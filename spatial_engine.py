@@ -1,0 +1,67 @@
+import math
+import random
+
+def euclidean_distance(coord1, coord2):
+    """Calcula la distancia en línea recta entre dos coordenadas (X, Y)."""
+    return math.sqrt((coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2)
+
+def calculate_exploration_probability(S, rho=0.8, gamma=0.5):
+    """Aplica la fórmula EPR: P_new = rho * S^(-gamma)"""
+    if S == 0:
+        return 1.0  # Si no conoce ningún sitio de ESTE TIPO, explora al 100%
+    return rho * (S ** -gamma)
+
+def choose_destination(agent_coords, visited_places, places_db, agent_age_group, rho=0.8, gamma=0.5, beta=2.0):
+    """
+    Decide el siguiente lugar al que irá el agente basándose en EPR, Gravedad y Edad (INE).
+    """
+    # 1. FILTRO DE MEMORIA: Nos quedamos solo con los sitios visitados que encajan
+    known_places = {place_id: count for place_id, count in visited_places.items() if place_id in places_db}
+    S = len(known_places)
+    
+    p_explore = calculate_exploration_probability(S, rho, gamma)
+    is_exploring = random.random() < p_explore
+    candidates = {}
+
+    if not is_exploring and S > 0:
+        # FASE RETORNO PREFERENCIAL
+        for place_id, visit_count in known_places.items():
+            place_info = places_db[place_id]
+            dist = euclidean_distance(agent_coords, place_info['coords'])
+            dist = max(dist, 0.1) # Evitar división por cero
+            
+            # W = Visitas / (Distancia ^ Beta)
+            weight = visit_count / (dist ** beta)
+            candidates[place_id] = weight
+    else:
+        # FASE EXPLORACIÓN (Modelo de Gravedad cruzado con EDAD)
+        is_exploring = True 
+        
+        for place_id, place_info in places_db.items():
+            if place_id not in known_places:
+                # Extraemos el atractivo específico para la edad de este agente
+                atractivo_real = place_info['atractivo_por_edad'].get(agent_age_group, 0.1)
+                
+                # Si el lugar está prohibido o tiene 0 atractivo para su edad, lo saltamos
+                if atractivo_real <= 0:
+                    continue
+                    
+                dist = euclidean_distance(agent_coords, place_info['coords'])
+                dist = max(dist, 0.1)
+                
+                # W = Atractivo_por_edad / (Distancia ^ Beta)
+                weight = atractivo_real / (dist ** beta)
+                candidates[place_id] = weight
+        
+        # Fallback de seguridad: Si no hay candidatos (ej. ha visitado todos los locales 
+        # aptos para su edad), le forzamos a retornar a uno conocido (rho=0.0)
+        if not candidates:
+            return choose_destination(agent_coords, known_places, places_db, agent_age_group, rho=0.0, gamma=gamma, beta=beta)
+
+    # 2. Selección del destino mediante Ruleta Proporcional
+    places_list = list(candidates.keys())
+    weights_list = list(candidates.values())
+    
+    chosen_place_id = random.choices(places_list, weights=weights_list, k=1)[0]
+    
+    return chosen_place_id, is_exploring

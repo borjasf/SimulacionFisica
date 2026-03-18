@@ -1,0 +1,125 @@
+{
+//NACIMIENTO DE USUARIO
+//Este evento llega cuando un agente entra en la simulación.
+//El memory manager debe capturar esto para saber quién es quién.
+{
+  "id": "8d4c8b6e-1f6b-4e5e-b1d2-1d4b3d85b9a7",
+  "definition_id": "da316793-8b26-4d2b-a6d3-5d53d4d32c3c",
+  "simulation_id": "3f9fb8f2-6c3e-4f2e-a2ce-93fbb1f1a8d2", //Estos 3 son UUIDs (códigos internos), posiblemente usaré este simulation_id para filtrar eventos de esta simulación en concreto.
+  "name": "Laura",
+  "age": 29,
+  "occupation": "Software Engineer",
+  "interests": "Sport",
+  "traits": [
+    "Openness +",
+    "Conscientiousness -",
+    "Extraversion +",
+    "Agreeableness -",
+    "Neuroticism +"
+  ],
+  "gender": "female",
+  "qualification": "Master",
+  "backstory": "Laura moved to Madrid for work and spends weekends hiking and attending concerts.",
+  "memory_type": "short_term",
+  "social_influence": 37.42,
+  "social_activity": 58.13,
+  "user_account_id": "a9c1c5b0-22a6-4e2b-9c2f-c60a3d8d4d3f", //Esto es como el DNI del agente
+  "created_at_cet": "2026-01-28T12:17:06+01:00",
+  "created_at": 1769599026,
+  "created_by": "spiderling"
+}
+
+//EVENTOS DE INTERACCIÓN
+//Estos eventos llegan cuando un agente realiza una acción, como publicar algo, dar like, etc
+
+{
+  "event": "logout",
+  "id": "8d4c8b6e-1f6b-4e5e-b1d2-1d4b3d85b9a7",
+  "created_at": 1769599052,
+  "created_at_cet": "2026-01-28T12:17:32+01:00"
+}
+,
+
+{
+  "id": "f0b2d19b-8b83-4f7e-9b22-2d3e7bf2e20a",
+  "definition_id": "da316793-8b26-4d2b-a6d3-5d53d4d32c3c",
+  "simulation_id": "3f9fb8f2-6c3e-4f2e-a2ce-93fbb1f1a8d2",
+  "follower_id": "a9c1c5b0-22a6-4e2b-9c2f-c60a3d8d4d3f",
+  "followed_id": "2d61a7c3-fb2a-4c78-a3f1-3d5e4a8fd4c2",
+  "active": true,
+  "created_at_cet": "2026-01-28T12:17:15+01:00",
+  "created_at": 1769599035
+},
+
+{
+  "id": "5e7a1b9c-1d41-4d2a-8b8d-9e2f3c1a7d10",
+  "definition_id": "da316793-8b26-4d2b-a6d3-5d53d4d32c3c",
+  "simulation_id": "3f9fb8f2-6c3e-4f2e-a2ce-93fbb1f1a8d2",
+  "account_id": "a9c1c5b0-22a6-4e2b-9c2f-c60a3d8d4d3f",
+  "interaction_type": "post",
+  "referencing_message_id": null,
+  "content_message_id": "c3b6e7a2-0b0c-4d7c-a0e4-4c9c10a2b111",
+  "active": true,
+  "created_at": 1769599052,
+  "created_at_cet": "2026-01-28T12:17:32+01:00"
+},
+
+{
+  "id": "3a1c2d3e-4f50-4c6b-9a11-7b5a3e9c2d44",
+  "definition_id": "da316793-8b26-4d2b-a6d3-5d53d4d32c3c",
+  "simulation_id": "3f9fb8f2-6c3e-4f2e-a2ce-93fbb1f1a8d2",
+  "account_id": "2d61a7c3-fb2a-4c78-a3f1-3d5e4a8fd4c2",
+  "interaction_type": "read",
+  "referencing_message_id": "c3b6e7a2-0b0c-4d7c-a0e4-4c9c10a2b111",
+  "content_message_id": null,
+  "active": true,
+  "created_at": 1769599068,
+  "created_at_cet": "2026-01-28T12:17:48+01:00"
+},
+
+{
+  "id": "9b7d2c11-8b4d-4ab3-95ce-5e92f0b1a222",
+  "definition_id": "da316793-8b26-4d2b-a6d3-5d53d4d32c3c",
+  "simulation_id": "3f9fb8f2-6c3e-4f2e-a2ce-93fbb1f1a8d2",
+  "account_id": "2d61a7c3-fb2a-4c78-a3f1-3d5e4a8fd4c2",
+  "interaction_type": "like",
+  "referencing_message_id": "c3b6e7a2-0b0c-4d7c-a0e4-4c9c10a2b111",
+  "content_message_id": null,
+  "active": true,
+  "created_at": 1769599073,
+  "created_at_cet": "2026-01-28T12:17:53+01:00"
+},
+
+{
+  "id": "1e2f3a4b-5c6d-4e7f-8a9b-0c1d2e3f4a55",
+  "definition_id": "da316793-8b26-4d2b-a6d3-5d53d4d32c3c",
+  "simulation_id": "3f9fb8f2-6c3e-4f2e-a2ce-93fbb1f1a8d2",
+  "account_id": "2d61a7c3-fb2a-4c78-a3f1-3d5e4a8fd4c2",
+  "interaction_type": "reply",
+  "referencing_message_id": "c3b6e7a2-0b0c-4d7c-a0e4-4c9c10a2b111",
+  "content_message_id": "7f2a9b11-44c1-4d9d-91c2-5bb0a8c2c333",
+  "active": true,
+  "created_at": 1769599090,
+  "created_at_cet": "2026-01-28T12:18:10+01:00"
+},
+
+{
+  "id": "6c88f2d9-9a0b-4c1e-8a30-2c4a8d5c9e66",
+  "definition_id": "da316793-8b26-4d2b-a6d3-5d53d4d32c3c",
+  "simulation_id": "3f9fb8f2-6c3e-4f2e-a2ce-93fbb1f1a8d2",
+  "account_id": "a9c1c5b0-22a6-4e2b-9c2f-c60a3d8d4d3f",
+  "interaction_type": "share",
+  "referencing_message_id": "c3b6e7a2-0b0c-4d7c-a0e4-4c9c10a2b111",
+  "content_message_id": null,
+  "active": true,
+  "created_at": 1769599120,
+  "created_at_cet": "2026-01-28T12:18:40+01:00"
+},
+
+{
+  "event": "sync",
+  "data": "Frontend synchronization with Simulodon completed"
+}
+
+
+}
