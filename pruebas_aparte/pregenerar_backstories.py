@@ -45,7 +45,7 @@ def generar_pasados(csv_entrada="users.csv", csv_salida="users_con_biografias.cs
             filas_actualizadas.append(fila)
             
             # Pausa obligatoria de 3 segundos para evitar colapsar la cuota gratuita de Gemini
-            time.sleep(3) 
+            time.sleep(10) 
 
     # Añadimos la nueva cabecera si es la primera vez que lo corremos
     if 'backstory' not in cabeceras:

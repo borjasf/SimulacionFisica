@@ -12,6 +12,8 @@ from markov_engine import get_markov_probabilities, evaluate_virtual_action
 import environment
 import spatial_engine
 import biological_engine
+import config
+import social_engine
 
 def run_simulation():
     print("Iniciando la inicialización del ecosistema...")
@@ -83,9 +85,9 @@ def run_simulation():
                 lugares_posibles = environment.get_places_by_type(nuevo_estado)
                 
                 if lugares_posibles:
-                    # Aplicamos los límites matemáticos por seguridad (rho entre 0 y 1, beta positivo)
-                    rho_personalizado = max(0.0, min(1.0, 0.8 + agente.exploration_rho_bonus))
-                    beta_personalizado = max(0.1, 2.0 * agente.spatial_beta_modifier)
+                # Aplicamos los límites matemáticos por seguridad (rho entre 0 y 1, beta positivo)
+                    rho_personalizado = max(0.0, min(1.0, config.BASE_EXPLORATION_RHO + agente.exploration_rho_bonus))
+                    beta_personalizado = max(0.1, config.BASE_SPATIAL_BETA * agente.spatial_beta_modifier)
 
                     # El motor espacial aplica la teoría de la Gravedad, el modelo EPR y el corte demográfico
                     destino_id, es_nuevo = spatial_engine.choose_destination(
@@ -155,58 +157,12 @@ def run_simulation():
             else:
                 print(f"[Turno {turno_global}] 🚶 [FÍSICO]  {agente.name} ({agente.age_group}) -> {nuevo_estado}{mensaje_espacial}")
 
-            # =================================================================
-            # --- FASE 4: EL ENCUENTRO Y EL DIÁLOGO SOCIAL ---
-            # =================================================================
+            # --- EL ENCUENTRO Y EL DIÁLOGO SOCIAL ---
             if nuevo_estado == "OCIO_SOCIAL_CONVERSAR":
-                
-                # Leemos su etiqueta GPS y la limpiamos de espacios ocultos
-                lugar = str(agente.current_location_name).strip()
-                
-                # Buscamos compañeros usando el motor nativo de objetos de Python
-                posibles_companeros = [
-                    a for a in agentes 
-                    if a != agente  
-                    and str(a.current_location_name).strip() == lugar
-                    and lugar != "Casa"
-                ]
-                
-                if posibles_companeros:
-                    companero = random.choice(posibles_companeros)
-                    print(f"\n   👀 ¡Encuentro! {agente.name} coincide con {companero.name} en {lugar}.")
-                    tema_interes = agente.interests
-                    vector_tema = motor_semantico.encode(tema_interes)
-                    
-                    def recuperar_memorias(personaje):
-                        if not personaje.long_term_memory: return []
-                        resultados = []
-                        for m in personaje.long_term_memory:
-                            similitud = util.cos_sim(vector_tema, m["vector"]).item()
-                            distancia = turno_global - m["recencia"]
-                            recencia_score = 1.0 / (1.0 + distancia * 0.05)
-                            importancia_score = m["importancia"] / 10.0
-                            
-                            score = (similitud * 0.5) + (recencia_score * 0.3) + (importancia_score * 0.2)
-                            resultados.append({"texto": m["texto"], "score": score})
-                        return sorted(resultados, key=lambda x: x["score"], reverse=True)[:3]
-
-                    mem_agente = recuperar_memorias(agente)
-                    mem_companero = recuperar_memorias(companero)
-                    
-                    print(f"   ⏳ El motor social procesa el diálogo sobre '{tema_interes}'...")
-                    charla_json = llm_client.generate_social_dialogue(agente, companero, mem_agente, mem_companero)
-                    
-                    print(f"\n   🎭 TEMA: {charla_json.get('tema_de_conversacion', 'General')}")
-                    for linea in charla_json.get('dialogo', []):
-                        print(f"   💬 {linea}")
-                        time.sleep(2)  
-                    print("   " + "-" * 60 + "\n")
-                else:
-                    # Chivato para saber si quiso hablar pero no había nadie
-                    print(f"   [🚶‍♂️ {agente.name} miró alrededor en {lugar}, pero no vio a nadie para hablar.]")
+                social_engine.procesar_encuentro(agente, agentes, motor_semantico, turno_global)
 
             turno_global += 1
-            time.sleep(0.05) # Pausa del bucle normal
+            time.sleep(config.SLEEP_TICK) # Pausa del bucle normal
             
     except KeyboardInterrupt:
         print("\n\n Simulación detenida manualmente.")

@@ -11,7 +11,7 @@ MAPA_CIUDAD = {
         "coords": (50, 90), "tipo": "TRABAJAR_ESTUDIAR", 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 95.0, "25-54": 30.0, "55-64": 10.0, "65+": 0.0}
     },
-    "Instituto_Sur": { # NUEVO: Concentrará a los menores de 16
+    "Instituto_Sur": { 
         "coords": (20, 20), "tipo": "TRABAJAR_ESTUDIAR", 
         "atractivo_por_edad": {"16-": 100.0, "16-24": 10.0, "25-54": 15.0, "55-64": 10.0, "65+": 0.0}
     },
@@ -27,11 +27,11 @@ MAPA_CIUDAD = {
         "coords": (80, 10), "tipo": "OCIO_SOCIAL_SITIO", 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 100.0, "25-54": 50.0, "55-64": 5.0, "65+": 0.0}
     },
-    "Centro_Jubilados": { # NUEVO: Punto caliente para la tercera edad
+    "Centro_Jubilados": { 
         "coords": (70, 70), "tipo": "OCIO_SOCIAL_SITIO", 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 0.0, "25-54": 5.0, "55-64": 50.0, "65+": 100.0}
     },
-    "Cafeteria_Tranquila": { # NUEVO: Local intermedio para mezclar adultos
+    "Cafeteria_Tranquila": { 
         "coords": (30, 60), "tipo": "OCIO_SOCIAL_SITIO", 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 30.0, "25-54": 60.0, "55-64": 80.0, "65+": 90.0}
     },
@@ -105,7 +105,7 @@ def plot_city_map(casas_generadas, agente_destacado=None):
         plt.scatter(x, y, c=colores.get(tipo, "black"), marker=marcadores.get(tipo, "o"), s=200, edgecolors='black', zorder=2)
         plt.annotate(place_id, (x, y), textcoords="offset points", xytext=(0,12), ha='center', fontsize=9, fontweight='bold', bbox=dict(boxstyle="round,pad=0.2", fc="white", alpha=0.7, ec="none"), zorder=3)
         
-    # --- SECCIÓN: DESTACAR AGENTE ---
+    # SECCIÓN: DESTACAR AGENTE 
     if agente_destacado:
         hx, hy = agente_destacado.home_coords
         plt.scatter(hx, hy, c='gold', marker='*', s=400, edgecolors='black', zorder=5)

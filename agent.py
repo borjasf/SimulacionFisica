@@ -50,8 +50,7 @@ class Agent:
         self.action_buffer = []    # Búfer temporal que acumulará las 10 acciones
         self.long_term_memory = [] # Lista de reflexiones profundas vectorizadas
         
-        # Memoria a corto y largo plazo
-        self.history = ["DORMIR"]
+        self.state_frequencies = {"DORMIR": 1}
 
         # Al nacer, el agente procesa su ADN (sus rasgos)
         self._apply_traits()
@@ -160,9 +159,9 @@ class Agent:
         self.action_buffer = []
             
     def update_state(self, new_state):
-        """Actualiza el estado matemático actual."""
+        """Actualiza el estado matemático actual sumando al contador de frecuencias."""
         self.current_state = new_state
-        self.history.append(new_state)
+        self.state_frequencies[new_state] = self.state_frequencies.get(new_state, 0) + 1
 
     def __repr__(self):
         return f"<Agent {self.name} | Edad: {self.age} ({self.age_group}) | Estado: {self.current_state}>"

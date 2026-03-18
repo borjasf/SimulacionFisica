@@ -3,7 +3,7 @@
 # DESCRIPCIÓN: Cálculo de afinidad entre agentes concurrentes.
 # REFERENCIA CIENTÍFICA: Bisgin et al. (2012) "A study of homophily on social media".
 # ==============================================================================
-
+import config
 def calculate_homophily_score(agent_a, agent_b):
     """
     Calcula la probabilidad de interacción entre dos agentes basándose en la
@@ -47,8 +47,7 @@ def calculate_homophily_score(agent_a, agent_b):
 
     # --- EVALUACIÓN FINAL ---
     # Fijamos un umbral (Threshold). Por ejemplo, si sacan 3 puntos o más, interactúan.
-    THRESHOLD = 3
-    interact_flag = score >= THRESHOLD
+    interact_flag = score >= config.THRESHOLD
     
     # Generamos el texto de contexto para la Memoria SQL / LLM
     if interact_flag:

@@ -53,11 +53,19 @@ def choose_destination(agent_coords, visited_places, places_db, agent_age_group,
                 weight = atractivo_real / (dist ** beta)
                 candidates[place_id] = weight
         
-        # Fallback de seguridad: Si no hay candidatos (ej. ha visitado todos los locales 
-        # aptos para su edad), le forzamos a retornar a uno conocido (rho=0.0)
+        # Fallback de seguridad: Si intentó explorar pero no hay lugares nuevos aptos...
         if not candidates:
-            return choose_destination(agent_coords, known_places, places_db, agent_age_group, rho=0.0, gamma=gamma, beta=beta)
-
+            if S > 0:
+                # 1. Si conoce lugares, cambiamos su mentalidad a "Retorno" y calculamos pesos
+                for place_id, visit_count in known_places.items():
+                    place_info = places_db[place_id]
+                    dist = max(euclidean_distance(agent_coords, place_info['coords']), 0.1)
+                    candidates[place_id] = visit_count / (dist ** beta)
+                is_exploring = False
+            else:
+                # 2. Si NO conoce ningún lugar y tampoco hay lugares aptos en toda la ciudad...
+                # (Es un caso extremo, ej. un niño en una ciudad solo de discotecas)
+                return "Casa", False
     # 2. Selección del destino mediante Ruleta Proporcional
     places_list = list(candidates.keys())
     weights_list = list(candidates.values())
