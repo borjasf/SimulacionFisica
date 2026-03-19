@@ -97,11 +97,11 @@ def generate_agent_backstory(agente):
         except Exception as e:
             error_str = str(e)
             if "503" in error_str or "429" in error_str:
-                print(f"   [ API Saturada] Reintentando biografía para {agente.name} en 2s... (Intento {intento + 1}/{max_retries})")
-                time.sleep(2)
+                print(f"   [ API Saturada] Reintentando backstory para {agente.name} en 10s... (Intento {intento + 1}/{max_retries})")
+                time.sleep(10)
             else:
-                print(f" Error al generar biografía para {agente.name}: {error_str}")
-                agente.backstory = "Biografía no disponible."
+                print(f" Error al generar backstory para {agente.name}: {error_str}")
+                agente.backstory = "Backstory no disponible."
                 return agente.backstory
                 
     # Fallback si se agotan los reintentos
@@ -173,8 +173,8 @@ def generate_daily_reflection(agente, lista_acciones):
             return reflexion_json
             
         except Exception as e:
-            print(f"   [⏳ Error JSON/API] Reintentando reflexión para {agente.name}... (Intento {intento + 1}/{max_retries})")
-            time.sleep(2)
+            print(f"   [Error JSON/API] Reintentando reflexión para {agente.name}... (Intento {intento + 1}/{max_retries})")
+            time.sleep(10)
             
     # Fallback si falla todo
     return {
@@ -248,8 +248,8 @@ def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2):
             return dialogo_json
             
         except Exception as e:
-            print(f"   [⏳ Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
-            time.sleep(2)
+            print(f"   [ Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
+            time.sleep(10)
             
     # Fallback conversacional
     return {

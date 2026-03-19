@@ -159,7 +159,7 @@ def run_simulation():
 
             # --- EL ENCUENTRO Y EL DIÁLOGO SOCIAL ---
             if nuevo_estado == "OCIO_SOCIAL_CONVERSAR":
-                social_engine.procesar_encuentro(agente, agentes, motor_semantico, turno_global)
+                social_engine.process_encounter(agente, agentes, motor_semantico, turno_global)
 
             turno_global += 1
             time.sleep(config.SLEEP_TICK) # Pausa del bucle normal

@@ -4,54 +4,55 @@ from sentence_transformers import util
 import llm_client
 import config
 
-def recuperar_memorias(personaje, vector_tema, turno_global):
+def retrieve_memories(agent, topic_vector, global_turn):
     """Filtra y puntúa los recuerdos del agente basándose en la fórmula del modelo de Stanford."""
-    if not personaje.long_term_memory: 
+    if not agent.long_term_memory: 
         return []
         
-    resultados = []
-    for m in personaje.long_term_memory:
-        similitud = util.cos_sim(vector_tema, m["vector"]).item()
-        distancia = turno_global - m["recencia"]
-        recencia_score = 1.0 / (1.0 + distancia * config.MEMORY_DECAY_FACTOR)
-        importancia_score = m["importancia"] / config.MAX_IMPORTANCE_SCORE
+    results = []
+    for m in agent.long_term_memory:
         
-        score = (similitud * config.WEIGHT_SIMILARITY) + \
-                (recencia_score * config.WEIGHT_RECENCY) + \
-                (importancia_score * config.WEIGHT_IMPORTANCE)
-        resultados.append({"texto": m["texto"], "score": score})
+        similarity = util.cos_sim(topic_vector, m["vector"]).item()
+        distance = global_turn - m["recencia"]
+        recency_score = 1.0 / (1.0 + distance * config.MEMORY_DECAY_FACTOR)
+        importance_score = m["importancia"] / config.MAX_IMPORTANCE_SCORE
         
-    return sorted(resultados, key=lambda x: x["score"], reverse=True)[:config.MAX_RETRIEVED_MEMORIES]
+        score = (similarity * config.WEIGHT_SIMILARITY) + \
+                (recency_score * config.WEIGHT_RECENCY) + \
+                (importance_score * config.WEIGHT_IMPORTANCE)
+        results.append({"texto": m["texto"], "score": score})
+        
+    return sorted(results, key=lambda x: x["score"], reverse=True)[:config.MAX_RETRIEVED_MEMORIES]
 
-def procesar_encuentro(agente, agentes, motor_semantico, turno_global):
+def process_encounter(agent, agents, semantic_engine, global_turn):
     """Busca compañeros en la misma ubicación y detona el diálogo social mediante LLM."""
-    lugar = str(agente.current_location_name).strip()
+    location = str(agent.current_location_name).strip()
     
     # Buscamos compañeros usando el motor nativo de objetos de Python
-    posibles_companeros = [
-        a for a in agentes 
-        if a != agente  
-        and str(a.current_location_name).strip() == lugar
-        and lugar != "Casa"
+    potential_companions = [
+        a for a in agents 
+        if a != agent  
+        and str(a.current_location_name).strip() == location
+        and location != "Casa"
     ]
     
-    if posibles_companeros:
-        companero = random.choice(posibles_companeros)
-        print(f"\n   👀 ¡Encuentro! {agente.name} coincide con {companero.name} en {lugar}.")
+    if potential_companions:
+        companion = random.choice(potential_companions)
+        print(f"\n  ¡Encuentro! {agent.name} coincide con {companion.name} en {location}.")
         
-        tema_interes = agente.interests
-        vector_tema = motor_semantico.encode(tema_interes)
+        interest_topic = agent.interests
+        topic_vector = semantic_engine.encode(interest_topic)
         
-        mem_agente = recuperar_memorias(agente, vector_tema, turno_global)
-        mem_companero = recuperar_memorias(companero, vector_tema, turno_global)
+        agent_memories = retrieve_memories(agent, topic_vector, global_turn)
+        companion_memories = retrieve_memories(companion, topic_vector, global_turn)
         
-        print(f"   ⏳ El motor social procesa el diálogo sobre '{tema_interes}'...")
-        charla_json = llm_client.generate_social_dialogue(agente, companero, mem_agente, mem_companero)
+        print(f"   El motor social procesa el diálogo sobre '{interest_topic}'...")
+        dialogue_json = llm_client.generate_social_dialogue(agent, companion, agent_memories, companion_memories)
         
-        print(f"\n   🎭 TEMA: {charla_json.get('tema_de_conversacion', 'General')}")
-        for linea in charla_json.get('dialogo', []):
-            print(f"   💬 {linea}")
+        print(f"\n  TEMA: {dialogue_json.get('tema_de_conversacion', 'General')}")
+        for line in dialogue_json.get('dialogo', []):
+            print(f"   {line}")
             time.sleep(config.SLEEP_DIALOGUE)  
         print("   " + "-" * 60 + "\n")
     else:
-        print(f"   [🚶‍♂️ {agente.name} miró alrededor en {lugar}, pero no vio a nadie para hablar.]")
+        print(f"   [{agent.name} miró alrededor en {location}, pero no vio a nadie para hablar.]")

@@ -1,17 +1,20 @@
 import math
 import random
 
+import config
+
 def euclidean_distance(coord1, coord2):
     """Calcula la distancia en línea recta entre dos coordenadas (X, Y)."""
-    return math.sqrt((coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2)
+    return math.sqrt((coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2) #Teorema de Pitágoras
 
-def calculate_exploration_probability(S, rho=0.8, gamma=0.5):
+def calculate_exploration_probability(S, rho=config.BASE_EXPLORATION_RHO, gamma=config.BASE_GAMMA):
     """Aplica la fórmula EPR: P_new = rho * S^(-gamma)"""
     if S == 0:
         return 1.0  # Si no conoce ningún sitio de ESTE TIPO, explora al 100%
     return rho * (S ** -gamma)
 
-def choose_destination(agent_coords, visited_places, places_db, agent_age_group, rho=0.8, gamma=0.5, beta=2.0):
+# Se ponen las constantes por defecto en la función, pero podrían ser modificadas por rasgos de personalidad en main.py mediante las fórmulas de trait_rules.py.
+def choose_destination(agent_coords, visited_places, places_db, agent_age_group, rho=config.BASE_EXPLORATION_RHO, gamma=config.BASE_GAMMA, beta=config.BASE_SPATIAL_BETA):
     """
     Decide el siguiente lugar al que irá el agente basándose en EPR, Gravedad y Edad (INE).
     """

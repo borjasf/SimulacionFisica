@@ -3,7 +3,8 @@ SLEEP_TICK = 0.05       # Pausa del bucle principal
 SLEEP_DIALOGUE = 2.0    # Pausa de lectura en consola para los diálogos
 
 # --- CONSTANTES ESPACIALES (MODELO G-EPR) ---
-BASE_EXPLORATION_RHO = 0.8  
+BASE_EXPLORATION_RHO = 0.8
+BASE_GAMMA = 0.5
 BASE_SPATIAL_BETA = 2.0     
 
 # --- CONSTANTES DE MEMORIA Y RECUPERACIÓN (STANFORD PAPER) ---

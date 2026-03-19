@@ -57,9 +57,6 @@ def calculate_homophily_score(agent_a, agent_b):
 
     return interact_flag, score, contexto_llm
 
-# ==========================================
-# PRUEBA RÁPIDA (Comprobación del algoritmo)
-# ==========================================
 if __name__ == "__main__":
     from agent_ingestor import load_agents_from_csv
     

@@ -105,8 +105,9 @@ class Agent:
         Guarda la acción en el largo plazo y avisa si el búfer llega a 10.
         """
         if new_state != self.current_state:
-            # --- GUARDADO EN LARGO PLAZO (LA ACCIÓN INDIVIDUAL) ---
+            # GUARDADO EN LARGO PLAZO (LA ACCIÓN INDIVIDUAL) 
             recuerdo_pasado = self.short_term_memory
+            # Vectorizamos el recuerdo usando el motor semántico (simulado aquí como una función externa)
             vector_memoria = motor_semantico.encode(recuerdo_pasado)
             
             # Asignamos una importancia base según el tipo de acción
