@@ -10,8 +10,8 @@ BASE_SPATIAL_BETA = 2.0
 # --- CONSTANTES DE MEMORIA Y RECUPERACIÓN (STANFORD PAPER) ---
 # Pesos de la fórmula de fusión de recuerdos (Deben sumar 1.0)
 WEIGHT_SIMILARITY = 0.5     # Peso de la similitud semántica (Vectores)
-WEIGHT_RECENCY = 0.3        # Peso de lo reciente que fue el recuerdo
-WEIGHT_IMPORTANCE = 0.2     # Peso de la carga emocional/importancia
+WEIGHT_RECENCY = 0.25        # Peso de lo reciente que fue el recuerdo
+WEIGHT_IMPORTANCE = 0.25     # Peso de la carga emocional/importancia
 
 MEMORY_DECAY_FACTOR = 0.05  # Factor de decaimiento temporal (a mayor número, olvidan más rápido)
 MAX_IMPORTANCE_SCORE = 10.0 # Normalizador de la nota de importancia (por defecto es del 1 al 10)

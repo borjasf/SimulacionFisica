@@ -140,34 +140,23 @@ Output format required:
 """
 
 def generate_daily_reflection(agente, lista_acciones_top):
-    descripciones = [TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente.traits]
-    rasgos_str = " ".join(descripciones)
-    acciones_str = "\n".join([f"- {accion}" for accion in lista_acciones_top])
-    
-    prompt = REFLECTION_PROMPT_TEMPLATE.format(
-        name=agente.name, age=agente.age, occupation=agente.occupation, traits=rasgos_str,
-        previous_reflection=agente.last_reflection, recent_actions=acciones_str
-    )
-    # ... (Mantén tu bucle de reintentos try/except y la llamada a response = client.models... igual que la tenías) ...
-
-def generate_daily_reflection(agente, lista_acciones):
     """
-    Envía un bloque de acciones crudas a Gemini para que las convierta en 
-    una reflexión profunda en formato JSON.
+    Envía las vivencias más importantes a Gemini conectándolas con su reflexión anterior.
     """
     # 1. Preparamos los datos
     descripciones = [TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente.traits]
     rasgos_str = " ".join(descripciones)
     
     # Formateamos la lista de acciones en un texto con viñetas
-    acciones_str = "\n".join([f"- {accion}" for accion in lista_acciones])
+    acciones_str = "\n".join([f"- {accion}" for accion in lista_acciones_top])
     
+    # 2. Inyectamos TODAS las variables necesarias en el prompt, incluyendo la reflexión anterior
     prompt = REFLECTION_PROMPT_TEMPLATE.format(
         name=agente.name,
         age=agente.age,
         occupation=agente.occupation,
         traits=rasgos_str,
-        #backstory=agente.backstory, BACKSTORY DESACTIVADA DE MOMENTO 
+        previous_reflection=agente.last_reflection,
         recent_actions=acciones_str
     )
     
@@ -192,7 +181,7 @@ def generate_daily_reflection(agente, lista_acciones):
     # Fallback si falla todo
     return {
         "tema_central": "Rutina",
-        "resumen_narrativo": "He estado haciendo mis tareas habituales sin mucho que destacar.",
+        "resumen_narrativo": "Siento que los últimos días han sido una continuación de mi rutina habitual.",
         "importancia": 1
     }
 

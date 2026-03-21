@@ -59,7 +59,7 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             # =====================================================================
             # FASE 1: CREACIÓN DE REFLEXIÓN (Sin similitud, usando solo el Top 5)
             # =====================================================================
-            print(f"   ⏳ Los agentes ordenan su mente antes de hablar...")
+            print(f"   Los agentes ordenan su mente antes de hablar...")
             for participante in [agent, companion]:
                 # Como bien has apuntado, ya no pasamos el turno_global, solo el limit=5
                 top_acciones = participante.get_top_recent_actions(limit=5)
