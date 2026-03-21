@@ -116,7 +116,6 @@ def generate_agent_backstory(agente):
 REFLECTION_PROMPT_TEMPLATE = """
 You are evaluating the recent actions of {name}, a {age}-year-old {occupation}.
 Their personality traits are: {traits}.
-Their background is: {backstory}
 
 Here is the chronological list of their most recent actions:
 {recent_actions}
@@ -154,7 +153,7 @@ def generate_daily_reflection(agente, lista_acciones):
         age=agente.age,
         occupation=agente.occupation,
         traits=rasgos_str,
-        backstory=agente.backstory,
+        #backstory=agente.backstory, BACKSTORY DESACTIVADA DE MOMENTO 
         recent_actions=acciones_str
     )
     
@@ -287,7 +286,7 @@ if __name__ == "__main__":
 
     agente_prueba = DummyAgent()
     
-    print(f"Generando biografía para {agente_prueba.name}...")
+    #print(f"Generando biografía para {agente_prueba.name}...")
     # Descomentar la siguiente línea solo cuando quieras probar con la API real
     # resultado = generate_agent_backstory(agente_prueba)
     

@@ -18,8 +18,9 @@ class Agent:
         self.qualification = qualification
         self.interests = interests
 
-        #BACKSTORY DE PRUEBA
-        self.backstory = f"Soy {name}, tengo {age} años y trabajo como {occupation}. Me gusta: {interests}."
+        #BACKSTORY DE PRUEBA (DESACTIVADA)
+        #self.backstory = f"Soy {name}, tengo {age} años y trabajo como {occupation}. Me gusta: {interests}."
+        self.backstory =""
         
         # Máquina de estados
         # Todos empiezan durmiendo o inactivos por defecto
