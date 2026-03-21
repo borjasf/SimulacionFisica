@@ -114,13 +114,16 @@ def generate_agent_backstory(agente):
 # ==============================================================================
 
 REFLECTION_PROMPT_TEMPLATE = """
-You are evaluating the recent actions of {name}, a {age}-year-old {occupation}.
+You are evaluating the recent life of {name}, a {age}-year-old {occupation}.
 Their personality traits are: {traits}.
 
-Here is the chronological list of their most recent actions:
+YOUR MENTAL BASE STATE (Your previous reflection):
+"{previous_reflection}"
+
+YOUR TOP MOST IMPORTANT RECENT VIVENCIES:
 {recent_actions}
 
-Analyze these events from the psychological perspective of this specific person. 
+Analyze how these recent vivencies affect your mental base state from the psychological perspective of this specific person. 
 Generate a high-level memory summary and rate the importance of this period in their life (1 being trivial, 10 being life-changing).
 
 IMPORTANT RULES:
@@ -130,11 +133,22 @@ IMPORTANT RULES:
 
 Output format required:
 {{
-    "tema_central": "Título corto de 3 o 4 palabras sobre lo que ha pasado",
-    "resumen_narrativo": "Reflexión en primera persona de 1 o 2 frases",
+    "tema_central": "Título corto de 3 o 4 palabras",
+    "resumen_narrativo": "Reflexión en primera persona de 1 o 2 frases conectando el pasado con lo reciente",
     "importancia": <número entero del 1 al 10>
 }}
 """
+
+def generate_daily_reflection(agente, lista_acciones_top):
+    descripciones = [TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente.traits]
+    rasgos_str = " ".join(descripciones)
+    acciones_str = "\n".join([f"- {accion}" for accion in lista_acciones_top])
+    
+    prompt = REFLECTION_PROMPT_TEMPLATE.format(
+        name=agente.name, age=agente.age, occupation=agente.occupation, traits=rasgos_str,
+        previous_reflection=agente.last_reflection, recent_actions=acciones_str
+    )
+    # ... (Mantén tu bucle de reintentos try/except y la llamada a response = client.models... igual que la tenías) ...
 
 def generate_daily_reflection(agente, lista_acciones):
     """
@@ -193,27 +207,26 @@ You are a scriptwriter generating a natural, casual conversation between two peo
 Context of their encounter (WHY they approached each other):
 {encounter_context}
 
-Person 1: {name1}, {age1} years old, {occupation1}. 
-Personality: {traits1}.
-Relevant recent memories for this conversation:
+Person 1: {name1}, {age1} years old, {occupation1}. Personality: {traits1}.
+Current Mental State: "{current_state1}"
+Relevant past memories for this conversation:
 {memories1}
 
-Person 2: {name2}, {age2} years old, {occupation2}. 
-Personality: {traits2}.
-Relevant recent memories for this conversation:
+Person 2: {name2}, {age2} years old, {occupation2}. Personality: {traits2}.
+Current Mental State: "{current_state2}"
+Relevant past memories for this conversation:
 {memories2}
 
 Write a short dialogue (2 to 4 lines maximum per person). 
-IMPORTANT NARRATIVE RULE: They MUST explicitly talk about what they have in common based on the 'Context of their encounter' provided above (e.g., their shared interests, identical occupation, or age group). They should also naturally allude to their recent memories, reacting to each other based on their personality traits.
+IMPORTANT NARRATIVE RULE: They MUST explicitly talk about what they have in common based on the 'Context of their encounter' provided above. They should weave their 'Current Mental State' and 'Relevant past memories' into the conversation naturally.
 
 IMPORTANT FORMAT RULES:
 - The dialogue MUST be entirely in SPANISH.
-- It MUST sound like a real, spontaneous spoken conversation (use colloquialisms if appropriate).
-- You MUST return ONLY a valid JSON object. No markdown, no extra text.
+- You MUST return ONLY a valid JSON object. No markdown.
 
 Output format required:
 {{
-    "tema_de_conversacion": "A brief 3-word summary of the topic",
+    "tema_de_conversacion": "A brief 3-word summary",
     "dialogo": [
         "{name1}: [Dialogue line here]",
         "{name2}: [Dialogue line here]"
@@ -221,7 +234,7 @@ Output format required:
 }}
 """
 
-def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2, contexto_encuentro):
+def generate_social_dialogue(agente1, agente2, estado_actual1, estado_actual2, recuerdos_ag1, recuerdos_ag2, contexto_encuentro):
     """
     Toma dos agentes, sus recuerdos y el motivo por el que se han acercado (homofilia)
     y pide a Gemini que redacte una conversación basada en sus similitudes.
@@ -237,8 +250,8 @@ def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2, con
     # Inyectamos el contexto de homofilia en el prompt
     prompt = DIALOGUE_PROMPT_TEMPLATE.format(
         encounter_context=contexto_encuentro,
-        name1=agente1.name, age1=agente1.age, occupation1=agente1.occupation, traits1=rasgos1_str, memories1=mems1_str,
-        name2=agente2.name, age2=agente2.age, occupation2=agente2.occupation, traits2=rasgos2_str, memories2=mems2_str
+        name1=agente1.name, age1=agente1.age, occupation1=agente1.occupation, traits1=rasgos1_str, memories1=mems1_str, current_state1=estado_actual1,
+        name2=agente2.name, age2=agente2.age, occupation2=agente2.occupation, traits2=rasgos2_str, memories2=mems2_str, current_state2=estado_actual2
     )
 
     max_retries = 3
@@ -253,7 +266,7 @@ def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2, con
             return dialogo_json
             
         except Exception as e:
-            print(f"   [⏳ Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
+            print(f"   [Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
             time.sleep(2)
             
     # Fallback conversacional

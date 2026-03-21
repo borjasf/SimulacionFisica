@@ -21,7 +21,7 @@ class Agent:
         #BACKSTORY DE PRUEBA (DESACTIVADA)
         #self.backstory = f"Soy {name}, tengo {age} años y trabajo como {occupation}. Me gusta: {interests}."
         self.backstory =""
-        
+
         # Máquina de estados
         # Todos empiezan durmiendo o inactivos por defecto
         self.current_state = "DORMIR" 
@@ -50,7 +50,8 @@ class Agent:
         self.short_term_memory = "Acabo de despertar." 
         self.action_buffer = []    # Búfer temporal que acumulará las 10 acciones
         self.long_term_memory = [] # Lista de reflexiones profundas vectorizadas
-        
+        self.last_reflection = "Últimamente mi rutina ha sido bastante normal y estable."
+
         self.state_frequencies = {"DORMIR": 1}
 
         # Al nacer, el agente procesa su ADN (sus rasgos)
@@ -101,34 +102,22 @@ class Agent:
                             self.markov_modifiers[state] = self.markov_modifiers.get(state, 1.0) * mult
 
     def update_memory(self, new_state, location_name, turno_global, motor_semantico):
-        """
-        Gestiona la transición de la memoria física.
-        Guarda la acción en el largo plazo y avisa si el búfer llega a 10.
-        """
+        """Gestiona la memoria a corto plazo. Acumula acciones en silencio."""
         if new_state != self.current_state:
-            # GUARDADO EN LARGO PLAZO (LA ACCIÓN INDIVIDUAL) 
             recuerdo_pasado = self.short_term_memory
-            # Vectorizamos el recuerdo usando el motor semántico (simulado aquí como una función externa)
-            vector_memoria = motor_semantico.encode(recuerdo_pasado)
             
-            # Asignamos una importancia base según el tipo de acción
-            # (Puedes tunear estos valores más adelante)
             importancia_base = 3 
             if "SOCIAL" in self.current_state:
                 importancia_base = 7
             elif self.current_state == "DORMIR":
                 importancia_base = 1
                 
-            # Metemos la ficha estandarizada en el cajón general
-            self.long_term_memory.append({
+            # Guardamos la acción en el búfer con sus datos matemáticos
+            self.action_buffer.append({
                 "texto": recuerdo_pasado,
-                "vector": vector_memoria,
-                "recencia": turno_global,
-                "importancia": importancia_base
+                "importancia": importancia_base,
+                "recencia": turno_global
             })
-
-            # --- PREPARACIÓN PARA GEMINI ---
-            self.action_buffer.append(recuerdo_pasado)
             
             # --- ACTUALIZAMOS EL PRESENTE ---
             state_to_text = {
@@ -145,20 +134,46 @@ class Agent:
             accion_texto = state_to_text.get(new_state, f"Estoy en estado {new_state}")
             self.short_term_memory = f"{accion_texto} en {location_name}."
             
-            if len(self.action_buffer) >= 10:
-                return True
-                
-        return False
+        return False # Ya no devuelve True nunca
+    
+    def get_top_recent_actions(self, limit=5):
+        """Extrae el top 5 combinando 50% Importancia y 50% Recencia personal, y vacía el búfer."""
+        if not self.action_buffer:
+            return []
+            
+        total_acciones = len(self.action_buffer)
         
+        # Usamos 'enumerate' para saber la posición exacta de cada acción en su memoria
+        for indice, accion in enumerate(self.action_buffer):
+            # Normalizamos importancia (1 a 10 -> 0.1 a 1.0)
+            norm_imp = accion["importancia"] / 10.0
+            
+            # Normalizamos recencia personal (El índice más alto es la acción más nueva)
+            # Ej: Si hay 10 acciones, la última (índice 9) tendrá recencia 1.0. La primera (0) tendrá 0.1.
+            norm_rec = (indice + 1) / total_acciones
+            
+            # Fórmula 50/50
+            accion["score"] = (0.5 * norm_imp) + (0.5 * norm_rec)
+
+        acciones_ordenadas = sorted(self.action_buffer, key=lambda x: x["score"], reverse=True)
+        top_acciones = acciones_ordenadas[:limit]
+        
+        # Vaciamos el búfer corto (¡La memoria a largo plazo queda intacta!)
+        self.action_buffer = [] 
+        return [a["texto"] for a in top_acciones]
+
     def save_reflection(self, reflexion_json, vector_memoria, turno_global):
-        """Guarda la reflexión en el mismo cajón usando el mismo formato estándar."""
+        """Guarda la reflexión en el disco duro (Largo Plazo) y actualiza el estado mental."""
+        texto_reflexion = reflexion_json.get("resumen_narrativo", "Nada destacable.")
+        
         self.long_term_memory.append({
-            "texto": reflexion_json.get("resumen_narrativo", "Nada destacable."),
+            "texto": texto_reflexion,
             "vector": vector_memoria,
             "recencia": turno_global,
             "importancia": reflexion_json.get("importancia", 1)
         })
-        self.action_buffer = []
+        # Actualiza el estado base para la próxima vez
+        self.last_reflection = texto_reflexion
             
     def update_state(self, new_state):
         """Actualiza el estado matemático actual sumando al contador de frecuencias."""

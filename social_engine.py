@@ -56,15 +56,44 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             print(f"\n   ¡Encuentro! {agent.name} coincide con {companion.name} en {location}.")
             print(f"   Afinidad: {score} pts. {context}")
             
-            # --- Aquí seguiría el mismo código que ya tenías para vectorizar y hablar ---
-            interest_topic = agent.interests
+            # =====================================================================
+            # FASE 1: CREACIÓN DE REFLEXIÓN (Sin similitud, usando solo el Top 5)
+            # =====================================================================
+            print(f"   ⏳ Los agentes ordenan su mente antes de hablar...")
+            for participante in [agent, companion]:
+                # Como bien has apuntado, ya no pasamos el turno_global, solo el limit=5
+                top_acciones = participante.get_top_recent_actions(limit=5)
+                
+                if top_acciones: # Si el búfer no está vacío
+                    reflexion_json = llm_client.generate_daily_reflection(participante, top_acciones)
+                    if reflexion_json:
+                        # Vectorizamos y guardamos la reflexión en el disco duro a largo plazo
+                        vector = semantic_engine.encode(reflexion_json["resumen_narrativo"])
+                        participante.save_reflection(reflexion_json, vector, global_turn)
+
+            # =====================================================================
+            # FASE 2: RECUPERACIÓN DEL PASADO (Con fórmula de similitud)
+            # =====================================================================
+            # CAMBIO CLAVE: Ya no buscamos los intereses generales del agente,
+            # buscamos en la memoria usando el "context" del encuentro como vector
+            interest_topic = context 
             topic_vector = semantic_engine.encode(interest_topic)
             
             agent_memories = retrieve_memories(agent, topic_vector, global_turn)
             companion_memories = retrieve_memories(companion, topic_vector, global_turn)
             
+            # =====================================================================
+            # FASE 3: EL GUIONISTA LLM
+            # =====================================================================
             print(f"   El motor social procesa el diálogo...")
-            dialogue_json = llm_client.generate_social_dialogue(agent, companion, agent_memories, companion_memories, context)
+            
+            # CAMBIO CLAVE: Añadimos 'agent.last_reflection' y 'companion.last_reflection'
+            # para inyectarle al prompt cómo se sienten exactamente en este momento
+            dialogue_json = llm_client.generate_social_dialogue(
+                agent, companion, 
+                agent.last_reflection, companion.last_reflection, 
+                agent_memories, companion_memories, context
+            )
 
             print(f"\n TEMA: {dialogue_json.get('tema_de_conversacion', 'General')}")
             for line in dialogue_json.get('dialogo', []):

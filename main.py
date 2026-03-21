@@ -127,26 +127,8 @@ def run_simulation():
             if lugar_memoria != "su ubicación actual":
                 agente.id_lugar_actual = lugar_memoria
             
-            # update_memory nos devuelve True si el búfer llegó a 10
-            # Le pasamos el turno_global y el motor_semantico local
-            toca_reflexionar = agente.update_memory(nuevo_estado, lugar_memoria, turno_global, motor_semantico)
-            
-            if toca_reflexionar:
-                print(f"\n🧠 [REFLEXIÓN] {agente.name} está reflexionando sobre sus últimas experiencias...")
-                
-                # 1. Gemini resume las 10 acciones crudas
-                reflexion = llm_client.generate_daily_reflection(agente, agente.action_buffer)
-                
-                # 2. El modelo local vectoriza la reflexión
-                texto_a_vectorizar = reflexion["resumen_narrativo"]
-                vector = motor_semantico.encode(texto_a_vectorizar)
-                
-                # 3. Guardamos el recuerdo a largo plazo pasándole el turno
-                agente.save_reflection(reflexion, vector, turno_global)
-                
-                print(f"   💡 Pensamiento: '{reflexion['resumen_narrativo']}'")
-                print(f"   📊 Importancia: {reflexion['importancia']}/10 | Tema: {reflexion['tema_central']}\n")
-            
+            # Llama a la memoria para acumular, pero ya no procesa el resultado
+            agente.update_memory(nuevo_estado, lugar_memoria, turno_global, motor_semantico)
             
             # 5. Actualizamos el estado cognitivo
             agente.update_state(nuevo_estado)
