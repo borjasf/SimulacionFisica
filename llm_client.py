@@ -191,6 +191,9 @@ def generate_daily_reflection(agente, lista_acciones):
 DIALOGUE_PROMPT_TEMPLATE = """
 You are a scriptwriter generating a natural, casual conversation between two people who just met or bumped into each other.
 
+Context of their encounter (WHY they approached each other):
+{encounter_context}
+
 Person 1: {name1}, {age1} years old, {occupation1}. 
 Personality: {traits1}.
 Relevant recent memories for this conversation:
@@ -201,11 +204,12 @@ Personality: {traits2}.
 Relevant recent memories for this conversation:
 {memories2}
 
-Write a short dialogue (2 to 4 lines maximum per person). They should naturally bring up or allude to the specific memories provided, reacting to each other based on their personality traits.
+Write a short dialogue (2 to 4 lines maximum per person). 
+IMPORTANT NARRATIVE RULE: They MUST explicitly talk about what they have in common based on the 'Context of their encounter' provided above (e.g., their shared interests, identical occupation, or age group). They should also naturally allude to their recent memories, reacting to each other based on their personality traits.
 
-IMPORTANT RULES:
+IMPORTANT FORMAT RULES:
 - The dialogue MUST be entirely in SPANISH.
-- It MUST sound like a real, spontaneous spoken conversation (use colloquialisms if appropriate for their traits).
+- It MUST sound like a real, spontaneous spoken conversation (use colloquialisms if appropriate).
 - You MUST return ONLY a valid JSON object. No markdown, no extra text.
 
 Output format required:
@@ -218,10 +222,10 @@ Output format required:
 }}
 """
 
-def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2):
+def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2, contexto_encuentro):
     """
-    Toma dos agentes y sus recuerdos más relevantes y pide a Gemini que redacte
-    una conversación natural basada en ellos. Devuelve un diccionario JSON.
+    Toma dos agentes, sus recuerdos y el motivo por el que se han acercado (homofilia)
+    y pide a Gemini que redacte una conversación basada en sus similitudes.
     """
     # Formateamos rasgos y memorias (agente 1)
     rasgos1_str = " ".join([TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente1.traits])
@@ -231,7 +235,9 @@ def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2):
     rasgos2_str = " ".join([TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente2.traits])
     mems2_str = "\n".join([f"- {r['texto']}" for r in recuerdos_ag2]) if recuerdos_ag2 else "- Nada relevante reciente."
 
+    # Inyectamos el contexto de homofilia en el prompt
     prompt = DIALOGUE_PROMPT_TEMPLATE.format(
+        encounter_context=contexto_encuentro,
         name1=agente1.name, age1=agente1.age, occupation1=agente1.occupation, traits1=rasgos1_str, memories1=mems1_str,
         name2=agente2.name, age2=agente2.age, occupation2=agente2.occupation, traits2=rasgos2_str, memories2=mems2_str
     )
@@ -248,15 +254,15 @@ def generate_social_dialogue(agente1, agente2, recuerdos_ag1, recuerdos_ag2):
             return dialogo_json
             
         except Exception as e:
-            print(f"   [ Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
-            time.sleep(10)
+            print(f"   [⏳ Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
+            time.sleep(2)
             
     # Fallback conversacional
     return {
         "tema_de_conversacion": "Saludos genéricos",
         "dialogo": [
-            f"{agente1.name}: ¡Hola {agente2.name}! ¿Qué tal todo?",
-            f"{agente2.name}: ¡Hola {agente1.name}! Todo bien, por aquí andamos."
+            f"{agente1.name}: ¡Hola {agente2.name}! Qué casualidad verte por aquí.",
+            f"{agente2.name}: ¡Hola {agente1.name}! Sí, me alegro de saludarte."
         ]
     }
 
