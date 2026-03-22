@@ -7,7 +7,7 @@ import math
 from sentence_transformers import SentenceTransformer, util
 import llm_client
 # Importamos nuestros módulos
-from agent_ingestor import load_agents_from_csv
+from agent_ingestor import load_agents_from_csv, load_friendships_from_csv
 from markov_engine import get_markov_probabilities, evaluate_virtual_action
 import environment
 import spatial_engine
@@ -18,7 +18,7 @@ import social_engine
 def run_simulation():
     print("Iniciando la inicialización del ecosistema...")
     
-    # NUEVO: CARGA DEL MODELO SEMÁNTICO (SOLO UNA VEZ)
+    # NUEVO: CARGA DEL MODELO SEMÁNTICO (sentence-transformers) (SOLO UNA VEZ)
     print("Cargando el motor cognitivo local (Embeddings)...")
     # Este proceso dura unos segundos, pero luego será instantáneo
     motor_semantico = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
@@ -29,6 +29,14 @@ def run_simulation():
     if not agentes:
         print("No hay agentes. Saliendo...")
         sys.exit()
+
+    # NUEVA LÓGICA DE AMISTAD
+    print("Cargando la red social de amistades...")
+    load_friendships_from_csv(agentes, "friendships.csv")
+
+    # 2. Asignamos las casas (Coordenadas de origen compartidas)
+    print("Generando el entorno urbano...")
+    casas_ciudad = environment.assign_homes(agentes)
 
     # 2. Asignamos las casas (Coordenadas de origen compartidas)
     print("Generando el entorno urbano...")
@@ -48,7 +56,7 @@ def run_simulation():
             
             estado_anterior = agente.current_state
             
-            # --- INTEGRACIÓN: MARKOV + BIOLOGICAL ---
+            # INTEGRACIÓN: MARKOV + BIOLOGICAL 
             
             # A) El agente sufre el desgaste de su último turno
             biological_engine.update_biological_needs(agente)
@@ -56,7 +64,7 @@ def run_simulation():
             # B) Pedimos la rutina base al motor de Markov (SIN tirar los dados)
             estados_posibles, probabilidades_rutina = get_markov_probabilities(estado_anterior)
 
-            # --- NUEVO: APLICAMOS LA PERSONALIDAD A LA RUTINA ---
+            # APLICAMOS LA PERSONALIDAD A LA RUTINA 
             probabilidades_personalizadas = []
             for i in range(len(estados_posibles)):
                 estado_evaluado = estados_posibles[i]

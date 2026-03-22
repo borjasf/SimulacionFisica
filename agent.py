@@ -52,6 +52,9 @@ class Agent:
         self.long_term_memory = [] # Lista de reflexiones profundas vectorizadas
         self.last_reflection = "Últimamente mi rutina ha sido bastante normal y estable."
 
+        # VARIABLE: Amigos en red social
+        self.amigos= []
+
         self.state_frequencies = {"DORMIR": 1}
 
         # Al nacer, el agente procesa su ADN (sus rasgos)

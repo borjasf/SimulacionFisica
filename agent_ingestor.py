@@ -70,6 +70,44 @@ def load_agents_from_csv(filepath):
     except FileNotFoundError:
         print(f"Error: No se encontró el archivo en la ruta '{filepath}'")
         return []
+    
+def load_friendships_from_csv(agents_list, filepath="friendships.csv"):
+    """
+    Lee el CSV y establece amistades SOLO si el seguimiento es mutuo 
+    (A sigue a B, y B sigue a A).
+    """
+    # 1. Diccionario rápido para acceder a los objetos Agente por su ID
+    diccionario_agentes = {str(a.id): a for a in agents_list}
+    
+    # 2. Mapa temporal de seguimientos brutos: { "id_1": {"id_2", "id_3"} }
+    seguimientos = {} 
+    
+    try:
+        with open(filepath, mode='r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                follower = str(row.get('follower', '')).strip()
+                followed = str(row.get('followed', '')).strip()
+                
+                if follower and followed:
+                    if follower not in seguimientos:
+                        seguimientos[follower] = set()
+                    seguimientos[follower].add(followed)
+        
+        # 3. Validación de Reciprocidad (El Match)
+        for agent_id, agent_obj in diccionario_agentes.items():
+            if agent_id in seguimientos:
+                for followed_id in seguimientos[agent_id]:
+                    # COMPROBACIÓN CLAVE: ¿El seguido también sigue a nuestro agente?
+                    if followed_id in seguimientos and agent_id in seguimientos[followed_id]:
+                        # Es mutuo. Verificamos que el amigo exista en la partida y lo añadimos
+                        if followed_id in diccionario_agentes and followed_id not in agent_obj.amigos:
+                            agent_obj.amigos.append(followed_id)
+                            
+        print(f"[OK] Red social validada. Amistades recíprocas establecidas.")
+        
+    except FileNotFoundError:
+        print(f"Aviso: No se encontró {filepath}. Los agentes no tendrán amistades previas.")    
 
 if __name__ == "__main__":
     mis_agentes = load_agents_from_csv("users.csv")

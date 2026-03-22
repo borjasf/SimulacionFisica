@@ -41,9 +41,30 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
     if potential_companions:
         valid_companions = []
         
-        # EL FILTRO DE HOMOFILIA: Evaluamos a todos los candidatos
+        # EL FILTRO DE HOMOFILIA Y AMISTAD: Evaluamos a todos los candidatos
         for a in potential_companions:
-            interactuan, puntuacion, contexto = homophily_rules.calculate_homophily_score(agent, a)
+            
+            # ¿SON AMIGOS MUTUOS CONFIRMADOS?
+            if str(a.id) in agent.amigos:
+                interactuan = True
+                puntuacion = 999  # Prioridad absoluta: los amigos van primero
+                
+                # Intersección rápida de intereses para enriquecer el diálogo
+                int_a = set([i.strip().lower() for i in agent.interests.split(',')])
+                int_b = set([i.strip().lower() for i in a.interests.split(',')])
+                shared = int_a.intersection(int_b)
+                
+                if shared:
+                    temas = ", ".join(shared)
+                    contexto = f"Son amigos que se han encontrado casualmente. Se están poniendo al día y hablando sobre {temas}."
+                else:
+                    contexto = "Son amigos que se han encontrado casualmente. Se están poniendo al día sobre cómo les va la vida."
+            
+            # SI SON DESCONOCIDOS, USAMOS LA MATEMÁTICA ESTÁTICA 
+            else:
+                interactuan, puntuacion, contexto = homophily_rules.calculate_homophily_score(agent, a)
+                
+            # Si pasaron cualquier filtro (amistad o matemáticas), se añaden a la lista
             if interactuan:
                 valid_companions.append((a, puntuacion, contexto))
                 
