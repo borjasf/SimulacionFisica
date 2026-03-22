@@ -38,10 +38,6 @@ def run_simulation():
     print("Generando el entorno urbano...")
     casas_ciudad = environment.assign_homes(agentes)
 
-    # 2. Asignamos las casas (Coordenadas de origen compartidas)
-    print("Generando el entorno urbano...")
-    casas_ciudad = environment.assign_homes(agentes)
-
     # Calculamos las papeletas para la lotería de turnos (Raíz cuadrada + Suavizado de Laplace)
     pesos_actividad = [(math.sqrt(agente.social_activity) + 1) for agente in agentes]
 
@@ -141,36 +137,95 @@ def run_simulation():
             # 5. Actualizamos el estado cognitivo
             agente.update_state(nuevo_estado)
             
-            # 6. Imprimimos el evento completo por consola (La memoria del agente NO se imprime)
-            if accion_virtual != "ACCION_FISICA":
-                print(f"[Turno {turno_global}] 📱 [VIRTUAL] {agente.name} ({agente.age_group}) -> {accion_virtual} | {nuevo_estado}{mensaje_espacial}")
-            else:
-                print(f"[Turno {turno_global}] 🚶 [FÍSICO]  {agente.name} ({agente.age_group}) -> {nuevo_estado}{mensaje_espacial}")
+            # 6. Imprimimos el evento completo por consola (SOLO SI PRINT_LOGS ES TRUE)
+            if config.PRINT_LOGS:
+                if accion_virtual != "ACCION_FISICA":
+                    print(f"[Turno {turno_global}] 📱 [VIRTUAL] {agente.name} ({agente.age_group}) -> {accion_virtual} | {nuevo_estado}{mensaje_espacial}")
+                else:
+                    print(f"[Turno {turno_global}] 🚶 [FÍSICO]  {agente.name} ({agente.age_group}) -> {nuevo_estado}{mensaje_espacial}")
 
             # --- EL ENCUENTRO Y EL DIÁLOGO SOCIAL ---
             if nuevo_estado == "OCIO_SOCIAL_CONVERSAR":
                 social_engine.process_encounter(agente, agentes, motor_semantico, turno_global)
 
+            # --- NUEVO: PARADA AUTOMÁTICA ---
+            if config.MAX_TURNS > 0 and turno_global > config.MAX_TURNS:
+                break # Rompe el bucle a la velocidad de la luz cuando llegue al tope
+
             turno_global += 1
-            time.sleep(config.SLEEP_TICK) # Pausa del bucle normal
             
+            # EL TRUCO PARA IR RÁPIDO: Solo pausa si estamos viendo los logs
+            if config.PRINT_LOGS:
+                time.sleep(config.SLEEP_TICK)
+            
+
     except KeyboardInterrupt:
-        print("\n\n Simulación detenida manualmente.")
-        print("\n=== EJEMPLO DE MEMORIA ESPACIAL A LARGO PLAZO ===")
-        # Mostramos los lugares que ha visitado el agente más activo
-        top_agente = agentes[0]
-        print(f"Lugares descubiertos por {top_agente.name}:")
-        for lugar, visitas in top_agente.visited_places.items():
-            print(f" - {lugar}: {visitas} visitas")
+        print("\n\n [!] Simulación detenida manualmente (Ctrl+C).")
         
-        print("\nGenerando mapa... (Cierra la ventana gráfica para salir del todo)")
-        try:
-            environment.plot_city_map(casas_ciudad, agente_destacado=top_agente)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            print("\n¡Simulación finalizada correctamente!")
-            sys.exit(0)
+    except Exception as e:
+        # ¡ESTA ES LA MAGIA! Si el programa falla, ahora te dirá por qué.
+        print(f"\n\n ❌ [ERROR CRÍTICO] La simulación se ha estrellado en el turno {turno_global}!")
+        print(f" Motivo del error: {e}\n")
+        import traceback
+        traceback.print_exc() # Esto imprimirá la línea exacta del fallo
+        
+    finally:
+        # =================================================================
+        # GENERACIÓN DEL INFORME ESTADÍSTICO PARA EL TRIBUNAL
+        # =================================================================
+        print("\n" + "="*60)
+        print("📊 INFORME ESTADÍSTICO DE LA SIMULACIÓN 📊")
+        print("="*60)
+        print(f"⏱️ Turnos totales simulados: {turno_global - 1}")
+        
+        # Métrica 1: BIOLOGÍA Y MARKOV
+        global_states = {}
+        total_states_logged = 0
+        for a in agentes:
+            for estado, count in a.state_frequencies.items():
+                global_states[estado] = global_states.get(estado, 0) + count
+                total_states_logged += count
+
+        print("\n--- DISTRIBUCIÓN DEL TIEMPO (ESTADOS DE MARKOV) ---")
+        sorted_states = sorted(global_states.items(), key=lambda x: x[1], reverse=True)
+        for estado, count in sorted_states:
+            porcentaje = (count / total_states_logged) * 100 if total_states_logged > 0 else 0
+            print(f" - {estado}: {porcentaje:.2f}% ({count} turnos totales)")
+
+        # Métrica 2: RED SOCIAL
+        total_amigos = sum(len(a.amigos) for a in agentes)
+        media_amigos = total_amigos / len(agentes) if agentes else 0
+        print("\n--- MÉTRICAS SOCIALES Y HOMOFILIA ---")
+        print(f" - Media de amigos por agente: {media_amigos:.2f}")
+        
+        if agentes:
+            extrovertido = max(agentes, key=lambda a: len(a.amigos))
+            introvertido = min(agentes, key=lambda a: len(a.amigos))
+            print(f" - El más sociable: {extrovertido.name} ({len(extrovertido.amigos)} amigos)")
+            print(f" - El menos sociable: {introvertido.name} ({len(introvertido.amigos)} amigos)")
+
+        # Métrica 3: ESPACIAL
+        print("\n--- LUGARES MÁS VISITADOS (MODELO ESPACIAL) ---")
+        global_places = {}
+        for a in agentes:
+            for lugar, visitas in a.visited_places.items():
+                global_places[lugar] = global_places.get(lugar, 0) + visitas
+
+        sorted_places = sorted(global_places.items(), key=lambda x: x[1], reverse=True)
+        for lugar, visitas in sorted_places[:5]: 
+            print(f" - {lugar}: {visitas} visitas totales")
+        print("="*60 + "\n")
+
+        if agentes:
+            top_agente = agentes[0]
+            print(f"\nGenerando mapa 2D para {top_agente.name}... (Cierra la ventana gráfica para salir)")
+            try:
+                environment.plot_city_map(casas_ciudad, agente_destacado=top_agente)
+            except Exception:
+                pass
+
+        print("\n¡Simulación finalizada!")
+        sys.exit(0)
 
 if __name__ == "__main__":
     run_simulation()

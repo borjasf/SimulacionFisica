@@ -10,12 +10,12 @@ def update_biological_needs(agente):
     
     # 1. ENERGÍA 
     if estado == "DORMIR":
-        agente.energia = min(100, agente.energia + (80 * agente.energy_recovery_mult))
+        agente.energia = min(100, agente.energia + (100 * agente.energy_recovery_mult))
     elif estado in ["TRABAJAR_ESTUDIAR", "OCIO_INDIVIDUAL", "INACTIVO_TAREAS_CASA"]:
-        agente.energia = max(0, agente.energia - (10 * agente.energy_decay_mult))
+        agente.energia = max(0, agente.energia - (4 * agente.energy_decay_mult))
     else:
         # Para relax, rrss, ocio social, comer... el desgaste es mínimo
-        agente.energia = max(0, agente.energia - (5 * agente.energy_decay_mult))
+        agente.energia = max(0, agente.energia - (2 * agente.energy_decay_mult))
 
     # 2. SACIEDAD 
     if estado == "COMER_BEBER":

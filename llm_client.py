@@ -9,6 +9,7 @@ import time
 from dotenv import load_dotenv
 from google import genai
 import json
+import config
 
 # ==============================================================================
 # DICCIONARIO SEMÁNTICO
@@ -143,6 +144,12 @@ def generate_daily_reflection(agente, lista_acciones_top):
     """
     Envía las vivencias más importantes a Gemini conectándolas con su reflexión anterior.
     """
+    if config.MOCK_LLM:
+        return {
+            "tema_central": "Test Rápido", 
+            "resumen_narrativo": "Reflexión generada en modo simulación rápida.", 
+            "importancia": 5
+        }
     # 1. Preparamos los datos
     descripciones = [TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente.traits]
     rasgos_str = " ".join(descripciones)
@@ -228,6 +235,11 @@ def generate_social_dialogue(agente1, agente2, estado_actual1, estado_actual2, r
     Toma dos agentes, sus recuerdos y el motivo por el que se han acercado (homofilia)
     y pide a Gemini que redacte una conversación basada en sus similitudes.
     """
+    if config.MOCK_LLM:
+        return {
+            "tema_de_conversacion": "Modo Test",
+            "dialogo": [f"{agente1.name}: [Diálogo de prueba rápido]", f"{agente2.name}: [Diálogo de prueba rápido]"]
+        }
     # Formateamos rasgos y memorias (agente 1)
     rasgos1_str = " ".join([TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente1.traits])
     mems1_str = "\n".join([f"- {r['texto']}" for r in recuerdos_ag1]) if recuerdos_ag1 else "- Nada relevante reciente."
