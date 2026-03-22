@@ -51,7 +51,6 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             shared = int_a.intersection(int_b)
             
             # 2. Calculamos la puntuación bruta de homofilia 
-            # (Ignoramos el primer booleano que devuelve tu función actual)
             _, puntuacion, _ = homophily_rules.calculate_homophily_score(agent, a)
             
             # 3. Asignamos la PROBABILIDAD de interactuar
@@ -59,10 +58,9 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
                 probabilidad = config.FRIEND_INTERACTION_PROB  # 85% de probabilidad de pararse a hablar con un amigo
                 puntuacion += config.FRIEND_PRIORITY_BONUS    # Subimos su nota para que gane si hay varias personas
             else:
-                # Convertimos la puntuación en probabilidad (min 5%, max 95%)
-                # Ej: Si tienen 30 puntos -> 30% de probabilidad de hablar.
                 prob_calculada = puntuacion * config.HOMOPHILY_PROB_MULTIPLIER
-                probabilidad = max(config.MIN_INTERACTION_PROB, min(config.MAX_INTERACTION_PROB, puntuacion / 100.0))
+                # Corrección: Usamos prob_calculada en lugar de puntuacion / 100.0
+                probabilidad = max(config.MIN_INTERACTION_PROB, min(config.MAX_INTERACTION_PROB, prob_calculada))
                 
             # 4. Tiramos los dados virtuales
             interactuan = random.random() < probabilidad
@@ -85,21 +83,22 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
                 valid_companions.append((a, puntuacion, contexto))
 
                 
-        # Si después de evaluar a todos, alguien superó el Threshold de config.py
+        # Si después de evaluar a todos, alguien superó los filtros
         if valid_companions:
             # Ordenamos la lista para hablar con el que tenga mayor puntuación (mejor match)
             valid_companions.sort(key=lambda x: x[1], reverse=True)
             companion, score, context = valid_companions[0] 
             
-            print(f"\n   ¡Encuentro! {agent.name} coincide con {companion.name} en {location}.")
-            print(f"   Afinidad: {score} pts. {context}")
+            # BLOQUEO DE PRINTS
+            if config.PRINT_LOGS:
+                print(f"\n   ¡Encuentro! {agent.name} coincide con {companion.name} en {location}.")
+                print(f"   Afinidad: {score} pts. {context}")
+                print(f"   Los agentes ordenan su mente antes de hablar...")
             
             # =====================================================================
             # FASE 1: CREACIÓN DE REFLEXIÓN (Sin similitud, usando solo el Top 5)
             # =====================================================================
-            print(f"   Los agentes ordenan su mente antes de hablar...")
             for participante in [agent, companion]:
-                # Como bien has apuntado, ya no pasamos el turno_global, solo el limit=5
                 top_acciones = participante.get_top_recent_actions(limit=5)
                 
                 if top_acciones: # Si el búfer no está vacío
@@ -112,8 +111,6 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             # =====================================================================
             # FASE 2: RECUPERACIÓN DEL PASADO (Con fórmula de similitud)
             # =====================================================================
-            # CAMBIO CLAVE: Ya no buscamos los intereses generales del agente,
-            # buscamos en la memoria usando el "context" del encuentro como vector
             interest_topic = context 
             topic_vector = semantic_engine.encode(interest_topic)
             
@@ -123,7 +120,8 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             # =====================================================================
             # FASE 3: EL GUIONISTA LLM
             # =====================================================================
-            print(f"   El motor social procesa el diálogo...")
+            if config.PRINT_LOGS:
+                print(f"   El motor social procesa el diálogo...")
             
             dialogue_json = llm_client.generate_social_dialogue(
                 agent, companion, 
@@ -137,13 +135,17 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             if str(agent.id) not in companion.amigos:
                 companion.amigos.append(str(agent.id))
 
-            print(f"\n TEMA: {dialogue_json.get('tema_de_conversacion', 'General')}")
-            for line in dialogue_json.get('dialogo', []):
-                print(f"    {line}")
-                time.sleep(config.SLEEP_DIALOGUE)  
-            print("   " + "-" * 60 + "\n")
+            # BLOQUEO DE PRINTS Y SLEEP
+            if config.PRINT_LOGS:
+                print(f"\n TEMA: {dialogue_json.get('tema_de_conversacion', 'General')}")
+                for line in dialogue_json.get('dialogo', []):
+                    print(f"    {line}")
+                    time.sleep(config.SLEEP_DIALOGUE)  
+                print("   " + "-" * 60 + "\n")
         else:
             # Coincidieron físicamente, pero se cayeron mal
-            print(f"   [ {agent.name} vio gente en {location}, pero a nadie con quien poder hablar.]")
+            if config.PRINT_LOGS:
+                print(f"   [ {agent.name} vio gente en {location}, pero a nadie con quien poder hablar.]")
     else:
-        print(f"   [ {agent.name} miró alrededor en {location}, pero no vio a nadie en absoluto.]")
+        if config.PRINT_LOGS:
+            print(f"   [ {agent.name} miró alrededor en {location}, pero no vio a nadie en absoluto.]")

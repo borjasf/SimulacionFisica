@@ -15,7 +15,8 @@ def load_agents_from_csv(filepath):
             reader = csv.DictReader(file)
             
             for row in reader:
-                agent_id = row.get('id', row.get('user_account_id', 'unknown')) 
+                # EXTRACCIÓN DEL ID (Usamos 'username' según el CSV real)
+                agent_id = row.get('username', row.get('id', 'unknown')).strip()
                 name = row.get('name', 'SinNombre')
                 
                 # EXTRACCIÓN DE EDAD

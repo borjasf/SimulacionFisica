@@ -20,11 +20,11 @@ MAX_RETRIEVED_MEMORIES = 3  # Número máximo de recuerdos a inyectar en el prom
 # --- CONSTANTES DE RED SOCIAL Y PROBABILIDAD (MODELO CONTINUO) ---
 # Probabilidades de interacción al cruzarse
 FRIEND_INTERACTION_PROB = 0.85      # Probabilidad base de que dos amigos se paren a hablar (85%)
-MIN_INTERACTION_PROB = 0.05         # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
+MIN_INTERACTION_PROB = 0.10         # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
 MAX_INTERACTION_PROB = 0.95         # Techo probabilístico: Límite máximo para desconocidos afines (95%)
 
 # Multiplicadores
-HOMOPHILY_PROB_MULTIPLIER = 0.10    # Cada punto de homofilia suma un 10% de probabilidad
+HOMOPHILY_PROB_MULTIPLIER = 0.20    # Cada punto de homofilia suma un 10% de probabilidad
 FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos lideren el orden de prioridad
 
 
