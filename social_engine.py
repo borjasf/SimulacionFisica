@@ -41,32 +41,49 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
     if potential_companions:
         valid_companions = []
         
-        # EL FILTRO DE HOMOFILIA Y AMISTAD: Evaluamos a todos los candidatos
+        # EL FILTRO DE HOMOFILIA, PROBABILIDAD Y AMISTAD
         for a in potential_companions:
+            son_amigos = str(a.id) in agent.amigos
             
-            # ¿SON AMIGOS MUTUOS CONFIRMADOS?
-            if str(a.id) in agent.amigos:
-                interactuan = True
-                puntuacion = 999  # Prioridad absoluta: los amigos van primero
-                
-                # Intersección rápida de intereses para enriquecer el diálogo
-                int_a = set([i.strip().lower() for i in agent.interests.split(',')])
-                int_b = set([i.strip().lower() for i in a.interests.split(',')])
-                shared = int_a.intersection(int_b)
-                
-                if shared:
-                    temas = ", ".join(shared)
-                    contexto = f"Son amigos que se han encontrado casualmente. Se están poniendo al día y hablando sobre {temas}."
-                else:
-                    contexto = "Son amigos que se han encontrado casualmente. Se están poniendo al día sobre cómo les va la vida."
+            # 1. Extraemos los intereses en común (si los hay)
+            int_a = set([i.strip().lower() for i in agent.interests.split(',')])
+            int_b = set([i.strip().lower() for i in a.interests.split(',')])
+            shared = int_a.intersection(int_b)
             
-            # SI SON DESCONOCIDOS, USAMOS LA MATEMÁTICA ESTÁTICA 
+            # 2. Calculamos la puntuación bruta de homofilia 
+            # (Ignoramos el primer booleano que devuelve tu función actual)
+            _, puntuacion, _ = homophily_rules.calculate_homophily_score(agent, a)
+            
+            # 3. Asignamos la PROBABILIDAD de interactuar
+            if son_amigos:
+                probabilidad = config.FRIEND_INTERACTION_PROB  # 85% de probabilidad de pararse a hablar con un amigo
+                puntuacion += config.FRIEND_PRIORITY_BONUS    # Subimos su nota para que gane si hay varias personas
             else:
-                interactuan, puntuacion, contexto = homophily_rules.calculate_homophily_score(agent, a)
+                # Convertimos la puntuación en probabilidad (min 5%, max 95%)
+                # Ej: Si tienen 30 puntos -> 30% de probabilidad de hablar.
+                prob_calculada = puntuacion * config.HOMOPHILY_PROB_MULTIPLIER
+                probabilidad = max(config.MIN_INTERACTION_PROB, min(config.MAX_INTERACTION_PROB, puntuacion / 100.0))
                 
-            # Si pasaron cualquier filtro (amistad o matemáticas), se añaden a la lista
+            # 4. Tiramos los dados virtuales
+            interactuan = random.random() < probabilidad
+            
             if interactuan:
+                # 5. Generación de CONTEXTO dinámico
+                if son_amigos:
+                    if shared:
+                        temas = ", ".join(shared)
+                        contexto = f"Son amigos. Quieren ponerse al día y hablar sobre su interés común en {temas}."
+                    else:
+                        contexto = "Son amigos. Quieren ponerse al día sobre cómo les va la vida."
+                else:
+                    if shared:
+                        temas = ", ".join(shared)
+                        contexto = f"Se acaban de conocer. Han descubierto que tienen en común: {temas}."
+                    else:
+                        contexto = "Se acaban de conocer por primera vez. Están charlando para presentarse."
+                        
                 valid_companions.append((a, puntuacion, contexto))
+
                 
         # Si después de evaluar a todos, alguien superó el Threshold de config.py
         if valid_companions:
@@ -108,13 +125,17 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             # =====================================================================
             print(f"   El motor social procesa el diálogo...")
             
-            # CAMBIO CLAVE: Añadimos 'agent.last_reflection' y 'companion.last_reflection'
-            # para inyectarle al prompt cómo se sienten exactamente en este momento
             dialogue_json = llm_client.generate_social_dialogue(
                 agent, companion, 
                 agent.last_reflection, companion.last_reflection, 
                 agent_memories, companion_memories, context
             )
+
+            # --- NUEVA LÓGICA: SE HACEN AMIGOS TRAS HABLAR ---
+            if str(companion.id) not in agent.amigos:
+                agent.amigos.append(str(companion.id))
+            if str(agent.id) not in companion.amigos:
+                companion.amigos.append(str(agent.id))
 
             print(f"\n TEMA: {dialogue_json.get('tema_de_conversacion', 'General')}")
             for line in dialogue_json.get('dialogo', []):
