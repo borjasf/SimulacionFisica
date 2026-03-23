@@ -5,8 +5,8 @@ import llm_client
 import config
 import homophily_rules
 
-def retrieve_memories(agent, topic_vector, global_turn):
-    """Filtra y puntúa los recuerdos del agente basándose en la fórmula del modelo de Stanford."""
+""" def retrieve_memories(agent, topic_vector, global_turn):
+    Filtra y puntúa los recuerdos del agente basándose en la fórmula del modelo de Stanford.
     if not agent.long_term_memory: 
         return []
         
@@ -24,9 +24,9 @@ def retrieve_memories(agent, topic_vector, global_turn):
                 (importance_score * config.WEIGHT_IMPORTANCE)
         results.append({"texto": m["texto"], "score": score})
         
-    return sorted(results, key=lambda x: x["score"], reverse=True)[:config.MAX_RETRIEVED_MEMORIES]
+    return sorted(results, key=lambda x: x["score"], reverse=True)[:config.MAX_RETRIEVED_MEMORIES]"""
 
-def process_encounter(agent, agents, semantic_engine, global_turn):
+def process_encounter(agent, agents):
     """Busca compañeros en la misma ubicación y detona el diálogo social mediante LLM."""
     location = str(agent.current_location_name).strip()
     
@@ -55,7 +55,7 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             
             # 3. Asignamos la PROBABILIDAD de interactuar
             if son_amigos:
-                probabilidad = config.FRIEND_INTERACTION_PROB  # Probabilidad de pararse a hablar con un amigo
+                probabilidad = config.FRIEND_INTERACTION_PROB  # Probabilidad alta para amigos
                 puntuacion += config.FRIEND_PRIORITY_BONUS    # Subimos su nota para que gane si hay varias personas
             else:
                 prob_calculada = puntuacion * config.HOMOPHILY_PROB_MULTIPLIER
@@ -95,37 +95,38 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
                 print(f"   Los agentes ordenan su mente antes de hablar...")
             
             # =====================================================================
-            # FASE 1: CREACIÓN DE REFLEXIÓN (Sin similitud, usando solo el Top 5)
+            # FASE 1: ACTUALIZACIÓN DE MEMORIA A LARGO PLAZO (LLM-Centric)
             # =====================================================================
             for participante in [agent, companion]:
-                top_acciones = participante.get_top_recent_actions(limit=5)
+                # Extraemos TODA la lista cronológica de acciones cortas y vaciamos el búfer
+                acciones_recientes = participante.flush_short_term_memory()
                 
-                if top_acciones: # Si el búfer no está vacío
-                    reflexion_json = llm_client.generate_daily_reflection(participante, top_acciones)
-                    if reflexion_json:
-                        # Vectorizamos y guardamos la reflexión en el disco duro a largo plazo
-                        vector = semantic_engine.encode(reflexion_json["resumen_narrativo"])
-                        participante.save_reflection(reflexion_json, vector, global_turn)
+                if acciones_recientes: # Solo gasta tokens de API si han hecho cosas nuevas
+                    if config.PRINT_LOGS:
+                        print(f"   [{participante.name} sintetizando sus recuerdos...]")
+                    
+                    # Gemini unifica la memoria antigua y la reciente en un nuevo párrafo de vida
+                    nueva_reflexion = llm_client.generate_long_term_memory(participante, acciones_recientes)
+                    
+                    if nueva_reflexion:
+                        participante.update_long_term_memory(nueva_reflexion)
 
             # =====================================================================
-            # FASE 2: RECUPERACIÓN DEL PASADO (Con fórmula de similitud)
+            # FASE 2: ELIMINADA (Ya no hay embeddings ni búsqueda vectorial)
             # =====================================================================
-            interest_topic = context 
-            topic_vector = semantic_engine.encode(interest_topic)
-            
-            agent_memories = retrieve_memories(agent, topic_vector, global_turn)
-            companion_memories = retrieve_memories(companion, topic_vector, global_turn)
-            
+
             # =====================================================================
             # FASE 3: EL GUIONISTA LLM
             # =====================================================================
             if config.PRINT_LOGS:
                 print(f"   El motor social procesa el diálogo...")
             
+            # Le pasamos a Gemini directamente los párrafos de largo plazo actualizados
             dialogue_json = llm_client.generate_social_dialogue(
                 agent, companion, 
-                agent.last_reflection, companion.last_reflection, 
-                agent_memories, companion_memories, context
+                agent.long_term_memory, 
+                companion.long_term_memory, 
+                context
             )
 
             # NUEVA LÓGICA: SE HACEN AMIGOS TRAS HABLAR
@@ -141,6 +142,7 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
                     print(f"    {line}")
                     time.sleep(config.SLEEP_DIALOGUE)  
                 print("   " + "-" * 60 + "\n")
+                
         else:
             # Coincidieron físicamente, pero se cayeron mal
             if config.PRINT_LOGS:

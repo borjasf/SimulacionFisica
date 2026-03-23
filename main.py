@@ -4,7 +4,8 @@ import random
 import math
 
 # MOTOR LOCAL DE EMBEDDINGS
-from sentence_transformers import SentenceTransformer, util
+#from sentence_transformers import SentenceTransformer, util
+
 import llm_client
 # Importamos nuestros módulos
 from agent_ingestor import load_agents_from_csv, load_friendships_from_csv
@@ -19,10 +20,10 @@ def run_simulation():
     print("Iniciando la inicialización del ecosistema...")
     
     # NUEVO: CARGA DEL MODELO SEMÁNTICO (sentence-transformers) (SOLO UNA VEZ)
-    print("Cargando el motor cognitivo local (Embeddings)...")
+    #print("Cargando el motor cognitivo local (Embeddings)...")
     # Este proceso dura unos segundos, pero luego será instantáneo
-    motor_semantico = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-    print("Motor cognitivo cargado con éxito.")
+    #motor_semantico = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+    #print("Motor cognitivo cargado con éxito.")
 
     # 1. Cargamos los agentes del CSV
     agentes = load_agents_from_csv("users.csv")
@@ -145,7 +146,7 @@ def run_simulation():
 
             # EL ENCUENTRO Y EL DIÁLOGO SOCIAL
             if nuevo_estado == "OCIO_SOCIAL_CONVERSAR":
-                social_engine.process_encounter(agente, agentes, motor_semantico, turno_global)
+                social_engine.process_encounter(agente, agentes)
 
             #PARADA AUTOMÁTICA
             if config.MAX_TURNS > 0 and turno_global > config.MAX_TURNS:

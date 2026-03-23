@@ -8,25 +8,24 @@ class Agent:
         self.social_activity = float(social_activity)
         self.traits = traits_list
         
-        # NUEVO: EDAD Y GRUPO DEMOGRÁFICO 
+        # EDAD Y GRUPO DEMOGRÁFICO 
         self.age = int(age)
         self.age_group = self._calculate_age_group(self.age)
 
-        # NUEVOS CAMPOS PARA LA BACKSTORY
+        # CAMPOS PARA LA BACKSTORY
         self.gender = gender
         self.occupation = occupation
         self.qualification = qualification
         self.interests = interests
 
-        #BACKSTORY DE PRUEBA (DESACTIVADA)
-        #self.backstory = f"Soy {name}, tengo {age} años y trabajo como {occupation}. Me gusta: {interests}."
-        self.backstory =""
+        # BACKSTORY DE PRUEBA (DESACTIVADA)
+        self.backstory = ""
 
         # Máquina de estados
         # Todos empiezan durmiendo o inactivos por defecto
         self.current_state = "DORMIR" 
         
-        # NUEVAS VARIABLES BIOLÓGICAS
+        # VARIABLES BIOLÓGICAS
         self.energia = 100
         self.saciedad = 100
 
@@ -39,21 +38,21 @@ class Agent:
         self.homophily_base_bonus = 0
         self.markov_modifiers = {}
         
-        # NUEVAS VARIABLES ESPACIALES 
+        # VARIABLES ESPACIALES 
         self.home_coords = None     # Su casa fija (X, Y)
         self.current_coords = None  # Dónde está en este preciso momento
         self.visited_places = {}    # Memoria de lugares: {"Bar_Manolo": 3, "Parque": 1}
 
         self.current_location_name = "Casa"
 
-        # FASE 2 y 3: MEMORIA A CORTO Y LARGO PLAZO
+        # FASE 2 y 3: MEMORIA LLM-CENTRIC (NUEVO DISEÑO MINIMALISTA)
         self.short_term_memory = "Acabo de despertar." 
-        self.action_buffer = []    # Búfer temporal que acumulará las 10 acciones
-        self.long_term_memory = [] # Lista de reflexiones profundas vectorizadas
-        self.last_reflection = "Últimamente mi rutina ha sido bastante normal y estable."
+        self.action_buffer = []     # Lista simple de strings cronológicos
+        # El largo plazo ahora es un texto único que el LLM va actualizando
+        self.long_term_memory = "Últimamente mi rutina ha sido bastante normal y estable."
 
         # VARIABLE: Amigos en red social
-        self.amigos= []
+        self.amigos = []
 
         self.state_frequencies = {"DORMIR": 1}
 
@@ -61,7 +60,7 @@ class Agent:
         self._apply_traits()
 
     def _calculate_age_group(self, age):
-        """Asigna el rango de edad"""
+        """Asigna el rango de edad según estándares demográficos."""
         if age < 16:
             return "16-"
         elif 16 <= age <= 24:
@@ -105,32 +104,13 @@ class Agent:
                             self.markov_modifiers[state] = self.markov_modifiers.get(state, 1.0) * mult
 
     def update_memory(self, new_state, location_name, turno_global):
-        """Gestiona la memoria a corto plazo. Acumula acciones en silencio."""
+        """Gestiona la memoria a corto plazo. Acumula acciones cronológicamente."""
         if new_state != self.current_state:
+            # Rescatamos lo que estaba haciendo hasta ahora
             recuerdo_pasado = self.short_term_memory
             
-            #CÁLCULO DE IMPORTANCIA DINÁMICA
-            if self.current_state == "DORMIR":
-                importancia_base = 1
-            else:
-                # 1. Partimos de una importancia media
-                base = 4.0 
-                if "SOCIAL" in self.current_state:
-                    base = 6.0 
-                
-                # 2. Multiplicamos por la afinidad personal del agente a este estado
-                afinidad_personal = self.markov_modifiers.get(self.current_state, 1.0)
-                importancia_calculada = int(base * afinidad_personal)
-                
-                # 3. Limitamos matemáticamente para que nunca se salga del rango 1-10
-                importancia_base = max(1, min(10, importancia_calculada))
-                
-            # Guardamos la acción en el búfer con sus datos matemáticos
-            self.action_buffer.append({
-                "texto": recuerdo_pasado,
-                "importancia": importancia_base,
-                "recencia": turno_global
-            })
+            # Lo guardamos en el búfer cronológico como texto puro
+            self.action_buffer.append(recuerdo_pasado)
             
             # --- ACTUALIZAMOS EL PRESENTE ---
             state_to_text = {
@@ -147,46 +127,17 @@ class Agent:
             accion_texto = state_to_text.get(new_state, f"Estoy en estado {new_state}")
             self.short_term_memory = f"{accion_texto} en {location_name}."
             
-        return False # Ya no devuelve True nunca
-    
-    def get_top_recent_actions(self, limit=5):
-        """Extrae el top 5 combinando 50% Importancia y 50% Recencia personal, y vacía el búfer."""
-        if not self.action_buffer:
-            return []
-            
-        total_acciones = len(self.action_buffer)
-        
-        # Usamos 'enumerate' para saber la posición exacta de cada acción en su memoria
-        for indice, accion in enumerate(self.action_buffer):
-            # Normalizamos importancia (1 a 10 -> 0.1 a 1.0)
-            norm_imp = accion["importancia"] / 10.0
-            
-            # Normalizamos recencia personal (El índice más alto es la acción más nueva)
-            # Ej: Si hay 10 acciones, la última (índice 9) tendrá recencia 1.0. La primera (0) tendrá 0.1.
-            norm_rec = (indice + 1) / total_acciones
-            
-            # Fórmula 50/50
-            accion["score"] = (0.5 * norm_imp) + (0.5 * norm_rec)
+        return False
 
-        acciones_ordenadas = sorted(self.action_buffer, key=lambda x: x["score"], reverse=True)
-        top_acciones = acciones_ordenadas[:limit]
-        
-        # Vaciamos el búfer corto (¡La memoria a largo plazo queda intacta!)
-        self.action_buffer = [] 
-        return [a["texto"] for a in top_acciones]
+    def flush_short_term_memory(self):
+        """Devuelve toda la lista cronológica de acciones y vacía el búfer."""
+        acciones = list(self.action_buffer)
+        self.action_buffer.clear()
+        return acciones
 
-    def save_reflection(self, reflexion_json, vector_memoria, turno_global):
-        """Guarda la reflexión en el disco duro (Largo Plazo) y actualiza el estado mental."""
-        texto_reflexion = reflexion_json.get("resumen_narrativo", "Nada destacable.")
-        
-        self.long_term_memory.append({
-            "texto": texto_reflexion,
-            "vector": vector_memoria,
-            "recencia": turno_global,
-            "importancia": reflexion_json.get("importancia", 1)
-        })
-        # Actualiza el estado base para la próxima vez
-        self.last_reflection = texto_reflexion
+    def update_long_term_memory(self, nueva_reflexion):
+        """Sustituye la memoria a largo plazo por el nuevo resumen narrativo del LLM."""
+        self.long_term_memory = nueva_reflexion
             
     def update_state(self, new_state):
         """Actualiza el estado matemático actual sumando al contador de frecuencias."""

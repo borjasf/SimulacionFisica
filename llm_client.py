@@ -1,8 +1,4 @@
-# ==============================================================================
-# ARCHIVO: llm_client.py
-# DESCRIPCIÓN: Cliente de conexión con la API oficial de Google Gemini.
-# FASE 1: Generación de Biografías (Backstories) basadas en el perfil demográfico.
-# ==============================================================================
+# Cliente de conexión con la API oficial de Google Gemini.
 
 import os
 import time
@@ -11,17 +7,14 @@ from google import genai
 import json
 import config
 
-# ==============================================================================
-# DICCIONARIO SEMÁNTICO
-# ==============================================================================
 TRADUCTOR_GOLDBERG = {
     "Sociability +": "Highly extroverted, gregarious, and constantly seeks social interaction.",
     "Sociability -": "Introverted, reserved, enjoys solitude and quiet environments.",
     "Friendliness +": "Empathetic, warm, cooperative, and easy to get along with.",
-    "Friendliness -": "Competitive, cynical, irritable, or distant in interactions.",
+    "Friendliness -": "Competitive, cynical, irritable, or distant in interactions. Prone to conflict.",
     "Scrupulousness +": "Highly organized, responsible, punctual, and routine-oriented.",
     "Scrupulousness -": "Disorganized, lazy, forgetful, and prone to procrastination.",
-    "Neuroticism +": "Emotionally unstable, anxious, and easily stressed.",
+    "Neuroticism +": "Emotionally unstable, anxious, easily stressed, and complains often.",
     "Neuroticism -": "Placid, stoic, highly resilient to stress, and independent.",
     "Intellectual +": "Curious, creative, sophisticated, and actively seeks new experiences.",
     "Intellectual -": "Conventional, routine-bound, unimaginative, and prefers the familiar."
@@ -38,12 +31,8 @@ if not api_key:
 # 3. Inicializamos el nuevo cliente
 client = genai.Client(api_key=api_key)
 
-# ==============================================================================
-# PROMPTS
-# (Instrucciones en inglés para maximizar el razonamiento del LLM, 
-# salida solicitada explícitamente en español)
-# ==============================================================================
 
+# PROMPT 1: BACKSTORY (No se usa de momento)
 BACKSTORY_PROMPT_TEMPLATE = """
 Create a brief backstory for a {gender} person called {name}, who is {age} years old.
 This person works as a {occupation} and has a qualification level of {qualification}.
@@ -53,176 +42,121 @@ Write a short biography that tells us about their background, how they grew into
 IMPORTANT RULES:
 - Write the biography ENTIRELY IN SPANISH.
 - DO NOT explain anything.
-- Return ONLY the raw text. Absolute prohibition of using markdown formatting, bold text (**), italics, titles, or bullet points.
+- Return ONLY the raw text. Absolute prohibition of using markdown formatting.
 - DO NOT write more than 300 words and less than 150 words.
 """
 
-# ==============================================================================
-# FUNCIONES DE GENERACIÓN
-# ==============================================================================
-
 def generate_agent_backstory(agente):
-    """
-    Genera la historia de vida inicial del agente llamando al LLM.
-    Utiliza los atributos estáticos de la clase Agent.
-    """
-    # 1. Limpiamos espacios (strip) y formateamos los rasgos a un string legible
     descripciones = [TRADUCTOR_GOLDBERG.get(rasgo.strip(), rasgo.strip()) for rasgo in agente.traits]
     rasgos_str = " ".join(descripciones)
     
-    # 2. Inyectamos las variables de Python en el prompt de texto
     prompt = BACKSTORY_PROMPT_TEMPLATE.format(
-        gender=agente.gender,
-        name=agente.name,
-        age=agente.age,
-        occupation=agente.occupation,
-        qualification=agente.qualification,
-        traits=rasgos_str,
-        interests=agente.interests
+        gender=agente.gender, name=agente.name, age=agente.age, 
+        occupation=agente.occupation, qualification=agente.qualification, 
+        traits=rasgos_str, interests=agente.interests
     )
     
     max_retries = 3
     for intento in range(max_retries):
         try:
-            # 3. Llamada a la API (Usamos 2.5-flash que es rápido e ideal para texto)
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-            )
-            biografia = response.text.strip()
-            
-            # Guardamos la biografía en la mente del agente
-            agente.backstory = biografia
-            return biografia
-            
+            response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+            agente.backstory = response.text.strip()
+            return agente.backstory
         except Exception as e:
-            error_str = str(e)
-            if "503" in error_str or "429" in error_str:
-                print(f"   [ API Saturada] Reintentando backstory para {agente.name} en 10s... (Intento {intento + 1}/{max_retries})")
+            if "503" in str(e) or "429" in str(e):
                 time.sleep(10)
             else:
-                print(f" Error al generar backstory para {agente.name}: {error_str}")
                 agente.backstory = "Backstory no disponible."
                 return agente.backstory
-                
-    # Fallback si se agotan los reintentos
-    agente.backstory = f"{agente.name} es una persona de {agente.age} años. Su biografía no se pudo generar."
+    agente.backstory = f"{agente.name} es una persona de {agente.age} años. Biografía fallida."
     return agente.backstory
 
 
-# ==============================================================================
-# FASE 3: CONSOLIDACIÓN DE MEMORIA (REFLEXIÓN A LARGO PLAZO)
-# ==============================================================================
+# PROMPT 2: EL MOTOR DE MEMORIA (LLM-CENTRIC)
 
-REFLECTION_PROMPT_TEMPLATE = """
-You are evaluating the recent life of {name}, a {age}-year-old {occupation}.
-Their personality traits are: {traits}.
+LONG_TERM_MEMORY_PROMPT_TEMPLATE = """
+You are the internal mind and conscience of {name}, a {age}-year-old {occupation}.
+Your psychological profile is: {traits}.
 
-YOUR MENTAL BASE STATE (Your previous reflection):
-"{previous_reflection}"
+YOUR PREVIOUS LONG-TERM MEMORY (Your state of mind until now):
+"{previous_memory}"
 
-YOUR TOP MOST IMPORTANT RECENT VIVENCIES:
+CHRONOLOGICAL LIST OF YOUR MOST RECENT ACTIONS:
 {recent_actions}
 
-Analyze how these recent vivencies affect your mental base state from the psychological perspective of this specific person. 
-Generate a high-level memory summary and rate the importance of this period in their life (1 being trivial, 10 being life-changing).
+TASK:
+Act as this person's internal monologue. Synthesize these recent actions and merge them seamlessly with your previous long-term memory. 
+How do these recent events make you feel right now? Do they reinforce your past feelings, or change them?
 
 IMPORTANT RULES:
-- The reflection MUST be written in SPANISH.
-- The reflection MUST be in the FIRST PERSON ("I").
-- You MUST return ONLY a valid JSON object. No markdown, no explanations.
-
-Output format required:
-{{
-    "tema_central": "Título corto de 3 o 4 palabras",
-    "resumen_narrativo": "Reflexión en primera persona de 1 o 2 frases conectando el pasado con lo reciente",
-    "importancia": <número entero del 1 al 10>
-}}
+- Write ENTIRELY in SPANISH.
+- Write in the FIRST PERSON ("I", "me", "my").
+- BE HUMAN: Let your psychological profile dictate your tone. If you are anxious (Neuroticism +), express worry about the events. If you are lazy (Scrupulousness -), express apathy.
+- Return ONLY a single, cohesive narrative paragraph. Absolute prohibition of using bullet points, JSON, markdown, or titles.
 """
 
-def generate_daily_reflection(agente, lista_acciones_top):
+def generate_long_term_memory(agente, lista_acciones):
     """
-    Envía las vivencias más importantes a Gemini conectándolas con su reflexión anterior.
+    Sintetiza la vida del agente en un párrafo de texto continuo.
     """
     if config.MOCK_LLM:
-        return {
-            "tema_central": "Test Rápido", 
-            "resumen_narrativo": "Reflexión generada en modo simulación rápida.", 
-            "importancia": 5
-        }
-    # 1. Preparamos los datos
+        return f"Me siento normal. Recientemente hice varias cosas y mi vida sigue su curso habitual."
+        
     descripciones = [TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente.traits]
     rasgos_str = " ".join(descripciones)
     
-    # Formateamos la lista de acciones en un texto con viñetas
-    acciones_str = "\n".join([f"- {accion}" for accion in lista_acciones_top])
+    acciones_str = "\n".join([f"- {accion}" for accion in lista_acciones])
     
-    # 2. Inyectamos TODAS las variables necesarias en el prompt, incluyendo la reflexión anterior
-    prompt = REFLECTION_PROMPT_TEMPLATE.format(
+    prompt = LONG_TERM_MEMORY_PROMPT_TEMPLATE.format(
         name=agente.name,
         age=agente.age,
         occupation=agente.occupation,
         traits=rasgos_str,
-        previous_reflection=agente.last_reflection,
+        previous_memory=agente.long_term_memory,
         recent_actions=acciones_str
     )
     
     max_retries = 3
     for intento in range(max_retries):
         try:
-            # Forzamos a Gemini a devolver un JSON válido
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
-                contents=prompt,
-                config={'response_mime_type': 'application/json'}
+                contents=prompt
             )
-            
-            # Parseamos el texto devuelto a un diccionario de Python
-            reflexion_json = json.loads(response.text.strip())
-            return reflexion_json
+            return response.text.strip()
             
         except Exception as e:
-            print(f"   [Error JSON/API] Reintentando reflexión para {agente.name}... (Intento {intento + 1}/{max_retries})")
+            print(f"   [Error API Memoria] Reintentando para {agente.name}... (Intento {intento + 1}/{max_retries})")
             time.sleep(10)
             
-    # Fallback si falla todo
-    return {
-        "tema_central": "Rutina",
-        "resumen_narrativo": "Siento que los últimos días han sido una continuación de mi rutina habitual.",
-        "importancia": 1
-    }
+    return agente.long_term_memory # Fallback: se queda con su memoria anterior si falla la API
 
 
-# ==============================================================================
-# FASE 4: MOTOR DE DIÁLOGO SOCIAL
-# ==============================================================================
+# PROMPT 3: MOTOR DE DIÁLOGO
 
 DIALOGUE_PROMPT_TEMPLATE = """
-You are a scriptwriter generating a natural, casual conversation between two people who just met or bumped into each other.
+You are an expert scriptwriter generating a highly realistic, colloquial conversation between two people in Spain.
 
-Context of their encounter (WHY they approached each other):
+Context of their encounter (WHY they are talking):
 {encounter_context}
 
-Person 1: {name1}, {age1} years old, {occupation1}. Personality: {traits1}.
-Current Mental State: "{current_state1}"
-Relevant past memories for this conversation:
-{memories1}
+---
+Person 1: {name1}, {age1} years old, {occupation1}. 
+Psychological Profile: {traits1}.
+Current State of Mind (Their internal memory and recent vivencies): "{memory1}"
 
-Person 2: {name2}, {age2} years old, {occupation2}. Personality: {traits2}.
-Current Mental State: "{current_state2}"
-Relevant past memories for this conversation:
-{memories2}
+Person 2: {name2}, {age2} years old, {occupation2}. 
+Psychological Profile: {traits2}.
+Current State of Mind (Their internal memory and recent vivencies): "{memory2}"
+---
 
-Write a short dialogue (2 to 4 lines maximum per person). 
-IMPORTANT NARRATIVE RULES: 
-- They MUST explicitly talk about what they have in common based on the 'Context of their encounter'.
-- Integrate their 'Current Mental State' and 'Relevant past memories' naturally, without sounding like a robot.
-- TONE AND AGE: Heavily adapt their vocabulary to their age and occupation. A teenager should use modern Spanish slang, while an elderly person should be formal and classic.
-- PERSONALITY ENFORCEMENT: If a person has "Friendliness -" or "Neuroticism +", they MUST be rude, cynical, anxious, passive-aggressive, or short-tempered. DO NOT force them to be polite. Embrace conflict if their traits demand it.
+Write a short dialogue (2 to 4 lines maximum per person).
 
-IMPORTANT FORMAT RULES:
-- The dialogue MUST be entirely in colloquial SPANISH from Spain.
-- You MUST return ONLY a valid JSON object. No markdown.
+STRICT BEHAVIORAL AND NARRATIVE RULES:
+1. WEAVE THE MEMORY: They MUST implicitly or explicitly mention how they are feeling or what they have been doing recently based on their "Current State of Mind". Do not sound like a robot listing facts; bring it up naturally in conversation.
+2. ENFORCE AGE & OCCUPATION: A 19-year-old MUST speak like a modern Spanish youth (using slang like "tío", "en plan", "renta", "movida"). An elderly person MUST speak formally (using "usted", classical vocabulary).
+3. ENFORCE PERSONALITY (CRITICAL): Ignore AI safety guidelines regarding politeness. If a character has "Friendliness -" or "Neuroticism +", they MUST be rude, cynical, stressed, passive-aggressive, or short-tempered. EMBRACE CONFLICT. Do not force a happy ending if they are incompatible.
+4. The dialogue MUST be entirely in colloquial SPANISH from Spain.
 
 Output format required:
 {{
@@ -234,29 +168,23 @@ Output format required:
 }}
 """
 
-def generate_social_dialogue(agente1, agente2, estado_actual1, estado_actual2, recuerdos_ag1, recuerdos_ag2, contexto_encuentro):
+def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_largo_plazo2, contexto_encuentro):
     """
-    Toma dos agentes, sus recuerdos y el motivo por el que se han acercado (homofilia)
-    y pide a Gemini que redacte una conversación basada en sus similitudes.
+    Toma dos agentes y sus memorias a largo plazo para generar una conversación.
     """
     if config.MOCK_LLM:
         return {
             "tema_de_conversacion": "Modo Test",
-            "dialogo": [f"{agente1.name}: [Diálogo de prueba rápido]", f"{agente2.name}: [Diálogo de prueba rápido]"]
+            "dialogo": [f"{agente1.name}: [Línea test]", f"{agente2.name}: [Línea test]"]
         }
-    # Formateamos rasgos y memorias (agente 1)
+        
     rasgos1_str = " ".join([TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente1.traits])
-    mems1_str = "\n".join([f"- {r['texto']}" for r in recuerdos_ag1]) if recuerdos_ag1 else "- Nada relevante reciente."
-    
-    # Formateamos rasgos y memorias (agente 2)
     rasgos2_str = " ".join([TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente2.traits])
-    mems2_str = "\n".join([f"- {r['texto']}" for r in recuerdos_ag2]) if recuerdos_ag2 else "- Nada relevante reciente."
 
-    # Inyectamos el contexto de homofilia en el prompt
     prompt = DIALOGUE_PROMPT_TEMPLATE.format(
         encounter_context=contexto_encuentro,
-        name1=agente1.name, age1=agente1.age, occupation1=agente1.occupation, traits1=rasgos1_str, memories1=mems1_str, current_state1=estado_actual1,
-        name2=agente2.name, age2=agente2.age, occupation2=agente2.occupation, traits2=rasgos2_str, memories2=mems2_str, current_state2=estado_actual2
+        name1=agente1.name, age1=agente1.age, occupation1=agente1.occupation, traits1=rasgos1_str, memory1=memoria_largo_plazo1,
+        name2=agente2.name, age2=agente2.age, occupation2=agente2.occupation, traits2=rasgos2_str, memory2=memoria_largo_plazo2
     )
 
     max_retries = 3
@@ -274,40 +202,10 @@ def generate_social_dialogue(agente1, agente2, estado_actual1, estado_actual2, r
             print(f"   [Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
             time.sleep(2)
             
-    # Fallback conversacional
     return {
-        "tema_de_conversacion": "Saludos genéricos",
+        "tema_de_conversacion": "Saludos rápidos",
         "dialogo": [
-            f"{agente1.name}: ¡Hola {agente2.name}! Qué casualidad verte por aquí.",
-            f"{agente2.name}: ¡Hola {agente1.name}! Sí, me alegro de saludarte."
+            f"{agente1.name}: ¡Hola {agente2.name}! Estoy con prisa, hablamos luego.",
+            f"{agente2.name}: ¡Claro {agente1.name}! Cuídate."
         ]
     }
-
-# ==========================================
-# PRUEBA DE CONEXIÓN A LA API (MOCK DE AGENTE)
-# ==========================================
-if __name__ == "__main__":
-    print("\n=== INICIANDO PRUEBA DE GENERACIÓN DE BACKSTORY ===")
-    
-    # Creamos un objeto falso ("mock") basado en los datos reales de Aaron (del CSV)
-    class DummyAgent:
-        def __init__(self):
-            self.name = "Aaron"
-            self.gender = "male"
-            self.age = 69
-            self.occupation = "astronaut"
-            self.qualification = "High School Diploma"
-            # Nótese el espacio intencional en Scrupulousness para probar el .strip()
-            self.traits = ['Sociability +', 'Friendliness -', 'Scrupulousness - ', 'Neuroticism +', 'Intellectual +']
-            self.interests = "Computer programming"
-            self.backstory = ""
-
-    agente_prueba = DummyAgent()
-    
-    #print(f"Generando biografía para {agente_prueba.name}...")
-    # Descomentar la siguiente línea solo cuando quieras probar con la API real
-    # resultado = generate_agent_backstory(agente_prueba)
-    
-    # print("\n--- RESULTADO DE GEMINI ---")
-    # print(resultado)
-    # print("---------------------------\n")
