@@ -8,7 +8,7 @@ class Agent:
         self.social_activity = float(social_activity)
         self.traits = traits_list
         
-        # NUEVO: EDAD Y GRUPO DEMOGRÁFICO (INE)
+        # NUEVO: EDAD Y GRUPO DEMOGRÁFICO 
         self.age = int(age)
         self.age_group = self._calculate_age_group(self.age)
 
@@ -61,7 +61,7 @@ class Agent:
         self._apply_traits()
 
     def _calculate_age_group(self, age):
-        """Asigna el rango de edad oficial del INE basado en la edad entera."""
+        """Asigna el rango de edad"""
         if age < 16:
             return "16-"
         elif 16 <= age <= 24:
@@ -104,16 +104,26 @@ class Agent:
                         for state, mult in rules["markov_weight_modifiers"].items():
                             self.markov_modifiers[state] = self.markov_modifiers.get(state, 1.0) * mult
 
-    def update_memory(self, new_state, location_name, turno_global, motor_semantico):
+    def update_memory(self, new_state, location_name, turno_global):
         """Gestiona la memoria a corto plazo. Acumula acciones en silencio."""
         if new_state != self.current_state:
             recuerdo_pasado = self.short_term_memory
             
-            importancia_base = 3 
-            if "SOCIAL" in self.current_state:
-                importancia_base = 7
-            elif self.current_state == "DORMIR":
+            #CÁLCULO DE IMPORTANCIA DINÁMICA
+            if self.current_state == "DORMIR":
                 importancia_base = 1
+            else:
+                # 1. Partimos de una importancia media
+                base = 4.0 
+                if "SOCIAL" in self.current_state:
+                    base = 6.0 
+                
+                # 2. Multiplicamos por la afinidad personal del agente a este estado
+                afinidad_personal = self.markov_modifiers.get(self.current_state, 1.0)
+                importancia_calculada = int(base * afinidad_personal)
+                
+                # 3. Limitamos matemáticamente para que nunca se salga del rango 1-10
+                importancia_base = max(1, min(10, importancia_calculada))
                 
             # Guardamos la acción en el búfer con sus datos matemáticos
             self.action_buffer.append({

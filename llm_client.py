@@ -214,10 +214,14 @@ Relevant past memories for this conversation:
 {memories2}
 
 Write a short dialogue (2 to 4 lines maximum per person). 
-IMPORTANT NARRATIVE RULE: They MUST explicitly talk about what they have in common based on the 'Context of their encounter' provided above. They should weave their 'Current Mental State' and 'Relevant past memories' into the conversation naturally.
+IMPORTANT NARRATIVE RULES: 
+- They MUST explicitly talk about what they have in common based on the 'Context of their encounter'.
+- Integrate their 'Current Mental State' and 'Relevant past memories' naturally, without sounding like a robot.
+- TONE AND AGE: Heavily adapt their vocabulary to their age and occupation. A teenager should use modern Spanish slang, while an elderly person should be formal and classic.
+- PERSONALITY ENFORCEMENT: If a person has "Friendliness -" or "Neuroticism +", they MUST be rude, cynical, anxious, passive-aggressive, or short-tempered. DO NOT force them to be polite. Embrace conflict if their traits demand it.
 
 IMPORTANT FORMAT RULES:
-- The dialogue MUST be entirely in SPANISH.
+- The dialogue MUST be entirely in colloquial SPANISH from Spain.
 - You MUST return ONLY a valid JSON object. No markdown.
 
 Output format required:

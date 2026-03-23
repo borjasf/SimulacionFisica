@@ -50,7 +50,7 @@ def calculate_homophily_score(agent_a, agent_b):
         match_reasons.append("Ambos tienen personalidades muy extrovertidas y sociables.")
 
     # --- EVALUACIÓN FINAL ---
-    # Ya no usamos THRESHOLD rígido. Devolvemos los puntos y dejamos que social_engine calcule la probabilidad.
+    # Ya no uso THRESHOLD rígido. Devolvemos los puntos y dejamos que social_engine calcule la probabilidad.
     if match_reasons:
         contexto_llm = "Se han acercado porque " + " ".join(match_reasons)
     else:

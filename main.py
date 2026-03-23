@@ -76,6 +76,7 @@ def run_simulation():
                 estados_posibles
             )
             
+            #UNICAMENTE SEPARA LA ACCION DE RRSS EN USAR, SEGUIR, SALIR PARA AYUDAR A LA PARTE VIRTUAL.
             accion_virtual = evaluate_virtual_action(estado_anterior, nuevo_estado)
             
             # 4. DECISIÓN ESPACIAL (G-EPR: Gravedad + Retorno Preferencial + Edades)
@@ -106,11 +107,10 @@ def run_simulation():
                     # Actualizamos la memoria espacial del agente
                     agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
                     agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
-
                     agente.current_location_name = destino_id
                     
                     # Formateamos el texto para la consola
-                    tipo_visita = "🌟 NUEVO" if es_nuevo else "🔄 HABITUAL"
+                    tipo_visita = " [NUEVO] " if es_nuevo else " [HABITUAL] "
                     mensaje_espacial = f" -> Se desplaza a: {destino_id} ({tipo_visita})"
                     lugar_memoria = destino_id # <-- 2. Guardamos el nombre del lugar público
                     
@@ -118,21 +118,20 @@ def run_simulation():
             elif nuevo_estado in ["DORMIR", "INACTIVO_RELAX", "INACTIVO_TAREAS_CASA"]:
                 if agente.current_coords != agente.home_coords:
                     agente.current_coords = agente.home_coords
-                    mensaje_espacial = " -> 🏠 Vuelve a casa"
+                    mensaje_espacial = " -> Vuelve a casa"
                 else:
-                    mensaje_espacial = " -> 🏠 Permanece en casa"
+                    mensaje_espacial = " -> Se queda en casa"
                 
                 agente.current_location_name = "Casa"
                 lugar_memoria = "Casa" # <-- 3. Guardamos que está en casa
             
             # Nota: Si el estado es "OCIO_SOCIAL_CONVERSAR" u otros genéricos, 
             # el lugar_memoria se quedará como "su ubicación actual"
-            # ---> AÑADE ESTAS DOS LÍNEAS AQUÍ <---
             if lugar_memoria != "su ubicación actual":
                 agente.id_lugar_actual = lugar_memoria
             
             # Llama a la memoria para acumular, pero ya no procesa el resultado
-            agente.update_memory(nuevo_estado, lugar_memoria, turno_global, motor_semantico)
+            agente.update_memory(nuevo_estado, lugar_memoria, turno_global)
             
             # 5. Actualizamos el estado cognitivo
             agente.update_state(nuevo_estado)
@@ -140,21 +139,21 @@ def run_simulation():
             # 6. Imprimimos el evento completo por consola (SOLO SI PRINT_LOGS ES TRUE)
             if config.PRINT_LOGS:
                 if accion_virtual != "ACCION_FISICA":
-                    print(f"[Turno {turno_global}] 📱 [VIRTUAL] {agente.name} ({agente.age_group}) -> {accion_virtual} | {nuevo_estado}{mensaje_espacial}")
+                    print(f"[Turno {turno_global}] [VIRTUAL] {agente.name} ({agente.age_group}) -> {accion_virtual} | {nuevo_estado}{mensaje_espacial}")
                 else:
-                    print(f"[Turno {turno_global}] 🚶 [FÍSICO]  {agente.name} ({agente.age_group}) -> {nuevo_estado}{mensaje_espacial}")
+                    print(f"[Turno {turno_global}] [FÍSICO]  {agente.name} ({agente.age_group}) -> {nuevo_estado}{mensaje_espacial}")
 
-            # --- EL ENCUENTRO Y EL DIÁLOGO SOCIAL ---
+            # EL ENCUENTRO Y EL DIÁLOGO SOCIAL
             if nuevo_estado == "OCIO_SOCIAL_CONVERSAR":
                 social_engine.process_encounter(agente, agentes, motor_semantico, turno_global)
 
-            # --- NUEVO: PARADA AUTOMÁTICA ---
+            #PARADA AUTOMÁTICA
             if config.MAX_TURNS > 0 and turno_global > config.MAX_TURNS:
                 break # Rompe el bucle a la velocidad de la luz cuando llegue al tope
 
             turno_global += 1
             
-            # EL TRUCO PARA IR RÁPIDO: Solo pausa si estamos viendo los logs
+            #Solo pausa si estamos viendo los logs
             if config.PRINT_LOGS:
                 time.sleep(config.SLEEP_TICK)
             
@@ -163,20 +162,19 @@ def run_simulation():
         print("\n\n [!] Simulación detenida manualmente (Ctrl+C).")
         
     except Exception as e:
-        # ¡ESTA ES LA MAGIA! Si el programa falla, ahora te dirá por qué.
-        print(f"\n\n ❌ [ERROR CRÍTICO] La simulación se ha estrellado en el turno {turno_global}!")
+        print(f"\n\n [ERROR CRÍTICO] La simulación se ha estrellado en el turno {turno_global}!")
         print(f" Motivo del error: {e}\n")
         import traceback
-        traceback.print_exc() # Esto imprimirá la línea exacta del fallo
+        traceback.print_exc() #línea exacta del fallo
         
     finally:
         # =================================================================
         # GENERACIÓN DEL INFORME ESTADÍSTICO PARA EL TRIBUNAL
         # =================================================================
         print("\n" + "="*60)
-        print("📊 INFORME ESTADÍSTICO DE LA SIMULACIÓN 📊")
+        print("INFORME ESTADÍSTICO DE LA SIMULACIÓN")
         print("="*60)
-        print(f"⏱️ Turnos totales simulados: {turno_global - 1}")
+        print(f"Turnos totales simulados: {turno_global - 1}")
         
         # Métrica 1: BIOLOGÍA Y MARKOV
         global_states = {}

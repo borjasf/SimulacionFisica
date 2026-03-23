@@ -20,7 +20,7 @@ MAX_RETRIEVED_MEMORIES = 3  # Número máximo de recuerdos a inyectar en el prom
 # --- CONSTANTES DE RED SOCIAL Y PROBABILIDAD (MODELO CONTINUO) ---
 # Probabilidades de interacción al cruzarse
 FRIEND_INTERACTION_PROB = 0.85      # Probabilidad base de que dos amigos se paren a hablar (85%)
-MIN_INTERACTION_PROB = 0.10         # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
+MIN_INTERACTION_PROB = 0.5         # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
 MAX_INTERACTION_PROB = 0.95         # Techo probabilístico: Límite máximo para desconocidos afines (95%)
 
 # Multiplicadores
@@ -29,6 +29,6 @@ FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos li
 
 
 # --- MODO TESTER / DEBUG ---
-MOCK_LLM = True          # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
-PRINT_LOGS = False        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
+MOCK_LLM = False          # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
+PRINT_LOGS = True        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
 MAX_TURNS = 10000         # Si es > 0, la simulación se detendrá sola al llegar a este turno

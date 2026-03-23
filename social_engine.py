@@ -55,11 +55,10 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
             
             # 3. Asignamos la PROBABILIDAD de interactuar
             if son_amigos:
-                probabilidad = config.FRIEND_INTERACTION_PROB  # 85% de probabilidad de pararse a hablar con un amigo
+                probabilidad = config.FRIEND_INTERACTION_PROB  # Probabilidad de pararse a hablar con un amigo
                 puntuacion += config.FRIEND_PRIORITY_BONUS    # Subimos su nota para que gane si hay varias personas
             else:
                 prob_calculada = puntuacion * config.HOMOPHILY_PROB_MULTIPLIER
-                # Corrección: Usamos prob_calculada en lugar de puntuacion / 100.0
                 probabilidad = max(config.MIN_INTERACTION_PROB, min(config.MAX_INTERACTION_PROB, prob_calculada))
                 
             # 4. Tiramos los dados virtuales
@@ -129,7 +128,7 @@ def process_encounter(agent, agents, semantic_engine, global_turn):
                 agent_memories, companion_memories, context
             )
 
-            # --- NUEVA LÓGICA: SE HACEN AMIGOS TRAS HABLAR ---
+            # NUEVA LÓGICA: SE HACEN AMIGOS TRAS HABLAR
             if str(companion.id) not in agent.amigos:
                 agent.amigos.append(str(companion.id))
             if str(agent.id) not in companion.amigos:
