@@ -63,13 +63,15 @@ class Agent:
         """Asigna el rango de edad según estándares demográficos."""
         if age < 16:
             return "16-"
-        elif 16 <= age <= 24:
+        elif 16 <= age <= 24: #LA ONU DEFINE JÓVENES HASTA LOS 24 AÑOS, INCLUIDOS
             return "16-24"
-        elif 25 <= age <= 54:
-            return "25-54"
-        elif 55 <= age <= 64:
-            return "55-64"
-        else:
+        #Uno de los autores más utilizados es Daniel Levinson, que estudió las etapas de la vida adulta y 
+        #propuso transiciones importantes alrededor de los 40–45 años, marcando el paso de la adultez temprana a la media.
+        elif 25 <= age <= 44:
+            return "25-44"
+        elif 45 <= age <= 64:
+            return "45-64"
+        else: # En españa la edad de jubilación con más de 38 años cotizados es de 65 años.
             return "65+"
 
     def _apply_traits(self):

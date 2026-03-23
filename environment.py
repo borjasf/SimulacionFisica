@@ -5,43 +5,43 @@ import matplotlib.pyplot as plt
 MAPA_CIUDAD = {
     "Oficina_Centro": {
         "coords": (50, 50), "tipo": "TRABAJAR_ESTUDIAR", 
-        "atractivo_por_edad": {"16-": 0.0, "16-24": 20.0, "25-54": 90.0, "55-64": 60.0, "65+": 0.0}
+        "atractivo_por_edad": {"16-": 0.0, "16-24": 20.0, "25-44": 90.0, "45-64": 60.0, "65+": 0.0}
     },
     "Universidad_Norte": {
         "coords": (50, 90), "tipo": "TRABAJAR_ESTUDIAR", 
-        "atractivo_por_edad": {"16-": 0.0, "16-24": 95.0, "25-54": 30.0, "55-64": 10.0, "65+": 0.0}
+        "atractivo_por_edad": {"16-": 0.0, "16-24": 95.0, "25-44": 30.0, "45-64": 10.0, "65+": 0.0}
     },
     "Instituto_Sur": { 
         "coords": (20, 20), "tipo": "TRABAJAR_ESTUDIAR", 
-        "atractivo_por_edad": {"16-": 100.0, "16-24": 10.0, "25-54": 15.0, "55-64": 10.0, "65+": 0.0}
+        "atractivo_por_edad": {"16-": 100.0, "16-24": 10.0, "25-44": 15.0, "45-64": 10.0, "65+": 0.0}
     },
     "Plaza_Mayor": {
         "coords": (48, 52), "tipo": "OCIO_SOCIAL_SITIO", 
-        "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-54": 70.0, "55-64": 60.0, "65+": 80.0}
+        "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 70.0, "45-64": 60.0, "65+": 80.0}
     },
     "Bar_Manolo": {
         "coords": (10, 15), "tipo": "OCIO_SOCIAL_SITIO", 
-        "atractivo_por_edad": {"16-": 0.0, "16-24": 40.0, "25-54": 80.0, "55-64": 90.0, "65+": 70.0}
+        "atractivo_por_edad": {"16-": 0.0, "16-24": 40.0, "25-44": 80.0, "45-64": 90.0, "65+": 70.0}
     },
     "Discoteca_Sur": {
         "coords": (80, 10), "tipo": "OCIO_SOCIAL_SITIO", 
-        "atractivo_por_edad": {"16-": 0.0, "16-24": 100.0, "25-54": 50.0, "55-64": 5.0, "65+": 0.0}
+        "atractivo_por_edad": {"16-": 0.0, "16-24": 100.0, "25-44": 50.0, "45-64": 5.0, "65+": 0.0}
     },
     "Centro_Jubilados": { 
         "coords": (70, 70), "tipo": "OCIO_SOCIAL_SITIO", 
-        "atractivo_por_edad": {"16-": 0.0, "16-24": 0.0, "25-54": 5.0, "55-64": 50.0, "65+": 100.0}
+        "atractivo_por_edad": {"16-": 0.0, "16-24": 0.0, "25-44": 5.0, "45-64": 50.0, "65+": 100.0}
     },
     "Cafeteria_Tranquila": { 
         "coords": (30, 60), "tipo": "OCIO_SOCIAL_SITIO", 
-        "atractivo_por_edad": {"16-": 10.0, "16-24": 30.0, "25-54": 60.0, "55-64": 80.0, "65+": 90.0}
+        "atractivo_por_edad": {"16-": 10.0, "16-24": 30.0, "25-44": 60.0, "45-64": 80.0, "65+": 90.0}
     },
     "Polideportivo": {
         "coords": (20, 80), "tipo": "OCIO_INDIVIDUAL", 
-        "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-54": 60.0, "55-64": 30.0, "65+": 10.0}
+        "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 60.0, "45-64": 30.0, "65+": 10.0}
     },
     "Parque_Central": {
         "coords": (55, 45), "tipo": "OCIO_INDIVIDUAL", 
-        "atractivo_por_edad": {"16-": 90.0, "16-24": 40.0, "25-54": 70.0, "55-64": 60.0, "65+": 90.0}
+        "atractivo_por_edad": {"16-": 90.0, "16-24": 40.0, "25-44": 70.0, "45-64": 60.0, "65+": 90.0}
     }
 }
 
