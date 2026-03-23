@@ -193,7 +193,9 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
-                config={'response_mime_type': 'application/json'}
+                config={'response_mime_type': 'application/json',
+                        'temperature': 0.0 #Recomendación de SimBench
+                }
             )
             dialogo_json = json.loads(response.text.strip())
             return dialogo_json

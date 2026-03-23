@@ -5,49 +5,58 @@ import random
 # OCIO_SOCIAL_CONVERSAR solo es accesible (salvo excepciones del 0%) desde OCIO_SOCIAL_SITIO.
 TRANSITION_MATRIX = {
     "DORMIR": {
+        # Te despiertas: Lo normal es ir a trabajar/estudiar, o relajarte/tareas si es finde.
         "DORMIR": 0.0, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.45, 
-        "INACTIVO_RELAX": 0.15, "INACTIVO_TAREAS_CASA": 0.10, "OCIO_INDIVIDUAL": 0.05, 
-        "OCIO_SOCIAL_SITIO": 0.10, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.13
+        "INACTIVO_RELAX": 0.20, "INACTIVO_TAREAS_CASA": 0.15, "OCIO_INDIVIDUAL": 0.05, 
+        "OCIO_SOCIAL_SITIO": 0.03, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.10
     },
     "COMER_BEBER": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.0, "TRABAJAR_ESTUDIAR": 0.15, 
-        "INACTIVO_RELAX": 0.25, "INACTIVO_TAREAS_CASA": 0.15, "OCIO_INDIVIDUAL": 0.10, 
-        "OCIO_SOCIAL_SITIO": 0.14, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.20
+        # Terminas de comer: Vuelves al trabajo, o te echas a relajar (la siesta/descanso).
+        "DORMIR": 0.01, "COMER_BEBER": 0.0, "TRABAJAR_ESTUDIAR": 0.25, 
+        "INACTIVO_RELAX": 0.25, "INACTIVO_TAREAS_CASA": 0.10, "OCIO_INDIVIDUAL": 0.15, 
+        "OCIO_SOCIAL_SITIO": 0.10, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.14
     },
     "TRABAJAR_ESTUDIAR": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.05, 
-        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.10, "OCIO_INDIVIDUAL": 0.10, 
-        "OCIO_SOCIAL_SITIO": 0.25, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.17
+        # Terminas la jornada laboral: Estás cansado. Te vas a casa a relajarte o quedas en un sitio.
+        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.0, 
+        "INACTIVO_RELAX": 0.35, "INACTIVO_TAREAS_CASA": 0.15, "OCIO_INDIVIDUAL": 0.15, 
+        "OCIO_SOCIAL_SITIO": 0.20, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.12
     },
     "INACTIVO_RELAX": {
-        "DORMIR": 0.02, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.05, 
-        "INACTIVO_RELAX": 0.15, "INACTIVO_TAREAS_CASA": 0.15, "OCIO_INDIVIDUAL": 0.10, 
-        "OCIO_SOCIAL_SITIO": 0.16, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.35
+        # Terminas de relajarte: Ya tienes energía para hacer tareas de casa, salir o mirar el móvil.
+        "DORMIR": 0.02, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.15, 
+        "INACTIVO_RELAX": 0.0, "INACTIVO_TAREAS_CASA": 0.20, "OCIO_INDIVIDUAL": 0.20, 
+        "OCIO_SOCIAL_SITIO": 0.21, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.20
     },
     "INACTIVO_TAREAS_CASA": {
-        "DORMIR": 0.02, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.05, 
-        "INACTIVO_RELAX": 0.35, "INACTIVO_TAREAS_CASA": 0.05, "OCIO_INDIVIDUAL": 0.10, 
-        "OCIO_SOCIAL_SITIO": 0.15, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.26
+        # Limpiar cansa: Lo normal es tirarse a relajarse o mirar el móvil al terminar.
+        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.10, 
+        "INACTIVO_RELAX": 0.35, "INACTIVO_TAREAS_CASA": 0.0, "OCIO_INDIVIDUAL": 0.15, 
+        "OCIO_SOCIAL_SITIO": 0.20, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.17
     },
     "OCIO_INDIVIDUAL": {
-        "DORMIR": 0.02, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.10, 
-        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.10, "OCIO_INDIVIDUAL": 0.01, 
-        "OCIO_SOCIAL_SITIO": 0.25, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.20
+        # Vuelves del gimnasio/parque: A casa a relajarte o sigues por ahí.
+        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.10, 
+        "INACTIVO_RELAX": 0.35, "INACTIVO_TAREAS_CASA": 0.15, "OCIO_INDIVIDUAL": 0.0, 
+        "OCIO_SOCIAL_SITIO": 0.20, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.17
     },
     "OCIO_SOCIAL_SITIO": {
+        # Estás en un local/plaza: ALTA probabilidad de ponerse a conversar, o te vas a casa.
         "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.05, 
-        "INACTIVO_RELAX": 0.25, "INACTIVO_TAREAS_CASA": 0.05, "OCIO_INDIVIDUAL": 0.05, 
-        "OCIO_SOCIAL_SITIO": 0.15, "OCIO_SOCIAL_CONVERSAR": 0.30, "USANDO_RRSS": 0.12
+        "INACTIVO_RELAX": 0.12, "INACTIVO_TAREAS_CASA": 0.05, "OCIO_INDIVIDUAL": 0.05, 
+        "OCIO_SOCIAL_SITIO": 0.10, "OCIO_SOCIAL_CONVERSAR": 0.55, "USANDO_RRSS": 0.05
     },
     "OCIO_SOCIAL_CONVERSAR": {
+        # Acaba la charla: Te quedas en el sitio pero sin hablar, o te vas a tu casa a relajarte.
         "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.05, 
-        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.05, "OCIO_INDIVIDUAL": 0.05, 
-        "OCIO_SOCIAL_SITIO": 0.25, "OCIO_SOCIAL_CONVERSAR": 0.15, "USANDO_RRSS": 0.12
+        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.05, "OCIO_INDIVIDUAL": 0.10, 
+        "OCIO_SOCIAL_SITIO": 0.30, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.17
     },
     "USANDO_RRSS": {
-        "DORMIR": 0.02, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.10, 
-        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.10, "OCIO_INDIVIDUAL": 0.10, 
-        "OCIO_SOCIAL_SITIO": 0.20, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.16
+        # Dejas el móvil: A relajarte, a hacer tareas o a salir.
+        "DORMIR": 0.02, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.15, 
+        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.20, "OCIO_INDIVIDUAL": 0.15, 
+        "OCIO_SOCIAL_SITIO": 0.16, "OCIO_SOCIAL_CONVERSAR": 0.0, "USANDO_RRSS": 0.0
     }
 }
 

@@ -16,6 +16,9 @@ import biological_engine
 import config
 import social_engine
 
+from agent import Agent
+
+
 def run_simulation():
     print("Iniciando la inicialización del ecosistema...")
     
@@ -31,6 +34,14 @@ def run_simulation():
         print("No hay agentes. Saliendo...")
         sys.exit()
 
+    agentes = [
+        Agent(
+            agent_id=999, name="Sujeto_Control", social_activity=50, 
+            traits_list=[], age=30, gender="male", occupation="Oficinista", 
+            qualification="Grado", interests="Nada"
+        )
+    ]
+
     # NUEVA LÓGICA DE AMISTAD
     print("Cargando la red social de amistades...")
     load_friendships_from_csv(agentes, "friendships.csv")
@@ -39,6 +50,7 @@ def run_simulation():
     print("Generando el entorno urbano...")
     casas_ciudad = environment.assign_homes(agentes)
 
+    
     # Calculamos las papeletas para la lotería de turnos (Raíz cuadrada + Suavizado de Laplace)
     pesos_actividad = [(math.sqrt(agente.social_activity) + 1) for agente in agentes]
 
@@ -85,7 +97,7 @@ def run_simulation():
             lugar_memoria = "su ubicación actual" # <-- 1. Variable por defecto para la memoria
             
             # Si el agente va a un destino público (NUEVOS ESTADOS)
-            if nuevo_estado in ["OCIO_SOCIAL_SITIO", "OCIO_INDIVIDUAL"]:
+            if nuevo_estado in ["OCIO_SOCIAL_SITIO", "OCIO_INDIVIDUAL", "TRABAJAR_ESTUDIAR"]:
                 
                 # Filtramos el mapa para darle solo las opciones viables
                 lugares_posibles = environment.get_places_by_type(nuevo_estado)

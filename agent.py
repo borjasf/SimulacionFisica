@@ -65,8 +65,8 @@ class Agent:
             return "16-"
         elif 16 <= age <= 24: #LA ONU DEFINE JÓVENES HASTA LOS 24 AÑOS, INCLUIDOS
             return "16-24"
-        #Uno de los autores más utilizados es Daniel Levinson, que estudió las etapas de la vida adulta y 
-        #propuso transiciones importantes alrededor de los 40–45 años, marcando el paso de la adultez temprana a la media.
+        #Daniel Levinson estudió las etapas de la vida adulta y propuso transiciones importantes alrededor de los 40–45 años,
+        # marcando el paso de la adultez temprana a la media.
         elif 25 <= age <= 44:
             return "25-44"
         elif 45 <= age <= 64:
