@@ -35,6 +35,46 @@ def run_simulation():
         )
     ]"""
 
+    # LISTA DE AGENTES ESTRATÉGICOS PARA EL TEST DE TURÍNG PHYGITAL
+    agentes = [
+        Agent(
+            agent_id=1, name="James", social_activity=80, 
+            traits_list=["Sociability +", "Neuroticism +", "Openness +"], 
+            age=20, gender="male", occupation="Estudiante de Ingeniería", 
+            qualification="Grado", interests="Física, Videojuegos, Café"
+        ),
+        Agent(
+            agent_id=2, name="Benjamin", social_activity=40, 
+            traits_list=["Sociability -", "Conscientiousness +", "Amiability +"], 
+            age=45, gender="male", occupation="Arquitecto", 
+            qualification="Máster", interests="Diseño, Lectura, Silencio"
+        ),
+        Agent(
+            agent_id=3, name="Clara", social_activity=70, 
+            traits_list=["Sociability +", "Openness +", "Amiability -"], 
+            age=28, gender="female", occupation="Artista Freelance", 
+            qualification="Grado", interests="Pintura, Museos, Redes Sociales"
+        ),
+        Agent(
+            agent_id=4, name="Ricardo", social_activity=30, 
+            traits_list=["Sociability -", "Conscientiousness +", "Neuroticism -"], 
+            age=68, gender="male", occupation="Jubilado", 
+            qualification="Doctorado", interests="Ajedrez, Pasear"
+        ),
+        Agent(
+            agent_id=5, name="Elena", social_activity=90, 
+            traits_list=["Sociability +", "Amiability +", "Conscientiousness -"], 
+            age=24, gender="female", occupation="Camarera", 
+            qualification="Bachillerato", interests="Música, Conciertos, Viajar"
+        ),
+        Agent(
+            agent_id=6, name="Lucas", social_activity=55, 
+            traits_list=["Neuroticism +", "Conscientiousness -", "Openness -"], 
+            age=32, gender="male", occupation="Administrativo", 
+            qualification="FP", interests="Series, Descansar, Fútbol"
+        )
+    ]
+
     # NUEVA LÓGICA DE AMISTAD
     print("Cargando la red social de amistades...")
     load_friendships_from_csv(agentes, "friendships.csv")
@@ -154,7 +194,8 @@ def run_simulation():
             
             # ESTADO SECUNDARIO / MULTITAREA
             
-            nuevo_estado_secundario = markov_engine.evaluate_secondary_state(nuevo_estado_primario)
+            # <-- AQUÍ ESTÁ EL CAMBIO CLAVE -->
+            nuevo_estado_secundario = markov_engine.evaluate_secondary_state(agente, nuevo_estado_primario)
             
             # Si el motor secundario dictamina que quiere charlar
             if nuevo_estado_secundario == "CONVERSAR":

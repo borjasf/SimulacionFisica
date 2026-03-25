@@ -56,10 +56,26 @@ def get_markov_probabilities(current_primary_state):
         current_primary_state = "INACTIVO_RELAX"
     return list(TRANSITION_MATRIX[current_primary_state].keys()), list(TRANSITION_MATRIX[current_primary_state].values())
 
-def evaluate_secondary_state(primary_state):
-    """Lanza los dados para ver si el agente decide activar un hilo secundario."""
-    probs = SECONDARY_PROBABILITIES.get(primary_state, {"NINGUNO": 1.0})
-    return random.choices(list(probs.keys()), weights=list(probs.values()), k=1)[0]
+def evaluate_secondary_state(agente, primary_state):
+    """
+    Lanza los dados para ver si el agente decide activar un hilo secundario,
+    aplicando sus modificadores de personalidad.
+    """
+    probs_dict = SECONDARY_PROBABILITIES.get(primary_state, {"NINGUNO": 1.0})
+    
+    estados_secundarios = list(probs_dict.keys())
+    pesos_base = list(probs_dict.values())
+    
+    pesos_personalizados = []
+    for i in range(len(estados_secundarios)):
+        estado_evaluado = estados_secundarios[i]
+        peso_original = pesos_base[i]
+        
+        # Extraemos el multiplicador del agente (1.0 si no tiene rasgo que lo altere)
+        multiplicador = agente.markov_modifiers.get(estado_evaluado, 1.0)
+        pesos_personalizados.append(peso_original * multiplicador)
+
+    return random.choices(estados_secundarios, weights=pesos_personalizados, k=1)[0]
 
 def evaluate_virtual_action(current_sec, next_sec):
     """Actualizado para usar el Hilo Secundario."""

@@ -10,8 +10,8 @@ GOLDBERG_RULES = {
             # GOLDBERG (+): Clúster 1 (Gregarismo), Clúster 2 (Nivel de energía)
             # Justificación: Buscan el contacto social y la actividad fuera de casa.
             "markov_weight_modifiers": {
-                "OCIO_SOCIAL_SITIO": 1.4,       # Un 40% más de probabilidad de ir a sitios sociales
-                "OCIO_SOCIAL_CONVERSAR": 1.5,   # Altísima propensión a iniciar conversaciones
+                "OCIO_PUBLICO": 1.4,            # Un 40% más de probabilidad de ir a sitios sociales
+                "CONVERSAR": 1.5,               # Altísima propensión a iniciar conversaciones (Secundario)
                 "INACTIVO_RELAX": 0.7,          # Evitan quedarse en casa sin hacer nada
                 "OCIO_INDIVIDUAL": 1.2          # Mayor energía para salir al parque/deporte
             },
@@ -22,10 +22,10 @@ GOLDBERG_RULES = {
             # GOLDBERG (-): Clúster 10 (Aislamiento), Clúster 11 (Silencio), Clúster 16 (Pasividad)
             # Justificación: Prefieren entornos controlados, solitarios o digitales.
             "markov_weight_modifiers": {
-                "OCIO_SOCIAL_SITIO": 0.6,       # Penalización fuerte a salir de bares/discotecas
-                "OCIO_SOCIAL_CONVERSAR": 0.5,   # Hablan mucho menos aunque estén en el sitio
+                "OCIO_PUBLICO": 0.6,            # Penalización fuerte a salir de bares/discotecas
+                "CONVERSAR": 0.5,               # Hablan mucho menos aunque estén en el sitio (Secundario)
                 "INACTIVO_RELAX": 1.3,          # Refugio principal (Aislamiento)
-                "USANDO_RRSS": 1.3              # Alternativa pasiva de socialización
+                "USANDO_RRSS": 1.3              # Alternativa pasiva de socialización (Secundario)
             },
             "exploration_rho_bonus": -0.15      # Prefieren ir a los pocos sitios que ya conocen
         }
@@ -36,7 +36,7 @@ GOLDBERG_RULES = {
             # GOLDBERG (+): Clúster 18 (Cooperación), Clúster 20 (Empatía), Clúster 27 (Calidez)
             # Justificación: Individuos que fomentan relaciones largas y estables.
             "markov_weight_modifiers": {
-                "OCIO_SOCIAL_CONVERSAR": 1.3    # Tienden a alargar las interacciones verbales
+                "CONVERSAR": 1.3                # Tienden a alargar las interacciones verbales (Secundario)
             },
             "homophily_base_bonus": 15          # Caen bien, su umbral para entablar amistad es menor
         },
@@ -44,7 +44,7 @@ GOLDBERG_RULES = {
             # GOLDBERG (-): Clúster 30 (Beligerancia), Clúster 36 (Irritabilidad), Clúster 38 (Cinismo)
             # Justificación: Individuos competitivos o ariscos, cortan rápido las interacciones.
             "markov_weight_modifiers": {
-                "OCIO_SOCIAL_CONVERSAR": 0.7    # Cortan la charla rápido para seguir a lo suyo
+                "CONVERSAR": 0.7                # Cortan la charla rápido para seguir a lo suyo (Secundario)
             },
             "homophily_base_bonus": -10         # Más exigentes a la hora de considerar a alguien amigo
         }
@@ -57,7 +57,7 @@ GOLDBERG_RULES = {
             "markov_weight_modifiers": {
                 "TRABAJAR_ESTUDIAR": 1.3,       # Alta adherencia a sus obligaciones
                 "INACTIVO_TAREAS_CASA": 1.6,    # El rasgo definitorio para este estado (Organización)
-                "USANDO_RRSS": 0.7,             # No pierden el tiempo (Eficiencia)
+                "USANDO_RRSS": 0.7,             # No pierden el tiempo (Eficiencia) (Secundario)
                 "INACTIVO_RELAX": 0.8           # Menos propensos a holgazanear
             },
             "spatial_beta_modifier": 1.3        # Rutas eficientes: penalizan mucho la distancia irrazonable
@@ -69,7 +69,7 @@ GOLDBERG_RULES = {
                 "TRABAJAR_ESTUDIAR": 0.8,       # Mayor absentismo o escapes de su obligación
                 "INACTIVO_TAREAS_CASA": 0.4,    # Rechazo a las tareas de orden/limpieza (Pereza)
                 "INACTIVO_RELAX": 1.4,          # Alta tendencia a la procrastinación
-                "USANDO_RRSS": 1.4              # Principal fuente de evasión
+                "USANDO_RRSS": 1.4              # Principal fuente de evasión (Secundario)
             },
             "spatial_beta_modifier": 0.8        # Rutas caóticas o ineficientes
         }
@@ -82,7 +82,7 @@ GOLDBERG_RULES = {
             "biological_urgency_k": 2.5,        # La curva de necesidad física se dispara MUCHO antes
             "energy_decay_multiplier": 1.2,     # Se agotan emocional y físicamente más rápido
             "markov_weight_modifiers": {
-                "USANDO_RRSS": 1.5,             # Consumo compulsivo como mecanismo de control de ansiedad
+                "USANDO_RRSS": 1.5,             # Consumo compulsivo como mecanismo de control de ansiedad (Secundario)
                 "INACTIVO_RELAX": 1.2,          # Necesidad de aislamiento para recuperar estabilidad
                 "TRABAJAR_ESTUDIAR": 0.8        # Dificultad para sostener la atención continua
             }
@@ -93,7 +93,7 @@ GOLDBERG_RULES = {
             "biological_urgency_k": 3.5,        # Aguantan el hambre y el cansancio sin alterar su rutina
             "energy_decay_multiplier": 0.8,     # Resistentes al desgaste
             "markov_weight_modifiers": {
-                "USANDO_RRSS": 0.8              # Menor necesidad de evasión digital
+                "USANDO_RRSS": 0.8              # Menor necesidad de evasión digital (Secundario)
             }
         }
     },
