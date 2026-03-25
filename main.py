@@ -27,13 +27,13 @@ def run_simulation():
 
     # (OPCIONAL) TU AGENTE DE CONTROL PARA PRUEBAS
     # Comenta este bloque si quieres usar los agentes reales del CSV
-    agentes = [
+    """ agentes = [
         Agent(
             agent_id=999, name="Sujeto_Control", social_activity=50, 
             traits_list=[], age=30, gender="male", occupation="Oficinista", 
             qualification="Grado", interests="Nada"
         )
-    ]
+    ]"""
 
     # NUEVA LÓGICA DE AMISTAD
     print("Cargando la red social de amistades...")
