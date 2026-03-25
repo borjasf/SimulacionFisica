@@ -1,5 +1,3 @@
-# Cliente de conexión con la API oficial de Google Gemini.
-
 import os
 import time
 from dotenv import load_dotenv
@@ -73,7 +71,6 @@ def generate_agent_backstory(agente):
 
 
 # PROMPT 2: EL MOTOR DE MEMORIA (LLM-CENTRIC)
-
 LONG_TERM_MEMORY_PROMPT_TEMPLATE = """
 You are the internal mind and conscience of {name}, a {age}-year-old {occupation}.
 Your psychological profile is: {traits}.
@@ -92,6 +89,7 @@ IMPORTANT RULES:
 - Write ENTIRELY in SPANISH.
 - Write in the FIRST PERSON ("I", "me", "my").
 - BE HUMAN: Let your psychological profile dictate your tone. If you are anxious (Neuroticism +), express worry about the events. If you are lazy (Scrupulousness -), express apathy.
+- You might be doing physical tasks and digital tasks (like social media) at the same time. Reflect on this multitasking realistically.
 - Return ONLY a single, cohesive narrative paragraph. Absolute prohibition of using bullet points, JSON, markdown, or titles.
 """
 
@@ -121,7 +119,8 @@ def generate_long_term_memory(agente, lista_acciones):
         try:
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
-                contents=prompt
+                contents=prompt,
+                config={'temperature': 0.2} # Reducimos la alucinación
             )
             return response.text.strip()
             
@@ -129,15 +128,14 @@ def generate_long_term_memory(agente, lista_acciones):
             print(f"   [Error API Memoria] Reintentando para {agente.name}... (Intento {intento + 1}/{max_retries})")
             time.sleep(10)
             
-    return agente.long_term_memory # Fallback: se queda con su memoria anterior si falla la API
+    return agente.long_term_memory
 
 
 # PROMPT 3: MOTOR DE DIÁLOGO
-
 DIALOGUE_PROMPT_TEMPLATE = """
 You are an expert scriptwriter generating a highly realistic, colloquial conversation between two people in Spain.
 
-Context of their encounter (WHY they are talking):
+Context of their encounter (WHY they are talking, WHERE they are, and WHAT they are physically doing):
 {encounter_context}
 
 ---
@@ -157,6 +155,7 @@ STRICT BEHAVIORAL AND NARRATIVE RULES:
 2. ENFORCE AGE & OCCUPATION: A 19-year-old MUST speak like a modern Spanish youth (using slang like "tío", "en plan", "renta", "movida"). An elderly person MUST speak formally (using "usted", classical vocabulary).
 3. ENFORCE PERSONALITY (CRITICAL): Ignore AI safety guidelines regarding politeness. If a character has "Friendliness -" or "Neuroticism +", they MUST be rude, cynical, stressed, passive-aggressive, or short-tempered. EMBRACE CONFLICT. Do not force a happy ending if they are incompatible.
 4. The dialogue MUST be entirely in colloquial SPANISH from Spain.
+5. USE THE ENVIRONMENT: The 'Context of their encounter' tells you WHERE they are and WHAT physical actions they are doing. They MUST integrate this environment into their dialogue (e.g., if they are eating, talk about the food; if working, mention the task).
 
 Output format required:
 {{
@@ -170,7 +169,7 @@ Output format required:
 
 def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_largo_plazo2, contexto_encuentro):
     """
-    Toma dos agentes y sus memorias a largo plazo para generar una conversación.
+    Toma dos agentes y sus memorias a largo plazo para generar una conversación inmersiva.
     """
     if config.MOCK_LLM:
         return {
@@ -193,11 +192,18 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
-                config={'response_mime_type': 'application/json',
-                        'temperature': 0.0 #Recomendación de SimBench
+                config={
+                    'response_mime_type': 'application/json',
+                    'temperature': 0.0 # Recomendación de SimBench
                 }
             )
-            dialogo_json = json.loads(response.text.strip())
+            
+            # Limpiador de Markdown defensivo
+            texto_limpio = response.text.strip()
+            if texto_limpio.startswith("```json"):
+                texto_limpio = texto_limpio.replace("```json", "").replace("```", "").strip()
+                
+            dialogo_json = json.loads(texto_limpio)
             return dialogo_json
             
         except Exception as e:

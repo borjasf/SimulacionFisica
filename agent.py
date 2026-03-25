@@ -21,9 +21,10 @@ class Agent:
         # BACKSTORY DE PRUEBA (DESACTIVADA)
         self.backstory = ""
 
-        # Máquina de estados
+        # NUEVA MÁQUINA DE ESTADOS DUAL
         # Todos empiezan durmiendo o inactivos por defecto
-        self.current_state = "DORMIR" 
+        self.primary_state = "DORMIR" 
+        self.secondary_state = "NINGUNO" 
         
         # VARIABLES BIOLÓGICAS
         self.energia = 100
@@ -54,6 +55,7 @@ class Agent:
         # VARIABLE: Amigos en red social
         self.amigos = []
 
+        # Frecuencias ahora registran el primario
         self.state_frequencies = {"DORMIR": 1}
 
         # Al nacer, el agente procesa su ADN (sus rasgos)
@@ -105,9 +107,9 @@ class Agent:
                         for state, mult in rules["markov_weight_modifiers"].items():
                             self.markov_modifiers[state] = self.markov_modifiers.get(state, 1.0) * mult
 
-    def update_memory(self, new_state, location_name, turno_global):
-        """Gestiona la memoria a corto plazo. Acumula acciones cronológicamente."""
-        if new_state != self.current_state:
+    def update_memory(self, new_primary, new_secondary, location_name, turno_global):
+        """Gestiona la memoria a corto plazo fusionando el estado físico y cognitivo."""
+        if new_primary != self.primary_state or new_secondary != self.secondary_state:
             # Rescatamos lo que estaba haciendo hasta ahora
             recuerdo_pasado = self.short_term_memory
             
@@ -122,12 +124,18 @@ class Agent:
                 "INACTIVO_RELAX": "Me estoy tomando un tiempo para relajarme",
                 "INACTIVO_TAREAS_CASA": "Estoy haciendo tareas de mantenimiento en la casa",
                 "OCIO_INDIVIDUAL": "Estoy disfrutando de un rato de ocio por mi cuenta",
-                "OCIO_SOCIAL_SITIO": "Estoy pasando el rato en un lugar público",
-                "OCIO_SOCIAL_CONVERSAR": "Estoy conversando de forma activa",
-                "USANDO_RRSS": "Estoy navegando por las redes sociales y el entorno digital"
+                "OCIO_PUBLICO": "Estoy pasando el rato en un lugar público" # Renombrado
             }
-            accion_texto = state_to_text.get(new_state, f"Estoy en estado {new_state}")
-            self.short_term_memory = f"{accion_texto} en {location_name}."
+            accion_fisica = state_to_text.get(new_primary, f"Estoy en estado {new_primary}")
+            
+            # Añadimos la capa Phygital (Estado Secundario)
+            texto_extra = ""
+            if new_secondary == "USANDO_RRSS":
+                texto_extra = ", mientras uso las redes sociales en mi teléfono"
+            elif new_secondary == "CONVERSAR":
+                texto_extra = ", mientras converso de forma activa"
+                
+            self.short_term_memory = f"{accion_fisica} en {location_name}{texto_extra}."
             
         return False
 
@@ -141,10 +149,11 @@ class Agent:
         """Sustituye la memoria a largo plazo por el nuevo resumen narrativo del LLM."""
         self.long_term_memory = nueva_reflexion
             
-    def update_state(self, new_state):
-        """Actualiza el estado matemático actual sumando al contador de frecuencias."""
-        self.current_state = new_state
-        self.state_frequencies[new_state] = self.state_frequencies.get(new_state, 0) + 1
+    def update_state(self, new_primary, new_secondary):
+        """Actualiza el estado dual actual sumando al contador de frecuencias el primario."""
+        self.primary_state = new_primary
+        self.secondary_state = new_secondary
+        self.state_frequencies[new_primary] = self.state_frequencies.get(new_primary, 0) + 1
 
     def __repr__(self):
-        return f"<Agent {self.name} | Edad: {self.age} ({self.age_group}) | Estado: {self.current_state}>"
+        return f"<Agent {self.name} | Edad: {self.age} ({self.age_group}) | {self.primary_state} [+ {self.secondary_state}]>"

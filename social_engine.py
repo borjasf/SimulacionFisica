@@ -1,33 +1,14 @@
 import random
 import time
-from sentence_transformers import util
 import llm_client
 import config
 import homophily_rules
 
-""" def retrieve_memories(agent, topic_vector, global_turn):
-    Filtra y puntúa los recuerdos del agente basándose en la fórmula del modelo de Stanford.
-    if not agent.long_term_memory: 
-        return []
-        
-    results = []
-    for m in agent.long_term_memory:
-        
-        # CALCULO DE RELEVANCIA DE CADA RECUERDO, topic_vector son los intereses de la gente y m es un recuerdo individual
-        similarity = util.cos_sim(topic_vector, m["vector"]).item() #item() para obtener el valor numérico solamente.
-        distance = global_turn - m["recencia"]
-        recency_score = 1.0 / (1.0 + distance * config.MEMORY_DECAY_FACTOR)
-        importance_score = m["importancia"] / config.MAX_IMPORTANCE_SCORE
-        
-        score = (similarity * config.WEIGHT_SIMILARITY) + \
-                (recency_score * config.WEIGHT_RECENCY) + \
-                (importance_score * config.WEIGHT_IMPORTANCE)
-        results.append({"texto": m["texto"], "score": score})
-        
-    return sorted(results, key=lambda x: x["score"], reverse=True)[:config.MAX_RETRIEVED_MEMORIES]"""
-
 def process_encounter(agent, agents):
-    """Busca compañeros en la misma ubicación y detona el diálogo social mediante LLM."""
+    """
+    Busca compañeros en la misma ubicación y detona el diálogo social mediante LLM.
+    Devuelve True si lograron entablar conversación, o False si fracasaron.
+    """
     location = str(agent.current_location_name).strip()
     
     # Buscamos a todas las personas en la misma sala
@@ -65,7 +46,7 @@ def process_encounter(agent, agents):
             interactuan = random.random() < probabilidad
             
             if interactuan:
-                # 5. Generación de CONTEXTO dinámico
+                # 5. Generación de CONTEXTO dinámico relacional
                 if son_amigos:
                     if shared:
                         temas = ", ".join(shared)
@@ -87,6 +68,10 @@ def process_encounter(agent, agents):
             # Ordenamos la lista para hablar con el que tenga mayor puntuación (mejor match)
             valid_companions.sort(key=lambda x: x[1], reverse=True)
             companion, score, context = valid_companions[0] 
+            
+            # [!] NUEVO: INTERRUPCIÓN COGNITIVA
+            # Sobrescribimos el estado mental del compañero para que sepa que está charlando
+            companion.secondary_state = "CONVERSAR"
             
             # BLOQUEO DE PRINTS
             if config.PRINT_LOGS:
@@ -111,22 +96,27 @@ def process_encounter(agent, agents):
                     if nueva_reflexion:
                         participante.update_long_term_memory(nueva_reflexion)
 
-            # =====================================================================
-            # FASE 2: ELIMINADA (Ya no hay embeddings ni búsqueda vectorial)
-            # =====================================================================
 
             # =====================================================================
-            # FASE 3: EL GUIONISTA LLM
+            # FASE 2: EL GUIONISTA LLM (ENRIQUECIDO PHYCHITAL)
             # =====================================================================
             if config.PRINT_LOGS:
                 print(f"   El motor social procesa el diálogo...")
             
-            # Le pasamos a Gemini directamente los párrafos de largo plazo actualizados
+            # [!] NUEVO: CONTEXTO PHYCHITAL
+            # Le explicamos a Gemini el entorno exacto y lo que están haciendo físicamente
+            contexto_phygital = (
+                f"{context} Además, debes saber que actualmente se encuentran físicamente en "
+                f"el lugar llamado '{location}'. Mientras conversan, {agent.name} está realizando la "
+                f"acción física de '{agent.primary_state}', y {companion.name} está haciendo '{companion.primary_state}'."
+            )
+            
+            # Le pasamos a Gemini directamente los párrafos de largo plazo actualizados y el contexto rico
             dialogue_json = llm_client.generate_social_dialogue(
                 agent, companion, 
                 agent.long_term_memory, 
                 companion.long_term_memory, 
-                context
+                contexto_phygital 
             )
 
             # NUEVA LÓGICA: SE HACEN AMIGOS TRAS HABLAR
@@ -143,10 +133,15 @@ def process_encounter(agent, agents):
                     time.sleep(config.SLEEP_DIALOGUE)  
                 print("   " + "-" * 60 + "\n")
                 
+            return True # ¡Éxito! Lograron hablar.
+                
         else:
-            # Coincidieron físicamente, pero se cayeron mal
+            # Coincidieron físicamente, pero se cayeron mal o falló la probabilidad
             if config.PRINT_LOGS:
                 print(f"   [ {agent.name} vio gente en {location}, pero a nadie con quien poder hablar.]")
+            return False 
     else:
+        # No había literalmente nadie en ese lugar
         if config.PRINT_LOGS:
             print(f"   [ {agent.name} miró alrededor en {location}, pero no vio a nadie en absoluto.]")
+        return False

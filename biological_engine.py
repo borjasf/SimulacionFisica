@@ -6,7 +6,7 @@ def update_biological_needs(agente):
     Se aplican los multiplicadores de personalidad (Surgency, Conscientiousness, Neuroticism).
     Solo se evalúan Energía y Saciedad.
     """
-    estado = agente.current_state
+    estado = agente.primary_state
     
     # 1. ENERGÍA 
     if estado == "DORMIR":
