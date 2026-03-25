@@ -1,66 +1,63 @@
 import random
 import matplotlib.pyplot as plt
 
-# =====================================================================
 # MAPA DE LA CIUDAD VIRTUAL (100x100)
-# Define los lugares físicos (Estados Primarios) a los que pueden ir los agentes
-# =====================================================================
 MAPA_CIUDAD = {
-    # --- ZONAS DE TRABAJO Y ESTUDIO ---
+    # ZONAS DE TRABAJO Y ESTUDIO 
     "Oficina_Centro": {
-        "coords": (50, 50), "tipo": "TRABAJAR_ESTUDIAR", 
+        "coords": (50, 50), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 20.0, "25-44": 90.0, "45-64": 60.0, "65+": 0.0}
     },
     "Universidad_Norte": {
-        "coords": (50, 90), "tipo": "TRABAJAR_ESTUDIAR", 
+        "coords": (50, 90), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 95.0, "25-44": 30.0, "45-64": 10.0, "65+": 0.0}
     },
     "Instituto_Sur": { 
-        "coords": (20, 20), "tipo": "TRABAJAR_ESTUDIAR", 
+        "coords": (20, 20), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 100.0, "16-24": 10.0, "25-44": 15.0, "45-64": 10.0, "65+": 0.0}
     },
-    "Biblioteca_Municipal": { # NUEVO LUGAR
-        "coords": (60, 60), "tipo": "TRABAJAR_ESTUDIAR", 
+    "Biblioteca_Municipal": { 
+        "coords": (60, 60), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": False, 
         "atractivo_por_edad": {"16-": 40.0, "16-24": 80.0, "25-44": 60.0, "45-64": 30.0, "65+": 20.0}
     },
 
-    # --- ZONAS DE OCIO PÚBLICO (Socialización Física) ---
+    # ZONAS DE OCIO PÚBLICO 
     "Plaza_Mayor": {
-        "coords": (48, 52), "tipo": "OCIO_PUBLICO", 
+        "coords": (48, 52), "tipo": "OCIO_PUBLICO", "permite_comer": True,
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 70.0, "45-64": 60.0, "65+": 80.0}
     },
     "Bar_Manolo": {
-        "coords": (10, 15), "tipo": "OCIO_PUBLICO", 
+        "coords": (10, 15), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 40.0, "25-44": 80.0, "45-64": 90.0, "65+": 70.0}
     },
     "Discoteca_Sur": {
-        "coords": (80, 10), "tipo": "OCIO_PUBLICO", 
+        "coords": (80, 10), "tipo": "OCIO_PUBLICO", "permite_comer": False, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 100.0, "25-44": 50.0, "45-64": 5.0, "65+": 0.0}
     },
     "Centro_Jubilados": { 
-        "coords": (70, 70), "tipo": "OCIO_PUBLICO", 
+        "coords": (70, 70), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 0.0, "25-44": 5.0, "45-64": 50.0, "65+": 100.0}
     },
     "Cafeteria_Tranquila": { 
-        "coords": (30, 60), "tipo": "OCIO_PUBLICO", 
+        "coords": (30, 60), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 30.0, "25-44": 60.0, "45-64": 80.0, "65+": 90.0}
     },
-    "Restaurante_Familiar": { # NUEVO LUGAR
-        "coords": (40, 40), "tipo": "OCIO_PUBLICO", 
+    "Restaurante_Familiar": { 
+        "coords": (40, 40), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 50.0, "16-24": 40.0, "25-44": 85.0, "45-64": 85.0, "65+": 70.0}
     },
 
-    # --- ZONAS DE OCIO INDIVIDUAL ---
+    #  ZONAS DE OCIO INDIVIDUAL 
     "Polideportivo": {
-        "coords": (20, 80), "tipo": "OCIO_INDIVIDUAL", 
+        "coords": (20, 80), "tipo": "OCIO_INDIVIDUAL", "permite_comer": False,
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 60.0, "45-64": 30.0, "65+": 10.0}
     },
     "Parque_Central": {
-        "coords": (55, 45), "tipo": "OCIO_INDIVIDUAL", 
+        "coords": (55, 45), "tipo": "OCIO_INDIVIDUAL", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 90.0, "16-24": 40.0, "25-44": 70.0, "45-64": 60.0, "65+": 90.0}
     },
-    "Gimnasio_Centro": { # NUEVO LUGAR
-        "coords": (70, 30), "tipo": "OCIO_INDIVIDUAL", 
+    "Gimnasio_Centro": { 
+        "coords": (70, 30), "tipo": "OCIO_INDIVIDUAL", "permite_comer": False, 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 85.0, "25-44": 80.0, "45-64": 40.0, "65+": 5.0}
     }
 }

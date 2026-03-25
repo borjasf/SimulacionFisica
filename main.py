@@ -113,6 +113,31 @@ def run_simulation():
                     mensaje_espacial = f" -> Se desplaza a: {destino_id} ({tipo_visita})"
                     lugar_memoria = destino_id 
                     
+            # ¡NUEVA LÓGICA! Si el motor biológico exige COMER o BEBER
+            elif nuevo_estado_primario == "COMER_BEBER":
+                lugar_actual = str(agente.current_location_name).strip()
+                
+                # 1. Si ya está en casa, come allí directamente
+                if lugar_actual == "Casa":
+                    mensaje_espacial = " -> Come en casa"
+                    lugar_memoria = "Casa"
+                
+                # 2. Si está en la calle, leemos el diccionario para ver si le dejan comer
+                else:
+                    # Usamos .get() por seguridad (si el lugar no existe, asumimos True por defecto)
+                    info_lugar = environment.MAPA_CIUDAD.get(lugar_actual, {})
+                    permite_comer = info_lugar.get("permite_comer", True)
+                    
+                    if permite_comer:
+                        mensaje_espacial = f" -> Aprovecha para comer aquí ({lugar_actual})"
+                        lugar_memoria = lugar_actual
+                    else:
+                        # Le echan o no puede comer (ej. Gimnasio). Se va a casa.
+                        agente.current_coords = agente.home_coords
+                        agente.current_location_name = "Casa"
+                        mensaje_espacial = f" -> Vuelve a casa para comer (en {lugar_actual} no se puede)"
+                        lugar_memoria = "Casa"
+                        
             # Si la Cadena de Markov decide que descansa en casa
             elif nuevo_estado_primario in ["DORMIR", "INACTIVO_RELAX", "INACTIVO_TAREAS_CASA"]:
                 if agente.current_coords != agente.home_coords:
