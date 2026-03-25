@@ -79,18 +79,28 @@ def process_encounter(agent, agents):
                 print(f"   Los agentes ordenan su mente antes de hablar...")
             
             # FASE 1: ACTUALIZACIÓN DE MEMORIA A LARGO PLAZO
+
             for participante in [agent, companion]:
-                acciones_recientes = participante.flush_short_term_memory()
+                # 1. Copiamos la lista de acciones sin vaciar el búfer original
+                acciones_recientes = list(participante.short_term_memory)
                 
                 if acciones_recientes: 
                     if config.PRINT_LOGS:
                         print(f"   [{participante.name} sintetizando sus recuerdos...]")
                     
+                    # 2. Llamamos a la API
                     nueva_reflexion = llm_client.generate_long_term_memory(participante, acciones_recientes)
                     
-                    if nueva_reflexion:
+                    # 3. Validamos el éxito: En llm_client.py, si falla devuelve la memoria antigua.
+                    # Por tanto, si la nueva reflexión es diferente a la antigua, la API funcionó bien.
+                    if nueva_reflexion and nueva_reflexion != participante.long_term_memory:
                         participante.update_long_term_memory(nueva_reflexion)
-
+                        
+                        # 4. SOLO AHORA vaciamos los recuerdos a corto plazo
+                        participante.short_term_memory.clear()
+                    else:
+                        if config.PRINT_LOGS:
+                            print(f"   [!] Error de red. {participante.name} retendrá sus recuerdos a corto plazo para más adelante.")
 
             # FASE 2: EL LLM
             if config.PRINT_LOGS:

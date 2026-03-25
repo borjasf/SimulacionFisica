@@ -34,7 +34,7 @@ def choose_destination(agent_coords, visited_places, places_db, agent_age_group,
             dist = max(dist, 0.1) # Evitar división por cero
             
             # W = Visitas / (Distancia ^ Beta)
-            weight = visit_count / (dist ** beta)
+            weight = (visit_count + 1) / (dist ** beta)
             candidates[place_id] = weight
     else:
         # FASE EXPLORACIÓN (Modelo de Gravedad cruzado con EDAD)
