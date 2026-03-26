@@ -88,3 +88,58 @@ def choose_micro_action(agente, macro_state):
         pesos_personalizados.append(peso_original * multiplicador)
 
     return random.choices(acciones_posibles, weights=pesos_personalizados, k=1)[0]
+
+
+# ==============================================================================
+# CAPA 3: REDES SOCIALES (Cadena de Markov Absorbente)
+# ==============================================================================
+
+# El estado "salir" es el estado absorbente. Una vez se llega a él, el bucle termina.
+RRSS_TRANSITIONS = {
+    "ver_contenido": {"ver_contenido": 0.40, "dar_like": 0.30, "comentar": 0.05, "publicar": 0.05, "salir": 0.20},
+    "dar_like":      {"ver_contenido": 0.45, "dar_like": 0.00, "comentar": 0.15, "publicar": 0.00, "salir": 0.40},
+    "comentar":      {"ver_contenido": 0.30, "dar_like": 0.00, "comentar": 0.00, "publicar": 0.00, "salir": 0.70},
+    "publicar":      {"ver_contenido": 0.20, "dar_like": 0.00, "comentar": 0.00, "publicar": 0.00, "salir": 0.80}
+}
+
+def simulate_rrss_session():
+    """
+    Simula una sesión completa de redes sociales en una fracción de segundo.
+    Devuelve un string narrativo resumiendo todo lo que el agente hizo.
+    """
+    estado_actual = "ver_contenido" # Siempre se entra a la app viendo el feed
+    acciones_realizadas = {"ver_contenido": 0, "dar_like": 0, "comentar": 0, "publicar": 0}
+    
+    # Bucle intra-turno (Límite máximo de 15 acciones para evitar bucles infinitos por seguridad)
+    for _ in range(15):
+        if estado_actual == "salir":
+            break
+            
+        acciones_realizadas[estado_actual] += 1
+        
+        probs = RRSS_TRANSITIONS[estado_actual]
+        estado_actual = random.choices(list(probs.keys()), weights=list(probs.values()), k=1)[0]
+        
+    # --- TRADUCTOR NARRATIVO ---
+    resumen = []
+    if acciones_realizadas["ver_contenido"] > 0:
+        resumen.append("hizo scroll viendo publicaciones")
+    if acciones_realizadas["dar_like"] > 0:
+        likes = acciones_realizadas["dar_like"]
+        resumen.append(f"dio {likes} like{'s' if likes > 1 else ''}")
+    if acciones_realizadas["comentar"] > 0:
+        comentarios = acciones_realizadas["comentar"]
+        resumen.append(f"escribió {comentarios} comentario{'s' if comentarios > 1 else ''}")
+    if acciones_realizadas["publicar"] > 0:
+        resumen.append("subió una nueva publicación")
+        
+    if not resumen:
+        return "abrió la red social pero la cerró al instante sin hacer nada"
+        
+    # Formateamos la lista a lenguaje natural (Ej: "hizo scroll, dio 2 likes y escribió 1 comentario")
+    if len(resumen) > 1:
+        texto_final = ", ".join(resumen[:-1]) + " y " + resumen[-1]
+    else:
+        texto_final = resumen[0]
+        
+    return texto_final

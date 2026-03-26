@@ -17,9 +17,9 @@ class Agent:
 
         self.backstory = ""
 
-        # NUEVA MÁQUINA DE ESTADOS JERÁRQUICA (Capa 1 y Capa 2)
-        self.current_macro_state = "DORMIR" 
-        self.current_micro_action = "dormir profundamente" 
+        # Frecuencias ahora registran la macro y la micro acción anidada
+        self.macro_frequencies = {"DORMIR": 1}
+        self.micro_frequencies = {"DORMIR": {"dormir_profundamente": 1}}
         
         # VARIABLES BIOLÓGICAS
         self.energia = 100
@@ -82,15 +82,19 @@ class Agent:
                         for action, mult in rules["markov_weight_modifiers"].items():
                             self.markov_modifiers[action] = self.markov_modifiers.get(action, 1.0) * mult
 
-    def update_memory(self, new_macro, new_micro, location_name, turno_global):
-        """Gestiona la memoria a corto plazo usando la micro-acción concreta."""
-        if new_macro != self.current_macro_state or new_micro != self.current_micro_action:
+    def update_memory(self, new_macro, new_micro, location_name, turno_global, virtual_summary=""):
+        """Gestiona la memoria a corto plazo. Si hay actividad virtual, la prioriza en la narrativa."""
+        if new_macro != self.current_macro_state or new_micro != self.current_micro_action or virtual_summary:
             recuerdo_pasado = self.short_term_memory
             self.action_buffer.append(recuerdo_pasado)
             
-            # Quitamos los guiones bajos para que el LLM lo lea como lenguaje humano
-            accion_natural = new_micro.replace("_", " ")
-            self.short_term_memory = f"He estado haciendo lo siguiente: '{accion_natural}' en {location_name}."
+            if virtual_summary:
+                # Si usó las redes, el recuerdo detalla su sesión virtual exacta
+                self.short_term_memory = f"He estado en {location_name} usando el móvil: {virtual_summary}."
+            else:
+                # Si fue una acción puramente física
+                accion_natural = new_micro.replace("_", " ")
+                self.short_term_memory = f"He estado haciendo lo siguiente: '{accion_natural}' en {location_name}."
             
         return False
 
@@ -103,12 +107,15 @@ class Agent:
         self.long_term_memory = nueva_reflexion
             
     def update_state(self, new_macro, new_micro):
-        """Actualiza el estado jerárquico y los contadores estadísticos."""
+        """Actualiza el estado jerárquico y los contadores estadísticos anidados."""
         self.current_macro_state = new_macro
         self.current_micro_action = new_micro
         
         self.macro_frequencies[new_macro] = self.macro_frequencies.get(new_macro, 0) + 1
-        self.micro_frequencies[new_micro] = self.micro_frequencies.get(new_micro, 0) + 1
+        
+        if new_macro not in self.micro_frequencies:
+            self.micro_frequencies[new_macro] = {}
+        self.micro_frequencies[new_macro][new_micro] = self.micro_frequencies[new_macro].get(new_micro, 0) + 1
 
     def __repr__(self):
         return f"<Agent {self.name} | {self.current_macro_state} -> {self.current_micro_action}>"

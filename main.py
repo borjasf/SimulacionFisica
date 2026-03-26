@@ -52,9 +52,7 @@ def run_simulation():
             
             estado_anterior_macro = agente.current_macro_state
             
-            # =========================================================
             # 1. HILO FÍSICO: CAPA 1 (MACRO-ESTADO) Y BIOLOGÍA
-            # =========================================================
             biological_engine.update_biological_needs(agente)
             
             estados_posibles, probabilidades_rutina = markov_engine.get_markov_probabilities(estado_anterior_macro)
@@ -72,14 +70,14 @@ def run_simulation():
                 estados_posibles
             )
             
-            # =========================================================
             # 2. HILO COGNITIVO: CAPA 2 (MICRO-ACCIÓN)
-            # =========================================================
             nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
+
+            resumen_virtual = ""
+            if nueva_micro_accion in ["usar_rrss", "ver_las_rrss"]:
+                resumen_virtual = markov_engine.simulate_rrss_session()
             
-            # =========================================================
             # 3. MOTOR SOCIAL Y DE COLISIONES
-            # =========================================================
             if nueva_micro_accion in ["conversar", "charlar_mientras_comes"]:
                 hablaron = social_engine.process_encounter(agente, agentes)
                 
@@ -89,9 +87,7 @@ def run_simulation():
                     elif nuevo_macro_estado == "CASA": nueva_micro_accion = "ver_la_tv"
                     elif nuevo_macro_estado == "COMER_BEBER": nueva_micro_accion = "comer_fuera"
 
-            # =========================================================
             # 4. DECISIÓN ESPACIAL (G-EPR)
-            # =========================================================
             mensaje_espacial = ""
             lugar_memoria = "su ubicación actual"
             
@@ -163,15 +159,15 @@ def run_simulation():
             if lugar_memoria != "su ubicación actual":
                 agente.id_lugar_actual = lugar_memoria
         
-            # =========================================================
             # 5. ACTUALIZACIÓN DE MEMORIA Y LOGS
-            # =========================================================
-            agente.update_memory(nuevo_macro_estado, nueva_micro_accion, lugar_memoria, turno_global)
+            agente.update_memory(nuevo_macro_estado, nueva_micro_accion, lugar_memoria, turno_global, virtual_summary=resumen_virtual)
             agente.update_state(nuevo_macro_estado, nueva_micro_accion)
             
             if config.PRINT_LOGS:
-                etiqueta = "[VIRTUAL]" if "rrss" in nueva_micro_accion else "[FÍSICO] "
-                print(f"[Turno {turno_global}] {etiqueta} {agente.name} -> {nuevo_macro_estado} ({nueva_micro_accion.replace('_', ' ')}){mensaje_espacial}")
+                if resumen_virtual:
+                    print(f"[Turno {turno_global}] [VIRTUAL] {agente.name} -> En {lugar_memoria}: {resumen_virtual}")
+                else:
+                    print(f"[Turno {turno_global}] [FÍSICO]  {agente.name} -> {nuevo_macro_estado} ({nueva_micro_accion.replace('_', ' ')})){mensaje_espacial}")
 
             if config.MAX_TURNS > 0 and turno_global >= config.MAX_TURNS:
                 break 
@@ -189,9 +185,7 @@ def run_simulation():
         traceback.print_exc()
         
     finally:
-        # =========================================================
         # INFORME ESTADÍSTICO DE CAPA 1 Y CAPA 2
-        # =========================================================
         print("\n" + "="*60)
         print("INFORME ESTADÍSTICO JERÁRQUICO (Fase 1 & 2)")
         print("="*60)
@@ -205,8 +199,12 @@ def run_simulation():
             for estado, count in a.macro_frequencies.items():
                 global_macros[estado] = global_macros.get(estado, 0) + count
                 total_turns += count
-            for micro, count in a.micro_frequencies.items():
-                global_micros[micro] = global_micros.get(micro, 0) + count
+                
+            for macro, micros_dict in a.micro_frequencies.items():
+                if macro not in global_micros:
+                    global_micros[macro] = {}
+                for micro, count in micros_dict.items():
+                    global_micros[macro][micro] = global_micros[macro].get(micro, 0) + count
 
         print("\n--- DISTRIBUCIÓN DE CAPA 1 (Macro-estados) ---")
         sorted_macros = sorted(global_macros.items(), key=lambda x: x[1], reverse=True)
@@ -215,13 +213,13 @@ def run_simulation():
             print(f" - {estado}: {porcentaje:.2f}% ({count} turnos totales)")
 
         print("\n--- DISTRIBUCIÓN DE CAPA 2 (Micro-acciones por Estado) ---")
-        # Organizamos la impresión leyendo el diccionario estructural del markov_engine
         for macro, dict_micros in markov_engine.MICRO_ACTIONS.items():
             turnos_en_este_macro = global_macros.get(macro, 0)
             if turnos_en_este_macro > 0:
                 print(f" * Dentro de {macro} ({turnos_en_este_macro} turnos):")
-                # Extraemos y ordenamos solo las micro-acciones de este bloque
-                micros_de_este_macro = {k: global_micros.get(k, 0) for k in dict_micros.keys()}
+                
+                # Extraemos solo las micro-acciones pertenecientes a este macro-estado
+                micros_de_este_macro = global_micros.get(macro, {})
                 sorted_micros = sorted(micros_de_este_macro.items(), key=lambda x: x[1], reverse=True)
                 
                 for micro_name, micro_count in sorted_micros:
