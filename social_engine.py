@@ -11,8 +11,6 @@ def process_encounter(agent, agents):
     """
     location = str(agent.current_location_name).strip()
     
-    # 1. Buscamos a personas en la misma ubicación física
-    # Si están en "Casa", comprobamos que compartan las mismas coordenadas (viven juntos)
     potential_companions = [
         a for a in agents 
         if a != agent  
@@ -23,19 +21,15 @@ def process_encounter(agent, agents):
     if potential_companions:
         valid_companions = []
         
-        # EL FILTRO DE HOMOFILIA, PROBABILIDAD Y AMISTAD
         for a in potential_companions:
             son_amigos = str(a.id) in agent.amigos
             
-            # Extraemos los intereses en común (si los hay)
             int_a = set([i.strip().lower() for i in agent.interests.split(',')])
             int_b = set([i.strip().lower() for i in a.interests.split(',')])
             shared = int_a.intersection(int_b)
             
-            # Calculamos la puntuación bruta de homofilia 
             _, puntuacion, _ = homophily_rules.calculate_homophily_score(agent, a)
             
-            # Asignamos la PROBABILIDAD de interactuar
             if son_amigos:
                 probabilidad = config.FRIEND_INTERACTION_PROB  
                 puntuacion += config.FRIEND_PRIORITY_BONUS    
@@ -43,35 +37,35 @@ def process_encounter(agent, agents):
                 prob_calculada = puntuacion * config.HOMOPHILY_PROB_MULTIPLIER
                 probabilidad = max(config.MIN_INTERACTION_PROB, min(config.MAX_INTERACTION_PROB, prob_calculada))
                 
-            # Tiramos los dados virtuales
             interactuan = random.random() < probabilidad
             
             if interactuan:
-                # Generación de CONTEXTO dinámico relacional
                 if son_amigos:
                     if shared:
                         temas = ", ".join(shared)
-                        contexto = f"Son amigos y viven juntos. Quieren ponerse al día y hablar sobre su interés común en {temas}."
+                        contexto = f"Son amigos y viven juntos. Quieren ponerse al día y hablar sobre su interés común en {temas}." if location == "Casa" else f"Son amigos. Quieren ponerse al día y hablar sobre su interés común en {temas}."
                     else:
-                        contexto = "Son amigos y compañeros de casa. Quieren ponerse al día sobre cómo les va la vida."
+                        contexto = "Son amigos y compañeros de casa. Quieren ponerse al día sobre cómo les va la vida." if location == "Casa" else "Son amigos poniéndose al día de forma casual."
                 else:
                     if shared:
                         temas = ", ".join(shared)
-                        contexto = f"Comparten piso pero no son muy amigos aún. Tienen en común: {temas}."
+                        contexto = f"Comparten piso pero no son muy amigos aún. Tienen en común: {temas}." if location == "Casa" else f"Se acaban de cruzar y no tienen mucha confianza, pero a ambos les gusta: {temas}."
                     else:
-                        contexto = "Son compañeros de piso charlando de forma casual en casa."
+                        contexto = "Son compañeros de piso charlando de forma casual en casa." if location == "Casa" else "Son conocidos teniendo una charla casual."
                         
                 valid_companions.append((a, puntuacion, contexto))
 
-                
-        # Si después de evaluar a todos, alguien superó los filtros
         if valid_companions:
-            # Ordenamos la lista para hablar con el que tenga mayor puntuación (mejor match)
             valid_companions.sort(key=lambda x: x[1], reverse=True)
             companion, score, context = valid_companions[0] 
             
-            # INTERRUPCIÓN COGNITIVA
-            companion.secondary_state = "CONVERSAR"
+            # --- INTERRUPCIÓN COGNITIVA FASE 2 ---
+            # Guardamos qué hacían para dárselo de contexto al LLM
+            agent_action = agent.current_micro_action.replace('_', ' ')
+            companion_previous_action = companion.current_micro_action.replace('_', ' ')
+            
+            # Forzamos la micro-acción del compañero a "conversar" para alinear las estadísticas
+            companion.current_micro_action = "conversar"
             
             if config.PRINT_LOGS:
                 print(f"\n   ¡Encuentro! {agent.name} coincide con {companion.name} en {location}.")
@@ -79,23 +73,17 @@ def process_encounter(agent, agents):
                 print(f"   Los agentes ordenan su mente antes de hablar...")
             
             # FASE 1: ACTUALIZACIÓN DE MEMORIA A LARGO PLAZO
-
             for participante in [agent, companion]:
-                # 1. Copiamos la lista de acciones sin vaciar el búfer original
                 acciones_recientes = list(participante.action_buffer)
                 
                 if acciones_recientes: 
                     if config.PRINT_LOGS:
                         print(f"   [{participante.name} sintetizando sus recuerdos...]")
                     
-                    # 2. Llamamos a la API
                     nueva_reflexion = llm_client.generate_long_term_memory(participante, acciones_recientes)
                     
-                    # 3. Validamos el éxito
                     if nueva_reflexion and nueva_reflexion != participante.long_term_memory:
                         participante.update_long_term_memory(nueva_reflexion)
-                        
-                        # 4. SOLO AHORA vaciamos la lista real de recuerdos
                         participante.action_buffer.clear()
                     else:
                         if config.PRINT_LOGS:
@@ -107,8 +95,8 @@ def process_encounter(agent, agents):
             
             contexto_phygital = (
                 f"{context} Además, debes saber que actualmente se encuentran físicamente en "
-                f"el lugar llamado '{location}'. Mientras conversan, {agent.name} está realizando la "
-                f"acción física de '{agent.primary_state}', y {companion.name} está haciendo '{companion.primary_state}'."
+                f"el lugar llamado '{location}'. Justo antes de empezar a hablar, {agent.name} tenía la intención de "
+                f"'{agent_action}', y {companion.name} estaba haciendo '{companion_previous_action}'."
             )
             
             dialogue_json = llm_client.generate_social_dialogue(
@@ -118,7 +106,6 @@ def process_encounter(agent, agents):
                 contexto_phygital 
             )
 
-            # SE HACEN AMIGOS TRAS HABLAR
             if str(companion.id) not in agent.amigos:
                 agent.amigos.append(str(companion.id))
             if str(agent.id) not in companion.amigos:
@@ -135,7 +122,7 @@ def process_encounter(agent, agents):
                 
         else:
             if config.PRINT_LOGS:
-                print(f"   [ {agent.name} vio a sus convivientes en {location}, pero nadie estaba libre o de humor para hablar.]")
+                print(f"   [ {agent.name} vio a sus conocidos en {location}, pero nadie estaba libre o de humor para hablar.]")
             return False 
     else:
         if config.PRINT_LOGS:

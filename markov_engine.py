@@ -1,89 +1,90 @@
 import random
 
-# MATRIZ PRIMARIA (Solo acciones físicas y de ubicación)
+# CAPA 1: MATRIZ PRIMARIA FASE 1 (5 Macro-Estados)
 TRANSITION_MATRIX = {
     "DORMIR": {
-        "DORMIR": 0.0, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.45, 
-        "INACTIVO_RELAX": 0.23, "INACTIVO_TAREAS_CASA": 0.15, 
-        "OCIO_INDIVIDUAL": 0.05, "OCIO_PUBLICO": 0.10
+        "DORMIR": 0.0, "COMER_BEBER": 0.01, "TRABAJAR_ESTUDIAR": 0.45, 
+        "CASA": 0.35, "OCIO": 0.19
     },
     "COMER_BEBER": {
         "DORMIR": 0.01, "COMER_BEBER": 0.0, "TRABAJAR_ESTUDIAR": 0.35, 
-        "INACTIVO_RELAX": 0.20, "INACTIVO_TAREAS_CASA": 0.10, 
-        "OCIO_INDIVIDUAL": 0.19, "OCIO_PUBLICO": 0.15
+        "CASA": 0.35, "OCIO": 0.29
     },
     "TRABAJAR_ESTUDIAR": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.0, 
-        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.15, 
-        "OCIO_INDIVIDUAL": 0.22, "OCIO_PUBLICO": 0.30
+        "DORMIR": 0.01, "COMER_BEBER": 0.1, "TRABAJAR_ESTUDIAR": 0.05, 
+        "CASA": 0.45, "OCIO": 0.48
     },
-    "INACTIVO_RELAX": {
-        "DORMIR": 0.02, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.16, 
-        "INACTIVO_RELAX": 0.05, "INACTIVO_TAREAS_CASA": 0.25, 
-        "OCIO_INDIVIDUAL": 0.25, "OCIO_PUBLICO": 0.25
+    "CASA": {
+        "DORMIR": 0.05, "COMER_BEBER": 0.05, "TRABAJAR_ESTUDIAR": 0.30, 
+        "CASA": 0.15, "OCIO": 0.45
     },
-    "INACTIVO_TAREAS_CASA": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.15, 
-        "INACTIVO_RELAX": 0.30, "INACTIVO_TAREAS_CASA": 0.0, 
-        "OCIO_INDIVIDUAL": 0.20, "OCIO_PUBLICO": 0.32
-    },
-    "OCIO_INDIVIDUAL": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.17, 
-        "INACTIVO_RELAX": 0.35, "INACTIVO_TAREAS_CASA": 0.15, 
-        "OCIO_INDIVIDUAL": 0.0, "OCIO_PUBLICO": 0.30
-    },
-    "OCIO_PUBLICO": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.02, "TRABAJAR_ESTUDIAR": 0.17, 
-        "INACTIVO_RELAX": 0.25, "INACTIVO_TAREAS_CASA": 0.15, 
-        "OCIO_INDIVIDUAL": 0.20, "OCIO_PUBLICO": 0.20
+    "OCIO": {
+        "DORMIR": 0.025, "COMER_BEBER": 0.025, "TRABAJAR_ESTUDIAR": 0.20, 
+        "CASA": 0.55, "OCIO": 0.20
     }
 }
 
-# MATRIZ SECUNDARIA (Probabilidad de multitarea según el Hilo Primario)
-SECONDARY_PROBABILITIES = {
-    "DORMIR": {"USANDO_RRSS": 0.0, "CONVERSAR": 0.0, "NINGUNO": 1.0},
-    "COMER_BEBER": {"USANDO_RRSS": 0.20, "CONVERSAR": 0.10, "NINGUNO": 0.70},
-    "TRABAJAR_ESTUDIAR": {"USANDO_RRSS": 0.05, "CONVERSAR": 0.15, "NINGUNO": 0.80},
-    "INACTIVO_RELAX": {"USANDO_RRSS": 0.40, "CONVERSAR": 0.20, "NINGUNO": 0.40},
-    "INACTIVO_TAREAS_CASA": {"USANDO_RRSS": 0.10, "CONVERSAR": 0.20, "NINGUNO": 0.70},
-    "OCIO_INDIVIDUAL": {"USANDO_RRSS": 0.15, "CONVERSAR": 0.05, "NINGUNO": 0.80},
-    "OCIO_PUBLICO": {"USANDO_RRSS": 0.05, "CONVERSAR": 0.60, "NINGUNO": 0.35}
+# CAPA 2: MICRO-ACCIONES (Nomenclatura del usuario en snake_case)
+MICRO_ACTIONS = {
+    "DORMIR": {
+        "dormir_profundamente": 80,
+        "dormir_siesta": 20
+    },
+    "COMER_BEBER": {
+        "comer_en_casa": 40,
+        "comer_fuera_de_casa": 20,
+        "merendar_algo_rapido": 15,
+        "usar_rrss": 15,
+        "conversar_comiendo": 10
+    },
+    "TRABAJAR_ESTUDIAR": {
+        "trabajar": 35,
+        "ir_a_clase": 35,
+        "tareas_personales": 15,
+        "conversar": 10,
+        "usar_rrss": 5
+    },
+    "CASA": {
+        "ver_la_television": 30,
+        "usar_rrss": 25,
+        "hacer_limpieza": 20,
+        "jugar_videojuegos": 15,
+        "conversar": 10
+    },
+    "OCIO": {
+        "dar_una_vuelta": 30,
+        "conversar": 25,
+        "usar_rrss": 15,
+        "hacer_ejercicio": 15,
+        "culturizarse": 10,
+        "salir_de_fiesta": 5
+    }
 }
 
-def get_markov_probabilities(current_primary_state):
-    """Devuelve probabilidades del HILO PRIMARIO."""
-    if current_primary_state not in TRANSITION_MATRIX:
-        current_primary_state = "INACTIVO_RELAX"
-    return list(TRANSITION_MATRIX[current_primary_state].keys()), list(TRANSITION_MATRIX[current_primary_state].values())
+def get_markov_probabilities(current_macro_state):
+    """Devuelve las probabilidades de la CAPA 1 (Macro-estados)."""
+    if current_macro_state not in TRANSITION_MATRIX:
+        current_macro_state = "CASA"
+    return list(TRANSITION_MATRIX[current_macro_state].keys()), list(TRANSITION_MATRIX[current_macro_state].values())
 
-def evaluate_secondary_state(agente, primary_state):
+def choose_micro_action(agente, macro_state):
     """
-    Lanza los dados para ver si el agente decide activar un hilo secundario,
-    aplicando sus modificadores de personalidad.
+    Decide la acción específica de la CAPA 2 basándose en los pesos base 
+    y aplicando los modificadores de personalidad del agente.
     """
-    probs_dict = SECONDARY_PROBABILITIES.get(primary_state, {"NINGUNO": 1.0})
+    acciones_dict = MICRO_ACTIONS.get(macro_state, {"accion_por_defecto": 100})
     
-    estados_secundarios = list(probs_dict.keys())
-    pesos_base = list(probs_dict.values())
+    acciones_posibles = list(acciones_dict.keys())
+    pesos_base = list(acciones_dict.values())
     
     pesos_personalizados = []
-    for i in range(len(estados_secundarios)):
-        estado_evaluado = estados_secundarios[i]
+    for i in range(len(acciones_posibles)):
+        accion = acciones_posibles[i]
         peso_original = pesos_base[i]
         
-        # Extraemos el multiplicador del agente (1.0 si no tiene rasgo que lo altere)
-        multiplicador = agente.markov_modifiers.get(estado_evaluado, 1.0)
+        # En la Fase 2 aquí leeremos los rasgos del agente para alterar el peso.
+        # Por ahora, usamos el modificador genérico o 1.0
+        multiplicador = agente.markov_modifiers.get(accion, 1.0)
         pesos_personalizados.append(peso_original * multiplicador)
 
-    return random.choices(estados_secundarios, weights=pesos_personalizados, k=1)[0]
-
-def evaluate_virtual_action(current_sec, next_sec):
-    """Actualizado para usar el Hilo Secundario."""
-    if current_sec != "USANDO_RRSS" and next_sec == "USANDO_RRSS":
-        return "ENTRAR EN RRSS"
-    elif current_sec == "USANDO_RRSS" and next_sec == "USANDO_RRSS":
-        return "SEGUIR EN RRSS"
-    elif current_sec == "USANDO_RRSS" and next_sec != "USANDO_RRSS":
-        return "SALIR DE RRSS"
-    else:
-        return "ACCION_FISICA"
+    return random.choices(acciones_posibles, weights=pesos_personalizados, k=1)[0]

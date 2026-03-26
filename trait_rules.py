@@ -1,120 +1,144 @@
 # ==============================================================================
 # ARCHIVO: trait_rules.py
 # DESCRIPCIÓN: Traducción matemática de los 5 Grandes Rasgos de Personalidad 
-# basados en los 100 clústeres de Goldberg (1990, Tabla 3).
+# aplicados a la CAPA 1 (MACRO-ESTADOS) y CAPA 2 (MICRO-ACCIONES).
 # ==============================================================================
 
 GOLDBERG_RULES = {
     "Sociability": {
         "+": {
-            # GOLDBERG (+): Clúster 1 (Gregarismo), Clúster 2 (Nivel de energía)
-            # Justificación: Buscan el contacto social y la actividad fuera de casa.
             "markov_weight_modifiers": {
-                "OCIO_PUBLICO": 1.4,            # Un 40% más de probabilidad de ir a sitios sociales
-                "CONVERSAR": 1.5,               # Altísima propensión a iniciar conversaciones (Secundario)
-                "INACTIVO_RELAX": 0.7,          # Evitan quedarse en casa sin hacer nada
-                "OCIO_INDIVIDUAL": 1.2          # Mayor energía para salir al parque/deporte
+                # IMPACTO CAPA 1 (Dónde van)
+                "OCIO": 1.4,
+                "CASA": 0.7,
+                # IMPACTO CAPA 2 (Qué hacen)
+                "salir_de_fiesta": 2.5,         
+                "conversar": 1.8,               
+                "charlar_mientras_comes": 1.5,
+                "dar_una_vuelta": 1.3,
+                "ver_la_tv": 0.5,
+                "jugar_videojuegos": 0.5
             },
-            "exploration_rho_bonus": 0.15,      # Más propensos a descubrir locales nuevos
-            "homophily_base_bonus": 10          # Facilitadores sociales (conectan grupos)
+            "exploration_rho_bonus": 0.15,      
+            "homophily_base_bonus": 10          
         },
         "-": {
-            # GOLDBERG (-): Clúster 10 (Aislamiento), Clúster 11 (Silencio), Clúster 16 (Pasividad)
-            # Justificación: Prefieren entornos controlados, solitarios o digitales.
             "markov_weight_modifiers": {
-                "OCIO_PUBLICO": 0.6,            # Penalización fuerte a salir de bares/discotecas
-                "CONVERSAR": 0.5,               # Hablan mucho menos aunque estén en el sitio (Secundario)
-                "INACTIVO_RELAX": 1.3,          # Refugio principal (Aislamiento)
-                "USANDO_RRSS": 1.3              # Alternativa pasiva de socialización (Secundario)
+                # IMPACTO CAPA 1 (Dónde van)
+                "OCIO": 0.6,
+                "CASA": 1.4,
+                # IMPACTO CAPA 2 (Qué hacen)
+                "usar_rrss": 1.8,
+                "ver_las_rrss": 1.8,
+                "ver_la_tv": 1.5,
+                "jugar_videojuegos": 1.5,
+                "conversar": 0.3,
+                "salir_de_fiesta": 0.1
             },
-            "exploration_rho_bonus": -0.15      # Prefieren ir a los pocos sitios que ya conocen
+            "exploration_rho_bonus": -0.15      
         }
     },
     
     "Amiability": {
         "+": {
-            # GOLDBERG (+): Clúster 18 (Cooperación), Clúster 20 (Empatía), Clúster 27 (Calidez)
-            # Justificación: Individuos que fomentan relaciones largas y estables.
             "markov_weight_modifiers": {
-                "CONVERSAR": 1.3                # Tienden a alargar las interacciones verbales (Secundario)
+                "conversar": 1.4,
+                "charlar_mientras_comes": 1.4
             },
-            "homophily_base_bonus": 15          # Caen bien, su umbral para entablar amistad es menor
+            "homophily_base_bonus": 15          
         },
         "-": {
-            # GOLDBERG (-): Clúster 30 (Beligerancia), Clúster 36 (Irritabilidad), Clúster 38 (Cinismo)
-            # Justificación: Individuos competitivos o ariscos, cortan rápido las interacciones.
             "markov_weight_modifiers": {
-                "CONVERSAR": 0.7                # Cortan la charla rápido para seguir a lo suyo (Secundario)
+                "conversar": 0.5,
+                "charlar_mientras_comes": 0.5
             },
-            "homophily_base_bonus": -10         # Más exigentes a la hora de considerar a alguien amigo
+            "homophily_base_bonus": -10         
         }
     },
     
     "Conscientiousness": {
         "+": {
-            # GOLDBERG (+): Clúster 40 (Organización), Clúster 41 (Eficiencia), Clúster 46 (Puntualidad)
-            # Justificación: Altamente rutinarios y enfocados en sus obligaciones y el orden.
             "markov_weight_modifiers": {
-                "TRABAJAR_ESTUDIAR": 1.3,       # Alta adherencia a sus obligaciones
-                "INACTIVO_TAREAS_CASA": 1.6,    # El rasgo definitorio para este estado (Organización)
-                "USANDO_RRSS": 0.7,             # No pierden el tiempo (Eficiencia) (Secundario)
-                "INACTIVO_RELAX": 0.8           # Menos propensos a holgazanear
+                # IMPACTO CAPA 1
+                "TRABAJAR_ESTUDIAR": 1.3,
+                "CASA": 1.2,
+                # IMPACTO CAPA 2
+                "trabajar": 1.5,       
+                "ir_a_clase": 1.5,
+                "hacer_limpieza": 1.8,
+                "usar_rrss": 0.4,
+                "ver_las_rrss": 0.4,
+                "ver_la_tv": 0.6,
+                "salir_de_fiesta": 0.5
             },
-            "spatial_beta_modifier": 1.3        # Rutas eficientes: penalizan mucho la distancia irrazonable
+            "spatial_beta_modifier": 1.3        
         },
         "-": {
-            # GOLDBERG (-): Clúster 52 (Desorganización), Clúster 58 (Pereza), Clúster 55 (Olvido)
-            # Justificación: Tendencia a procrastinar y descuidar las tareas de mantenimiento.
             "markov_weight_modifiers": {
-                "TRABAJAR_ESTUDIAR": 0.8,       # Mayor absentismo o escapes de su obligación
-                "INACTIVO_TAREAS_CASA": 0.4,    # Rechazo a las tareas de orden/limpieza (Pereza)
-                "INACTIVO_RELAX": 1.4,          # Alta tendencia a la procrastinación
-                "USANDO_RRSS": 1.4              # Principal fuente de evasión (Secundario)
+                # IMPACTO CAPA 1
+                "TRABAJAR_ESTUDIAR": 0.7,
+                "CASA": 1.3,
+                # IMPACTO CAPA 2
+                "trabajar": 0.6,       
+                "ir_a_clase": 0.6,
+                "hacer_limpieza": 0.3,
+                "usar_rrss": 1.6,
+                "ver_las_rrss": 1.6,
+                "jugar_videojuegos": 1.5
             },
-            "spatial_beta_modifier": 0.8        # Rutas caóticas o ineficientes
+            "spatial_beta_modifier": 0.8        
         }
     },
     
     "Neuroticism": {
         "+": {
-            # GOLDBERG (+): Clúster 65 (Ansiedad), Clúster 66 (Inestabilidad), Clúster 67 (Emocionalidad)
-            # Justificación: Menor tolerancia al estrés, buscan evasión rápida constante.
-            "biological_urgency_k": 2.5,        # La curva de necesidad física se dispara MUCHO antes
-            "energy_decay_multiplier": 1.2,     # Se agotan emocional y físicamente más rápido
+            "biological_urgency_k": 2.5,        
+            "energy_decay_multiplier": 1.2,     
             "markov_weight_modifiers": {
-                "USANDO_RRSS": 1.5,             # Consumo compulsivo como mecanismo de control de ansiedad (Secundario)
-                "INACTIVO_RELAX": 1.2,          # Necesidad de aislamiento para recuperar estabilidad
-                "TRABAJAR_ESTUDIAR": 0.8        # Dificultad para sostener la atención continua
+                # IMPACTO CAPA 1
+                "TRABAJAR_ESTUDIAR": 0.8,
+                "CASA": 1.2,
+                # IMPACTO CAPA 2
+                "usar_rrss": 1.8,             
+                "ver_las_rrss": 1.8,
+                "trabajar": 0.7,
+                "ir_a_clase": 0.7
             }
         },
         "-": {
-            # GOLDBERG (-): Clúster 62 (Placidez), Clúster 63 (Independencia) [Polo opuesto: Estabilidad]
-            # Justificación: Resiliencia física y mental, rutinas estoicas sin sobresaltos.
-            "biological_urgency_k": 3.5,        # Aguantan el hambre y el cansancio sin alterar su rutina
-            "energy_decay_multiplier": 0.8,     # Resistentes al desgaste
+            "biological_urgency_k": 3.5,        
+            "energy_decay_multiplier": 0.8,     
             "markov_weight_modifiers": {
-                "USANDO_RRSS": 0.8              # Menor necesidad de evasión digital (Secundario)
+                "usar_rrss": 0.7,
+                "ver_las_rrss": 0.7
             }
         }
     },
     
     "Openness": {
         "+": {
-            # GOLDBERG (+): Clúster 75 (Creatividad), Clúster 76 (Curiosidad), Clúster 77 (Sofisticación)
-            # Justificación: Rompen la rutina espacial, buscan estímulos nuevos constantemente.
-            "exploration_rho_bonus": 0.35,      # Multiplicador MASIVO a explorar lugares desconocidos en el mapa
+            "exploration_rho_bonus": 0.35,      
             "markov_weight_modifiers": {
-                "OCIO_INDIVIDUAL": 1.3,         # Salen a caminar, leer, explorar (Curiosidad)
-                "INACTIVO_RELAX": 0.8           # Se aburren rápidamente de la monotonía casera
+                # IMPACTO CAPA 1
+                "OCIO": 1.3,
+                "CASA": 0.8,
+                # IMPACTO CAPA 2
+                "culturizarse": 2.5,         
+                "dar_una_vuelta": 1.4,
+                "comer_fuera": 1.3,
+                "ver_la_tv": 0.6
             }
         },
         "-": {
-            # GOLDBERG (-): Clúster 78 (Superficialidad), Clúster 79 (Falta de imaginación / Convencional)
-            # Justificación: Conservadores espaciales, repiten la misma ruta toda su vida.
-            "exploration_rho_bonus": -0.30,     # Su fórmula EPR casi siempre dictará "Retorno preferencial"
+            "exploration_rho_bonus": -0.30,     
             "markov_weight_modifiers": {
-                "OCIO_INDIVIDUAL": 0.7,
-                "INACTIVO_RELAX": 1.2           # Preferencia por lo conocido y rutinario
+                # IMPACTO CAPA 1
+                "OCIO": 0.7,
+                "CASA": 1.2,
+                # IMPACTO CAPA 2
+                "culturizarse": 0.3,
+                "comer_fuera": 0.7,
+                "ver_la_tv": 1.4
             }
         }
     }

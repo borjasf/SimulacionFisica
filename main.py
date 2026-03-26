@@ -5,7 +5,6 @@ import math
 import traceback
 
 import llm_client
-# Importamos nuestros módulos
 from agent_ingestor import load_agents_from_csv, load_friendships_from_csv
 import markov_engine
 import environment
@@ -19,7 +18,6 @@ from agent import Agent
 def run_simulation():
     print("Iniciando la inicialización del ecosistema...")
     
-    # 1. Cargamos los agentes del CSV
     agentes = load_agents_from_csv("users.csv")
     if not agentes:
         print("No hay agentes. Saliendo...")
@@ -36,15 +34,12 @@ def run_simulation():
             )
         )
 
-    # NUEVA LÓGICA DE AMISTAD
     print("Cargando la red social de amistades...")
     load_friendships_from_csv(agentes, "friendships.csv")
 
-    # 2. Asignamos las casas (Coordenadas de origen compartidas)
     print("Generando el entorno urbano...")
     casas_ciudad = environment.assign_homes(agentes)
 
-    # Calculamos las papeletas para la lotería de turnos (Raíz cuadrada + Suavizado de Laplace)
     pesos_actividad = [(math.sqrt(agente.social_activity) + 1) for agente in agentes]
 
     print("\n--- ¡Comienza el simulador espacial Phygital! (Ctrl+C para detener) ---\n")
@@ -53,21 +48,17 @@ def run_simulation():
     
     try:
         while True:
-            # 3. Elegimos al agente usando la cola de prioridad ponderada
             agente = random.choices(agentes, weights=pesos_actividad, k=1)[0]
             
-            estado_anterior_primario = agente.primary_state
+            estado_anterior_macro = agente.current_macro_state
             
-            
-            # INTEGRACIÓN MARKOV + BIOLOGÍA (ESTADO PRIMARIO)
-            
-            # A) El agente sufre el desgaste de su último turno físico
+            # =========================================================
+            # 1. HILO FÍSICO: CAPA 1 (MACRO-ESTADO) Y BIOLOGÍA
+            # =========================================================
             biological_engine.update_biological_needs(agente)
             
-            # B) Pedimos la rutina base al motor de Markov físico
-            estados_posibles, probabilidades_rutina = markov_engine.get_markov_probabilities(estado_anterior_primario)
+            estados_posibles, probabilidades_rutina = markov_engine.get_markov_probabilities(estado_anterior_macro)
 
-            # C) Aplicamos la personalidad a la rutina
             probabilidades_personalizadas = []
             for i in range(len(estados_posibles)):
                 estado_evaluado = estados_posibles[i]
@@ -75,23 +66,38 @@ def run_simulation():
                 multiplicador = agente.markov_modifiers.get(estado_evaluado, 1.0)
                 probabilidades_personalizadas.append(peso_original * multiplicador)
             
-            # D) El motor biológico suma la urgencia fisiológica y tira los dados
-            nuevo_estado_primario = biological_engine.get_next_state_with_biology(
+            nuevo_macro_estado = biological_engine.get_next_state_with_biology(
                 agente, 
                 probabilidades_personalizadas, 
                 estados_posibles
             )
             
-        
-            # DECISIÓN ESPACIAL (G-EPR)
-        
+            # =========================================================
+            # 2. HILO COGNITIVO: CAPA 2 (MICRO-ACCIÓN)
+            # =========================================================
+            nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
+            
+            # =========================================================
+            # 3. MOTOR SOCIAL Y DE COLISIONES
+            # =========================================================
+            if nueva_micro_accion in ["conversar", "charlar_mientras_comes"]:
+                hablaron = social_engine.process_encounter(agente, agentes)
+                
+                # Si no había nadie con quien hablar, buscamos un "fallback" lógico
+                if not hablaron:
+                    if nuevo_macro_estado == "OCIO": nueva_micro_accion = "dar_una_vuelta"
+                    elif nuevo_macro_estado == "CASA": nueva_micro_accion = "ver_la_tv"
+                    elif nuevo_macro_estado == "COMER_BEBER": nueva_micro_accion = "comer_fuera"
+
+            # =========================================================
+            # 4. DECISIÓN ESPACIAL (G-EPR)
+            # =========================================================
             mensaje_espacial = ""
             lugar_memoria = "su ubicación actual"
             
-            # Si el agente va a un destino público (NUEVOS ESTADOS FÍSICOS)
-            if nuevo_estado_primario in ["OCIO_PUBLICO", "OCIO_INDIVIDUAL", "TRABAJAR_ESTUDIAR"]:
-                
-                lugares_posibles = environment.get_places_by_type(nuevo_estado_primario)
+            # A) Búsqueda activa de destino público
+            if nuevo_macro_estado in ["OCIO", "TRABAJAR_ESTUDIAR"]:
+                lugares_posibles = environment.get_places_by_type(nuevo_macro_estado)
                 
                 if lugares_posibles:
                     rho_personalizado = max(0.0, min(1.0, config.BASE_EXPLORATION_RHO + agente.exploration_rho_bonus))
@@ -114,33 +120,37 @@ def run_simulation():
                     mensaje_espacial = f" -> Se desplaza a: {destino_id} ({tipo_visita})"
                     lugar_memoria = destino_id 
                     
-            # ¡NUEVA LÓGICA! Si el motor biológico exige COMER o BEBER
-            elif nuevo_estado_primario == "COMER_BEBER":
-                lugar_actual = str(agente.current_location_name).strip()
-                
-                # 1. Si ya está en casa, come allí directamente
-                if lugar_actual == "Casa":
-                    mensaje_espacial = " -> Come en casa"
+            # B) Lógica combinada para COMER_BEBER según la micro-acción
+            elif nuevo_macro_estado == "COMER_BEBER":
+                if nueva_micro_accion == "comer_en_casa":
+                    agente.current_coords = agente.home_coords
+                    agente.current_location_name = "Casa"
+                    mensaje_espacial = " -> Vuelve a casa para comer"
                     lugar_memoria = "Casa"
-                
-                # 2. Si está en la calle, leemos el diccionario para ver si le dejan comer
                 else:
-                    # Usamos .get() por seguridad (si el lugar no existe, asumimos True por defecto)
+                    lugar_actual = str(agente.current_location_name).strip()
                     info_lugar = environment.MAPA_CIUDAD.get(lugar_actual, {})
                     permite_comer = info_lugar.get("permite_comer", True)
                     
-                    if permite_comer:
+                    if lugar_actual != "Casa" and permite_comer:
                         mensaje_espacial = f" -> Aprovecha para comer aquí ({lugar_actual})"
                         lugar_memoria = lugar_actual
                     else:
-                        # Le echan o no puede comer (ej. Gimnasio). Se va a casa.
-                        agente.current_coords = agente.home_coords
-                        agente.current_location_name = "Casa"
-                        mensaje_espacial = f" -> Vuelve a casa para comer (en {lugar_actual} no se puede)"
-                        lugar_memoria = "Casa"
+                        # Si está en casa o en un sitio donde no dejan comer (ej. Gimnasio), sale a un local de OCIO
+                        lugares_comida = {k: v for k, v in environment.get_places_by_type("OCIO").items() if v.get("permite_comer", True)}
+                        if lugares_comida:
+                            destino_id, _ = spatial_engine.choose_destination(
+                                agent_coords=agente.current_coords, visited_places=agente.visited_places,
+                                places_db=lugares_comida, agent_age_group=agente.age_group, rho=0.5, beta=1.0)
+                            
+                            agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
+                            agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
+                            agente.current_location_name = destino_id
+                            mensaje_espacial = f" -> Sale a comer a: {destino_id}"
+                            lugar_memoria = destino_id
                         
-            # Si la Cadena de Markov decide que descansa en casa
-            elif nuevo_estado_primario in ["DORMIR", "INACTIVO_RELAX", "INACTIVO_TAREAS_CASA"]:
+            # C) Lógica de repliegue al hogar
+            elif nuevo_macro_estado in ["DORMIR", "CASA"]:
                 if agente.current_coords != agente.home_coords:
                     agente.current_coords = agente.home_coords
                     mensaje_espacial = " -> Vuelve a casa"
@@ -152,42 +162,21 @@ def run_simulation():
             
             if lugar_memoria != "su ubicación actual":
                 agente.id_lugar_actual = lugar_memoria
-            
-            # ESTADO SECUNDARIO / MULTITAREA
-            nuevo_estado_secundario = markov_engine.evaluate_secondary_state(agente, nuevo_estado_primario)
-            
-            # Si el motor secundario dictamina que quiere charlar
-            if nuevo_estado_secundario == "CONVERSAR":
-                # social_engine procesa todo y devuelve True si hubo diálogo real
-                hablaron = social_engine.process_encounter(agente, agentes)
-                
-                # Si no había nadie con quien hablar, revierte su estado mental
-                if not hablaron:
-                    nuevo_estado_secundario = "NINGUNO"
-
-            # Evaluamos si hace uso virtual (RRSS)
-            accion_virtual = markov_engine.evaluate_virtual_action(agente.secondary_state, nuevo_estado_secundario)
-            
         
-            # ACTUALIZACIÓN DE MEMORIA Y LOGS
-            agente.update_memory(nuevo_estado_primario, nuevo_estado_secundario, lugar_memoria, turno_global)
-            agente.update_state(nuevo_estado_primario, nuevo_estado_secundario)
+            # =========================================================
+            # 5. ACTUALIZACIÓN DE MEMORIA Y LOGS
+            # =========================================================
+            agente.update_memory(nuevo_macro_estado, nueva_micro_accion, lugar_memoria, turno_global)
+            agente.update_state(nuevo_macro_estado, nueva_micro_accion)
             
             if config.PRINT_LOGS:
-                # Añadimos el estado secundario a la consola visualmente si está haciendo algo
-                texto_sec = f" [+ {nuevo_estado_secundario}]" if nuevo_estado_secundario != "NINGUNO" else ""
-                
-                if accion_virtual != "ACCION_FISICA":
-                    print(f"[Turno {turno_global}] [VIRTUAL] {agente.name} ({agente.age_group}) -> {accion_virtual} | {nuevo_estado_primario}{mensaje_espacial}{texto_sec}")
-                else:
-                    print(f"[Turno {turno_global}] [FÍSICO]  {agente.name} ({agente.age_group}) -> {nuevo_estado_primario}{mensaje_espacial}{texto_sec}")
+                etiqueta = "[VIRTUAL]" if "rrss" in nueva_micro_accion else "[FÍSICO] "
+                print(f"[Turno {turno_global}] {etiqueta} {agente.name} -> {nuevo_macro_estado} ({nueva_micro_accion.replace('_', ' ')}){mensaje_espacial}")
 
-            # PARADA AUTOMÁTICA
             if config.MAX_TURNS > 0 and turno_global >= config.MAX_TURNS:
                 break 
 
             turno_global += 1
-            
             if config.PRINT_LOGS:
                 time.sleep(config.SLEEP_TICK)
             
@@ -200,74 +189,52 @@ def run_simulation():
         traceback.print_exc()
         
     finally:
-        # =================================================================
-        # GENERACIÓN DEL INFORME ESTADÍSTICO
-        # =================================================================
+        # =========================================================
+        # INFORME ESTADÍSTICO DE CAPA 1 Y CAPA 2
+        # =========================================================
         print("\n" + "="*60)
-        print("INFORME ESTADÍSTICO DE LA SIMULACIÓN")
+        print("INFORME ESTADÍSTICO JERÁRQUICO (Fase 1 & 2)")
         print("="*60)
         print(f"Turnos totales simulados: {turno_global - 1}")
         
-        global_states = {}
-        global_secondary_states = {}
-        global_combined_states = {}
-        total_states_logged = 0
-        total_secondary_logged = 0
+        global_macros = {}
+        global_micros = {}
+        total_turns = 0
 
         for a in agentes:
-            # Recuento de estados primarios
-            for estado, count in a.state_frequencies.items():
-                global_states[estado] = global_states.get(estado, 0) + count
-                total_states_logged += count
-                
-            # Recuento de estados secundarios
-            for estado_sec, count_sec in a.secondary_state_frequencies.items():
-                global_secondary_states[estado_sec] = global_secondary_states.get(estado_sec, 0) + count_sec
-                total_secondary_logged += count_sec
-            
-            for prim_state, sec_dict in a.combined_frequencies.items():
-                if prim_state not in global_combined_states:
-                    global_combined_states[prim_state] = {}
-                for sec_state, count in sec_dict.items():
-                    global_combined_states[prim_state][sec_state] = global_combined_states[prim_state].get(sec_state, 0) + count
+            for estado, count in a.macro_frequencies.items():
+                global_macros[estado] = global_macros.get(estado, 0) + count
+                total_turns += count
+            for micro, count in a.micro_frequencies.items():
+                global_micros[micro] = global_micros.get(micro, 0) + count
 
-        print("\n--- DISTRIBUCIÓN DEL TIEMPO (ESTADO FÍSICO / PRIMARIO) ---")
-        sorted_states = sorted(global_states.items(), key=lambda x: x[1], reverse=True)
-        for estado, count in sorted_states:
-            porcentaje = (count / total_states_logged) * 100 if total_states_logged > 0 else 0
+        print("\n--- DISTRIBUCIÓN DE CAPA 1 (Macro-estados) ---")
+        sorted_macros = sorted(global_macros.items(), key=lambda x: x[1], reverse=True)
+        for estado, count in sorted_macros:
+            porcentaje = (count / total_turns) * 100 if total_turns > 0 else 0
             print(f" - {estado}: {porcentaje:.2f}% ({count} turnos totales)")
 
-        print("\n--- DISTRIBUCIÓN DEL TIEMPO (ESTADO VIRTUAL / SECUNDARIO) ---")
-        sorted_sec_states = sorted(global_secondary_states.items(), key=lambda x: x[1], reverse=True)
-        for estado_sec, count_sec in sorted_sec_states:
-            porcentaje_sec = (count_sec / total_secondary_logged) * 100 if total_secondary_logged > 0 else 0
-            print(f" - {estado_sec}: {porcentaje_sec:.2f}% ({count_sec} turnos totales)")
-
-        print("\n--- DESGLOSE DE MULTITAREA POR ESTADO FÍSICO ---")
-        # Iteramos sobre los estados primarios ordenados de mayor a menor uso
-        for estado, count_total in sorted_states:
-            print(f" - {estado} ({count_total} turnos):")
-            sec_dict = global_combined_states.get(estado, {})
-            
-            # Ordenamos los subestados internamente de mayor a menor
-            sorted_sec = sorted(sec_dict.items(), key=lambda x: x[1], reverse=True)
-            for sec_estado, sec_count in sorted_sec:
-                # Calculamos el porcentaje relativo AL ESTADO PRIMARIO
-                porcentaje_interno = (sec_count / count_total) * 100 if count_total > 0 else 0
-                print(f"      > {sec_estado}: {porcentaje_interno:.2f}%")
+        print("\n--- DISTRIBUCIÓN DE CAPA 2 (Micro-acciones por Estado) ---")
+        # Organizamos la impresión leyendo el diccionario estructural del markov_engine
+        for macro, dict_micros in markov_engine.MICRO_ACTIONS.items():
+            turnos_en_este_macro = global_macros.get(macro, 0)
+            if turnos_en_este_macro > 0:
+                print(f" * Dentro de {macro} ({turnos_en_este_macro} turnos):")
+                # Extraemos y ordenamos solo las micro-acciones de este bloque
+                micros_de_este_macro = {k: global_micros.get(k, 0) for k in dict_micros.keys()}
+                sorted_micros = sorted(micros_de_este_macro.items(), key=lambda x: x[1], reverse=True)
+                
+                for micro_name, micro_count in sorted_micros:
+                    if micro_count > 0:
+                        porcentaje_relativo = (micro_count / turnos_en_este_macro) * 100
+                        print(f"      > {micro_name.replace('_', ' ')}: {porcentaje_relativo:.2f}%")
 
         total_amigos = sum(len(a.amigos) for a in agentes)
         media_amigos = total_amigos / len(agentes) if agentes else 0
-        print("\n--- MÉTRICAS SOCIALES Y HOMOFILIA ---")
+        print("\n--- MÉTRICAS SOCIALES ---")
         print(f" - Media de amigos por agente: {media_amigos:.2f}")
-        
-        if agentes:
-            extrovertido = max(agentes, key=lambda a: len(a.amigos))
-            introvertido = min(agentes, key=lambda a: len(a.amigos))
-            print(f" - El más sociable: {extrovertido.name} ({len(extrovertido.amigos)} amigos)")
-            print(f" - El menos sociable: {introvertido.name} ({len(introvertido.amigos)} amigos)")
 
-        print("\n--- LUGARES MÁS VISITADOS (MODELO ESPACIAL) ---")
+        print("\n--- LUGARES MÁS VISITADOS ---")
         global_places = {}
         for a in agentes:
             for lugar, visitas in a.visited_places.items():
@@ -275,18 +242,9 @@ def run_simulation():
 
         sorted_places = sorted(global_places.items(), key=lambda x: x[1], reverse=True)
         for lugar, visitas in sorted_places[:5]: 
-            print(f" - {lugar}: {visitas} visitas totales")
+            print(f" - {lugar}: {visitas} visitas")
         print("="*60 + "\n")
 
-        if agentes:
-            top_agente = agentes[0]
-            print(f"\nGenerando mapa 2D para {top_agente.name}... (Cierra la ventana gráfica para salir)")
-            try:
-                environment.plot_city_map(casas_ciudad, agente_destacado=top_agente)
-            except Exception:
-                pass
-
-        print("\n¡Simulación finalizada!")
         sys.exit(0)
 
 if __name__ == "__main__":

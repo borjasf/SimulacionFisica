@@ -1,7 +1,6 @@
 import random
 import matplotlib.pyplot as plt
 
-# MAPA DE LA CIUDAD VIRTUAL (100x100)
 MAPA_CIUDAD = {
     # ZONAS DE TRABAJO Y ESTUDIO 
     "Oficina_Centro": {
@@ -21,43 +20,41 @@ MAPA_CIUDAD = {
         "atractivo_por_edad": {"16-": 40.0, "16-24": 80.0, "25-44": 60.0, "45-64": 30.0, "65+": 20.0}
     },
 
-    # ZONAS DE OCIO PÚBLICO 
+    # ZONAS DE OCIO (Fusionadas)
     "Plaza_Mayor": {
-        "coords": (48, 52), "tipo": "OCIO_PUBLICO", "permite_comer": True,
+        "coords": (48, 52), "tipo": "OCIO", "permite_comer": True,
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 70.0, "45-64": 60.0, "65+": 80.0}
     },
     "Bar_Manolo": {
-        "coords": (10, 15), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
+        "coords": (10, 15), "tipo": "OCIO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 40.0, "25-44": 80.0, "45-64": 90.0, "65+": 70.0}
     },
     "Discoteca_Sur": {
-        "coords": (80, 10), "tipo": "OCIO_PUBLICO", "permite_comer": False, 
+        "coords": (80, 10), "tipo": "OCIO", "permite_comer": False, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 100.0, "25-44": 50.0, "45-64": 5.0, "65+": 0.0}
     },
     "Centro_Jubilados": { 
-        "coords": (70, 70), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
+        "coords": (70, 70), "tipo": "OCIO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 0.0, "25-44": 5.0, "45-64": 50.0, "65+": 100.0}
     },
     "Cafeteria_Tranquila": { 
-        "coords": (30, 60), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
+        "coords": (30, 60), "tipo": "OCIO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 30.0, "25-44": 60.0, "45-64": 80.0, "65+": 90.0}
     },
     "Restaurante_Familiar": { 
-        "coords": (40, 40), "tipo": "OCIO_PUBLICO", "permite_comer": True, 
+        "coords": (40, 40), "tipo": "OCIO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 50.0, "16-24": 40.0, "25-44": 85.0, "45-64": 85.0, "65+": 70.0}
     },
-
-    #  ZONAS DE OCIO INDIVIDUAL 
     "Polideportivo": {
-        "coords": (20, 80), "tipo": "OCIO_INDIVIDUAL", "permite_comer": False,
+        "coords": (20, 80), "tipo": "OCIO", "permite_comer": False,
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 60.0, "45-64": 30.0, "65+": 10.0}
     },
     "Parque_Central": {
-        "coords": (55, 45), "tipo": "OCIO_INDIVIDUAL", "permite_comer": True, 
+        "coords": (55, 45), "tipo": "OCIO", "permite_comer": True, 
         "atractivo_por_edad": {"16-": 90.0, "16-24": 40.0, "25-44": 70.0, "45-64": 60.0, "65+": 90.0}
     },
     "Gimnasio_Centro": { 
-        "coords": (70, 30), "tipo": "OCIO_INDIVIDUAL", "permite_comer": False, 
+        "coords": (70, 30), "tipo": "OCIO", "permite_comer": False, 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 85.0, "25-44": 80.0, "45-64": 40.0, "65+": 5.0}
     }
 }
