@@ -25,55 +25,16 @@ def run_simulation():
         print("No hay agentes. Saliendo...")
         sys.exit()
 
-    # (OPCIONAL) TU AGENTE DE CONTROL PARA PRUEBAS
-    # Comenta este bloque si quieres usar los agentes reales del CSV
-    """ agentes = [
-        Agent(
-            agent_id=999, name="Sujeto_Control", social_activity=50, 
-            traits_list=[], age=30, gender="male", occupation="Oficinista", 
-            qualification="Grado", interests="Nada"
+    # TUS AGENTES CLONES PARA LA PRUEBA DE VACÍO
+    agentes = []
+    for i in range(50):
+        agentes.append(
+            Agent(
+                agent_id=i, name=f"Clon_{i}", social_activity=50, 
+                traits_list=[], age=30, gender="male", occupation="Oficinista", 
+                qualification="Grado", interests="Nada"
+            )
         )
-    ]"""
-
-    # LISTA DE AGENTES ESTRATÉGICOS PARA EL TEST DE TURÍNG PHYGITAL
-    agentes = [
-        Agent(
-            agent_id=1, name="James", social_activity=80, 
-            traits_list=["Sociability +", "Neuroticism +", "Openness +"], 
-            age=20, gender="male", occupation="Estudiante de Ingeniería", 
-            qualification="Grado", interests="Física, Videojuegos, Café"
-        ),
-        Agent(
-            agent_id=2, name="Benjamin", social_activity=40, 
-            traits_list=["Sociability -", "Conscientiousness +", "Amiability +"], 
-            age=45, gender="male", occupation="Arquitecto", 
-            qualification="Máster", interests="Diseño, Lectura, Silencio"
-        ),
-        Agent(
-            agent_id=3, name="Clara", social_activity=70, 
-            traits_list=["Sociability +", "Openness +", "Amiability -"], 
-            age=28, gender="female", occupation="Artista Freelance", 
-            qualification="Grado", interests="Pintura, Museos, Redes Sociales"
-        ),
-        Agent(
-            agent_id=4, name="Ricardo", social_activity=30, 
-            traits_list=["Sociability -", "Conscientiousness +", "Neuroticism -"], 
-            age=68, gender="male", occupation="Jubilado", 
-            qualification="Doctorado", interests="Ajedrez, Pasear"
-        ),
-        Agent(
-            agent_id=5, name="Elena", social_activity=90, 
-            traits_list=["Sociability +", "Amiability +", "Conscientiousness -"], 
-            age=24, gender="female", occupation="Camarera", 
-            qualification="Bachillerato", interests="Música, Conciertos, Viajar"
-        ),
-        Agent(
-            agent_id=6, name="Lucas", social_activity=55, 
-            traits_list=["Neuroticism +", "Conscientiousness -", "Openness -"], 
-            age=32, gender="male", occupation="Administrativo", 
-            qualification="FP", interests="Series, Descansar, Fútbol"
-        )
-    ]
 
     # NUEVA LÓGICA DE AMISTAD
     print("Cargando la red social de amistades...")
@@ -193,8 +154,6 @@ def run_simulation():
                 agente.id_lugar_actual = lugar_memoria
             
             # ESTADO SECUNDARIO / MULTITAREA
-            
-            # <-- AQUÍ ESTÁ EL CAMBIO CLAVE -->
             nuevo_estado_secundario = markov_engine.evaluate_secondary_state(agente, nuevo_estado_primario)
             
             # Si el motor secundario dictamina que quiere charlar
@@ -211,8 +170,6 @@ def run_simulation():
             
         
             # ACTUALIZACIÓN DE MEMORIA Y LOGS
-        
-            
             agente.update_memory(nuevo_estado_primario, nuevo_estado_secundario, lugar_memoria, turno_global)
             agente.update_state(nuevo_estado_primario, nuevo_estado_secundario)
             
@@ -252,18 +209,52 @@ def run_simulation():
         print(f"Turnos totales simulados: {turno_global - 1}")
         
         global_states = {}
+        global_secondary_states = {}
+        global_combined_states = {}
         total_states_logged = 0
+        total_secondary_logged = 0
+
         for a in agentes:
-            # Aquí leemos state_frequencies, que ahora guarda las tareas primarias
+            # Recuento de estados primarios
             for estado, count in a.state_frequencies.items():
                 global_states[estado] = global_states.get(estado, 0) + count
                 total_states_logged += count
+                
+            # Recuento de estados secundarios
+            for estado_sec, count_sec in a.secondary_state_frequencies.items():
+                global_secondary_states[estado_sec] = global_secondary_states.get(estado_sec, 0) + count_sec
+                total_secondary_logged += count_sec
+            
+            for prim_state, sec_dict in a.combined_frequencies.items():
+                if prim_state not in global_combined_states:
+                    global_combined_states[prim_state] = {}
+                for sec_state, count in sec_dict.items():
+                    global_combined_states[prim_state][sec_state] = global_combined_states[prim_state].get(sec_state, 0) + count
 
-        print("\n--- DISTRIBUCIÓN DEL TIEMPO (ESTADO FÍSICO) ---")
+        print("\n--- DISTRIBUCIÓN DEL TIEMPO (ESTADO FÍSICO / PRIMARIO) ---")
         sorted_states = sorted(global_states.items(), key=lambda x: x[1], reverse=True)
         for estado, count in sorted_states:
             porcentaje = (count / total_states_logged) * 100 if total_states_logged > 0 else 0
             print(f" - {estado}: {porcentaje:.2f}% ({count} turnos totales)")
+
+        print("\n--- DISTRIBUCIÓN DEL TIEMPO (ESTADO VIRTUAL / SECUNDARIO) ---")
+        sorted_sec_states = sorted(global_secondary_states.items(), key=lambda x: x[1], reverse=True)
+        for estado_sec, count_sec in sorted_sec_states:
+            porcentaje_sec = (count_sec / total_secondary_logged) * 100 if total_secondary_logged > 0 else 0
+            print(f" - {estado_sec}: {porcentaje_sec:.2f}% ({count_sec} turnos totales)")
+
+        print("\n--- DESGLOSE DE MULTITAREA POR ESTADO FÍSICO ---")
+        # Iteramos sobre los estados primarios ordenados de mayor a menor uso
+        for estado, count_total in sorted_states:
+            print(f" - {estado} ({count_total} turnos):")
+            sec_dict = global_combined_states.get(estado, {})
+            
+            # Ordenamos los subestados internamente de mayor a menor
+            sorted_sec = sorted(sec_dict.items(), key=lambda x: x[1], reverse=True)
+            for sec_estado, sec_count in sorted_sec:
+                # Calculamos el porcentaje relativo AL ESTADO PRIMARIO
+                porcentaje_interno = (sec_count / count_total) * 100 if count_total > 0 else 0
+                print(f"      > {sec_estado}: {porcentaje_interno:.2f}%")
 
         total_amigos = sum(len(a.amigos) for a in agentes)
         media_amigos = total_amigos / len(agentes) if agentes else 0

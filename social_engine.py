@@ -82,7 +82,7 @@ def process_encounter(agent, agents):
 
             for participante in [agent, companion]:
                 # 1. Copiamos la lista de acciones sin vaciar el búfer original
-                acciones_recientes = list(participante.short_term_memory)
+                acciones_recientes = list(participante.action_buffer)
                 
                 if acciones_recientes: 
                     if config.PRINT_LOGS:
@@ -91,13 +91,12 @@ def process_encounter(agent, agents):
                     # 2. Llamamos a la API
                     nueva_reflexion = llm_client.generate_long_term_memory(participante, acciones_recientes)
                     
-                    # 3. Validamos el éxito: En llm_client.py, si falla devuelve la memoria antigua.
-                    # Por tanto, si la nueva reflexión es diferente a la antigua, la API funcionó bien.
+                    # 3. Validamos el éxito
                     if nueva_reflexion and nueva_reflexion != participante.long_term_memory:
                         participante.update_long_term_memory(nueva_reflexion)
                         
-                        # 4. SOLO AHORA vaciamos los recuerdos a corto plazo
-                        participante.short_term_memory.clear()
+                        # 4. SOLO AHORA vaciamos la lista real de recuerdos
+                        participante.action_buffer.clear()
                     else:
                         if config.PRINT_LOGS:
                             print(f"   [!] Error de red. {participante.name} retendrá sus recuerdos a corto plazo para más adelante.")

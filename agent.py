@@ -57,6 +57,8 @@ class Agent:
 
         # Frecuencias ahora registran el primario
         self.state_frequencies = {"DORMIR": 1}
+        self.secondary_state_frequencies = {"NINGUNO": 1}
+        self.combined_frequencies = {"DORMIR": {"NINGUNO": 1}} 
 
         # Al nacer, el agente procesa su ADN (sus rasgos)
         self._apply_traits()
@@ -150,10 +152,16 @@ class Agent:
         self.long_term_memory = nueva_reflexion
             
     def update_state(self, new_primary, new_secondary):
-        """Actualiza el estado dual actual sumando al contador de frecuencias el primario."""
+        """Actualiza el estado dual actual sumando al contador de frecuencias el primario, secundario y su combinación."""
         self.primary_state = new_primary
         self.secondary_state = new_secondary
+        
         self.state_frequencies[new_primary] = self.state_frequencies.get(new_primary, 0) + 1
+        self.secondary_state_frequencies[new_secondary] = self.secondary_state_frequencies.get(new_secondary, 0) + 1
+        
+        if new_primary not in self.combined_frequencies:
+            self.combined_frequencies[new_primary] = {}
+        self.combined_frequencies[new_primary][new_secondary] = self.combined_frequencies[new_primary].get(new_secondary, 0) + 1
 
     def __repr__(self):
         return f"<Agent {self.name} | Edad: {self.age} ({self.age_group}) | {self.primary_state} [+ {self.secondary_state}]>"

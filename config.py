@@ -3,15 +3,10 @@ SLEEP_TICK = 0.05       # Pausa del bucle principal
 SLEEP_DIALOGUE = 2.0    # Pausa de lectura en consola para los diálogos
 
 # --- CONSTANTES ESPACIALES (MODELO G-EPR) ---
-BASE_EXPLORATION_RHO = 0.8
-BASE_GAMMA = 0.5
-BASE_SPATIAL_BETA = 2.0     
-
-# --- CONSTANTES DE MEMORIA Y RECUPERACIÓN (STANFORD PAPER) ---
-# Pesos de la fórmula de fusión de recuerdos (Deben sumar 1.0)
-WEIGHT_SIMILARITY = 0.5     # Peso de la similitud semántica (Vectores)
-WEIGHT_RECENCY = 0.25        # Peso de lo reciente que fue el recuerdo
-WEIGHT_IMPORTANCE = 0.25     # Peso de la carga emocional/importancia
+# [A review of human mobility...]
+BASE_EXPLORATION_RHO = 0.8 #Página 12. En la referencia [20] del documento es 0.6 de base, pero al ser ejecuciones "cortas" y las personas venir de base sin conocimiento previo, intentamos acelerar ese proceso de reconocimiento de lugares.
+BASE_GAMMA = 0.5 #Página 12.
+BASE_SPATIAL_BETA = 2.0 # Página 15 del estudio: "The distance exponent β is typically found to be around 2, consistent with a gravity model of mobility."
 
 MEMORY_DECAY_FACTOR = 0.05  # Factor de decaimiento temporal (a mayor número, olvidan más rápido)
 MAX_IMPORTANCE_SCORE = 10.0 # Normalizador de la nota de importancia (por defecto es del 1 al 10)
@@ -29,6 +24,6 @@ FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos li
 
 
 # --- MODO TESTER / DEBUG ---
-MOCK_LLM = False          # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
-PRINT_LOGS = True        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
-MAX_TURNS = 100         # Si es > 0, la simulación se detendrá sola al llegar a este turno
+MOCK_LLM = True         # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
+PRINT_LOGS = False        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
+MAX_TURNS = 1000         # Si es > 0, la simulación se detendrá sola al llegar a este turno
