@@ -84,7 +84,7 @@ def run_simulation():
                 # Si no había nadie con quien hablar, buscamos un "fallback" lógico
                 if not hablaron:
                     if nuevo_macro_estado == "OCIO": nueva_micro_accion = "dar_una_vuelta"
-                    elif nuevo_macro_estado == "CASA": nueva_micro_accion = "ver_la_tv"
+                    elif nuevo_macro_estado == "CASA": nueva_micro_accion = "ver_la_television"
                     elif nuevo_macro_estado == "COMER_BEBER": nueva_micro_accion = "comer_fuera"
 
             # 4. DECISIÓN ESPACIAL (G-EPR)

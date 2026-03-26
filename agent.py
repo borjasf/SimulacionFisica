@@ -17,7 +17,11 @@ class Agent:
 
         self.backstory = ""
 
-        # Frecuencias ahora registran la macro y la micro acción anidada
+        # ESTADO JERÁRQUICO INICIAL (Capa 1 y Capa 2)
+        self.current_macro_state = "DORMIR"
+        self.current_micro_action = "dormir_profundamente"
+
+        # Frecuencias ahora registran la macro y la micro acción de forma anidada
         self.macro_frequencies = {"DORMIR": 1}
         self.micro_frequencies = {"DORMIR": {"dormir_profundamente": 1}}
         
@@ -45,10 +49,6 @@ class Agent:
         self.long_term_memory = "Últimamente mi rutina ha sido bastante normal y estable."
 
         self.amigos = []
-
-        # Frecuencias ahora registran la macro y la micro acción
-        self.macro_frequencies = {"DORMIR": 1}
-        self.micro_frequencies = {"dormir_profundamente": 1}
 
         self._apply_traits()
 
