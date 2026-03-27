@@ -24,7 +24,7 @@ def run_simulation():
         sys.exit()
 
     # TUS AGENTES CLONES PARA LA PRUEBA DE VACÍO
-    agentes = []
+    """agentes = []
     for i in range(50):
         agentes.append(
             Agent(
@@ -32,7 +32,7 @@ def run_simulation():
                 traits_list=[], age=30, gender="male", occupation="Oficinista", 
                 qualification="Grado", interests="Nada"
             )
-        )
+        )"""
 
     print("Cargando la red social de amistades...")
     load_friendships_from_csv(agentes, "friendships.csv")

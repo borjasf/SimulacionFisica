@@ -27,37 +27,38 @@ TRANSITION_MATRIX = {
 # CAPA 2: MICRO-ACCIONES (Nomenclatura del usuario en snake_case)
 MICRO_ACTIONS = {
     "DORMIR": {
-        "dormir_profundamente": 80,
-        "dormir_siesta": 20
+        "dormir_profundamente": 85,
+        "dormir_siesta": 15
     },
     "COMER_BEBER": {
-        "comer_en_casa": 40,
-        "comer_fuera_de_casa": 20,
+        "comer_en_casa": 45,            # (Basado en 31 Actividades culinarias: 63.7%)
+        "comer_fuera_de_casa": 20,      # (Derivado de Visitas y vida social)
         "merendar_algo_rapido": 15,
-        "usar_rrss": 15,
+        "usar_rrss": 10,                # (Basado en 21 Uso de redes sociales: 32.3%) -> NUEVA ACCIÓN
         "conversar_comiendo": 10
     },
     "TRABAJAR_ESTUDIAR": {
-        "trabajar": 35,
+        "trabajar": 35,                 # (Basado en 11 Trabajo principal: 31.6%)
         "ir_a_clase": 35,
-        "tareas_personales": 15,
+        "tareas_personales": 15,        # (Basado en 324 Tareas de organización: 22.8%)
         "conversar": 10,
         "usar_rrss": 5
     },
     "CASA": {
-        "ver_la_television": 30,
-        "usar_rrss": 25,
-        "hacer_limpieza": 20,
-        "jugar_videojuegos": 15,
-        "conversar": 10
+        "ver_la_television": 35,        # (Basado en 82 Ver televisión: 84.5%)
+        "usar_rrss": 20,                # (Basado en 21 Uso de redes sociales: 32.3%) -> NUEVA ACCIÓN
+        "hacer_limpieza": 15,           # (Basado en 321 Limpieza de la vivienda: 35.9%)
+        "jugar_videojuegos": 10,        # (Basado en 73 Juegos: 10.4%)
+        "conversar": 10,                # (Basado en 51 Vida social: 43.7%) -> NUEVA ACCIÓN (Aunque no es tan común en casa, lo dejamos para dar variedad)
+        "leer": 10                      # (Basado en 81 Lectura: 21.4%) -> NUEVA ACCIÓN
     },
     "OCIO": {
-        "dar_una_vuelta": 30,
-        "conversar": 25,
-        "usar_rrss": 15,
-        "hacer_ejercicio": 15,
+        "dar_una_vuelta": 10,
+        "conversar": 40,        # (Basado en 51 Vida social: 43.7%)
+        "usar_rrss": 10,
+        "hacer_ejercicio": 15,  # (Agregado de gimnasia, balón, acuáticos: ~10%)
         "culturizarse": 10,
-        "salir_de_fiesta": 5
+        "tomar_algo": 15
     }
 }
 
@@ -90,9 +91,8 @@ def choose_micro_action(agente, macro_state):
     return random.choices(acciones_posibles, weights=pesos_personalizados, k=1)[0]
 
 
-# ==============================================================================
+
 # CAPA 3: REDES SOCIALES (Cadena de Markov Absorbente)
-# ==============================================================================
 
 # El estado "salir" es el estado absorbente. Una vez se llega a él, el bucle termina.
 RRSS_TRANSITIONS = {
