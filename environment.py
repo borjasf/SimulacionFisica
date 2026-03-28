@@ -74,21 +74,18 @@ MAPA_CIUDAD = {
 }
 
 def get_places_by_type_and_action(macro_estado, micro_accion):
-    """Filtra el mapa aceptando lugares híbridos (cuando 'tipo' es una lista)."""
+    """Filtra el mapa aceptando lugares híbridos con una lógica universal."""
     lugares_validos = {}
     for nombre_lugar, info in MAPA_CIUDAD.items():
         tipos_lugar = info.get("tipo", [])
-        
-        # Convertimos a lista por si el lugar solo tiene un tipo escrito en formato String
+
         if isinstance(tipos_lugar, str):
             tipos_lugar = [tipos_lugar]
-            
-        # Regla especial: Comer/Beber en la calle se hace en sitios categorizados como OCIO
-        es_tipo_valido = (macro_estado in tipos_lugar) or (macro_estado == "COMER_BEBER" and "OCIO" in tipos_lugar)
-        
-        if es_tipo_valido and micro_accion in info.get("micro_acciones", []):
+
+        # Lógica pura: si el estado está en la lista de tipos y la acción en su lista
+        if macro_estado in tipos_lugar and micro_accion in info.get("micro_acciones", []):
             lugares_validos[nombre_lugar] = info
-            
+
     return lugares_validos
 
 def assign_homes(agents_list, map_size=100):
