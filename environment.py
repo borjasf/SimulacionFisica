@@ -1,67 +1,95 @@
 import random
 import matplotlib.pyplot as plt
 
+
 MAPA_CIUDAD = {
     # ZONAS DE TRABAJO Y ESTUDIO 
     "Oficina_Centro": {
-        "coords": (50, 50), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": True, 
+        "coords": (50, 50), "tipo": "TRABAJAR_ESTUDIAR",
+        "micro_acciones": ["trabajar", "tareas_personales", "conversar", "usar_rrss"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 20.0, "25-44": 90.0, "45-64": 60.0, "65+": 0.0}
     },
     "Universidad_Norte": {
-        "coords": (50, 90), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": True, 
+        "coords": (50, 90), "tipo": "TRABAJAR_ESTUDIAR",
+        "micro_acciones": ["ir_a_clase", "tareas_personales", "conversar", "usar_rrss"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 95.0, "25-44": 30.0, "45-64": 10.0, "65+": 0.0}
     },
     "Instituto_Sur": { 
-        "coords": (20, 20), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": True, 
+        "coords": (20, 20), "tipo": "TRABAJAR_ESTUDIAR",
+        "micro_acciones": ["ir_a_clase", "tareas_personales", "conversar", "usar_rrss"], 
         "atractivo_por_edad": {"16-": 100.0, "16-24": 10.0, "25-44": 15.0, "45-64": 10.0, "65+": 0.0}
     },
     "Biblioteca_Municipal": { 
-        "coords": (60, 60), "tipo": "TRABAJAR_ESTUDIAR", "permite_comer": False, 
+        "coords": (60, 60), "tipo": ["TRABAJAR_ESTUDIAR", "OCIO"],
+        "micro_acciones": ["tareas_personales", "usar_rrss", "culturizarse", "leer"], 
         "atractivo_por_edad": {"16-": 40.0, "16-24": 80.0, "25-44": 60.0, "45-64": 30.0, "65+": 20.0}
     },
 
-    # ZONAS DE OCIO (Fusionadas)
+    # ZONAS PÚBLICAS Y DE OCIO
     "Plaza_Mayor": {
-        "coords": (48, 52), "tipo": "OCIO", "permite_comer": True,
+        "coords": (48, 52), "tipo": ["OCIO", "COMER_BEBER"],
+        "micro_acciones": ["dar_una_vuelta", "conversar", "usar_rrss", "merendar_algo_rapido", "leer"],
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 70.0, "45-64": 60.0, "65+": 80.0}
     },
     "Bar_Manolo": {
-        "coords": (10, 15), "tipo": "OCIO", "permite_comer": True, 
+        "coords": (10, 15), "tipo": ["OCIO", "COMER_BEBER"],
+        "micro_acciones": ["tomar_algo", "conversar", "comer_fuera_de_casa", "conversar_comiendo", "usar_rrss", "usar_rrss_comiendo"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 40.0, "25-44": 80.0, "45-64": 90.0, "65+": 70.0}
     },
     "Discoteca_Sur": {
-        "coords": (80, 10), "tipo": "OCIO", "permite_comer": False, 
+        "coords": (80, 10), "tipo": "OCIO",
+        "micro_acciones": ["tomar_algo", "conversar", "usar_rrss"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 100.0, "25-44": 50.0, "45-64": 5.0, "65+": 0.0}
     },
     "Centro_Jubilados": { 
-        "coords": (70, 70), "tipo": "OCIO", "permite_comer": True, 
+        "coords": (70, 70), "tipo": ["OCIO", "COMER_BEBER"],
+        "micro_acciones": ["conversar", "tomar_algo", "leer", "usar_rrss", "culturizarse"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 0.0, "25-44": 5.0, "45-64": 50.0, "65+": 100.0}
     },
     "Cafeteria_Tranquila": { 
-        "coords": (30, 60), "tipo": "OCIO", "permite_comer": True, 
+        "coords": (30, 60), "tipo": ["OCIO", "COMER_BEBER"],
+        "micro_acciones": ["tomar_algo", "comer_fuera_de_casa", "merendar_algo_rapido", "conversar_comiendo", "leer", "conversar", "usar_rrss", "usar_rrss_comiendo"], 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 30.0, "25-44": 60.0, "45-64": 80.0, "65+": 90.0}
     },
     "Restaurante_Familiar": { 
-        "coords": (40, 40), "tipo": "OCIO", "permite_comer": True, 
+        "coords": (40, 40), "tipo": "COMER_BEBER",
+        "micro_acciones": ["comer_fuera_de_casa", "conversar_comiendo", "merendar_algo_rapido", "usar_rrss_comiendo"], 
         "atractivo_por_edad": {"16-": 50.0, "16-24": 40.0, "25-44": 85.0, "45-64": 85.0, "65+": 70.0}
     },
     "Polideportivo": {
-        "coords": (20, 80), "tipo": "OCIO", "permite_comer": False,
+        "coords": (20, 80), "tipo": "OCIO",
+        "micro_acciones": ["hacer_ejercicio", "conversar", "usar_rrss"],
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 60.0, "45-64": 30.0, "65+": 10.0}
     },
     "Parque_Central": {
-        "coords": (55, 45), "tipo": "OCIO", "permite_comer": True, 
+        "coords": (55, 45), "tipo": ["OCIO", "COMER_BEBER"],
+        "micro_acciones": ["dar_una_vuelta", "hacer_ejercicio", "conversar", "leer", "usar_rrss", "merendar_algo_rapido"], 
         "atractivo_por_edad": {"16-": 90.0, "16-24": 40.0, "25-44": 70.0, "45-64": 60.0, "65+": 90.0}
     },
     "Gimnasio_Centro": { 
-        "coords": (70, 30), "tipo": "OCIO", "permite_comer": False, 
+        "coords": (70, 30), "tipo": "OCIO",
+        "micro_acciones": ["hacer_ejercicio", "usar_rrss"], 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 85.0, "25-44": 80.0, "45-64": 40.0, "65+": 5.0}
     }
 }
 
-def get_places_by_type(target_type):
-    """Filtra el mapa y devuelve solo los lugares que coinciden con el estado físico solicitado."""
-    return {p_id: info for p_id, info in MAPA_CIUDAD.items() if info["tipo"] == target_type}
+def get_places_by_type_and_action(macro_estado, micro_accion):
+    """Filtra el mapa aceptando lugares híbridos (cuando 'tipo' es una lista)."""
+    lugares_validos = {}
+    for nombre_lugar, info in MAPA_CIUDAD.items():
+        tipos_lugar = info.get("tipo", [])
+        
+        # Convertimos a lista por si el lugar solo tiene un tipo escrito en formato String
+        if isinstance(tipos_lugar, str):
+            tipos_lugar = [tipos_lugar]
+            
+        # Regla especial: Comer/Beber en la calle se hace en sitios categorizados como OCIO
+        es_tipo_valido = (macro_estado in tipos_lugar) or (macro_estado == "COMER_BEBER" and "OCIO" in tipos_lugar)
+        
+        if es_tipo_valido and micro_accion in info.get("micro_acciones", []):
+            lugares_validos[nombre_lugar] = info
+            
+    return lugares_validos
 
 def assign_homes(agents_list, map_size=100):
     """

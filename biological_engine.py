@@ -3,25 +3,41 @@ import random
 def update_biological_needs(agente):
     """
     Actualiza las variables fisiológicas en cada turno usando la CAPA 1 (Macro-estados).
+    Dentro de cada estado, se ajusta el gasto usando la CAPA 2 (Micro-acciones).
     Se aplican los multiplicadores de personalidad (Surgency, Conscientiousness, Neuroticism).
     """
     estado = agente.current_macro_state
+    micro = agente.current_micro_action
     
-    # 1. ENERGÍA 
+    # 1. ENERGÍA (Media matemática esperada: -6 por turno)
     if estado == "DORMIR":
-        agente.energia = min(100, agente.energia + (100 * agente.energy_recovery_mult))
-    elif estado in ["TRABAJAR_ESTUDIAR", "OCIO"]:
-        # El trabajo y el ocio fuera de casa gastan más energía
-        agente.energia = max(0, agente.energia - (10 * agente.energy_decay_mult))
+        if micro == "dormir_profundamente":
+            agente.energia = min(100, agente.energia + (100 * agente.energy_recovery_mult))
+        else: # dormir_siesta
+            agente.energia = min(100, agente.energia + (40 * agente.energy_recovery_mult))
     else:
-        # Estar en CASA o COMER_BEBER desgasta menos
-        agente.energia = max(0, agente.energia - (5 * agente.energy_decay_mult))
+        # Desgaste dinámico pero simplificado (Valores: 4, 6, u 8)
+        if micro in ["hacer_ejercicio", "hacer_limpieza", "dar_una_vuelta", "trabajar", "ir_a_clase", "tareas_personales"]:
+            gasto_energia = 7  # Alto desgaste
+        else: 
+            gasto_energia = 5  # Bajo desgaste
+            
+        agente.energia = max(0, agente.energia - (gasto_energia * agente.energy_decay_mult))
 
-    # 2. SACIEDAD 
+    # 2. SACIEDAD (Media matemática esperada: -18 por turno)
     if estado == "COMER_BEBER":
-        agente.saciedad = min(100, agente.saciedad + 100)
+        if micro in ["comer_en_casa", "comer_fuera_de_casa", "conversar_comiendo"]:
+            agente.saciedad = min(100, agente.saciedad + 100)
+        elif micro in ["merendar_algo_rapido", "tomar_algo", "usar_rrss_comiendo"]:
+            agente.saciedad = min(100, agente.saciedad + 40) 
+        
     else:
-        agente.saciedad = max(0, agente.saciedad - 10)
+        if micro in ["hacer_ejercicio", "hacer_limpieza"]:
+            gasto_saciedad = 20 # El esfuerzo físico da más hambre
+        else:
+            gasto_saciedad = 15 # Desgaste normal (trabajar, estudiar, tareas...)
+            
+        agente.saciedad = max(0, agente.saciedad - gasto_saciedad)
 
 
 def calculate_utilities(agente):

@@ -91,62 +91,8 @@ def run_simulation():
             mensaje_espacial = ""
             lugar_memoria = "su ubicación actual"
             
-            # A) Búsqueda activa de destino público
-            if nuevo_macro_estado in ["OCIO", "TRABAJAR_ESTUDIAR"]:
-                lugares_posibles = environment.get_places_by_type(nuevo_macro_estado)
-                
-                if lugares_posibles:
-                    rho_personalizado = max(0.0, min(1.0, config.BASE_EXPLORATION_RHO + agente.exploration_rho_bonus))
-                    beta_personalizado = max(0.1, config.BASE_SPATIAL_BETA * agente.spatial_beta_modifier)
-
-                    destino_id, es_nuevo = spatial_engine.choose_destination(
-                        agent_coords=agente.current_coords,
-                        visited_places=agente.visited_places,
-                        places_db=lugares_posibles,
-                        agent_age_group=agente.age_group, 
-                        rho=rho_personalizado, 
-                        beta=beta_personalizado 
-                    )
-                    
-                    agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
-                    agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
-                    agente.current_location_name = destino_id
-                    
-                    tipo_visita = " [NUEVO] " if es_nuevo else " [HABITUAL] "
-                    mensaje_espacial = f" -> Se desplaza a: {destino_id} ({tipo_visita})"
-                    lugar_memoria = destino_id 
-                    
-            # B) Lógica combinada para COMER_BEBER según la micro-acción
-            elif nuevo_macro_estado == "COMER_BEBER":
-                if nueva_micro_accion == "comer_en_casa":
-                    agente.current_coords = agente.home_coords
-                    agente.current_location_name = "Casa"
-                    mensaje_espacial = " -> Vuelve a casa para comer"
-                    lugar_memoria = "Casa"
-                else:
-                    lugar_actual = str(agente.current_location_name).strip()
-                    info_lugar = environment.MAPA_CIUDAD.get(lugar_actual, {})
-                    permite_comer = info_lugar.get("permite_comer", True)
-                    
-                    if lugar_actual != "Casa" and permite_comer:
-                        mensaje_espacial = f" -> Aprovecha para comer aquí ({lugar_actual})"
-                        lugar_memoria = lugar_actual
-                    else:
-                        # Si está en casa o en un sitio donde no dejan comer (ej. Gimnasio), sale a un local de OCIO
-                        lugares_comida = {k: v for k, v in environment.get_places_by_type("OCIO").items() if v.get("permite_comer", True)}
-                        if lugares_comida:
-                            destino_id, _ = spatial_engine.choose_destination(
-                                agent_coords=agente.current_coords, visited_places=agente.visited_places,
-                                places_db=lugares_comida, agent_age_group=agente.age_group, rho=0.5, beta=1.0)
-                            
-                            agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
-                            agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
-                            agente.current_location_name = destino_id
-                            mensaje_espacial = f" -> Sale a comer a: {destino_id}"
-                            lugar_memoria = destino_id
-                        
-            # C) Lógica de repliegue al hogar
-            elif nuevo_macro_estado in ["DORMIR", "CASA"]:
+            # A) Bloque Doméstico: El agente decide volver o quedarse en casa
+            if nuevo_macro_estado in ["CASA", "DORMIR"] or nueva_micro_accion == "comer_en_casa":
                 if agente.current_coords != agente.home_coords:
                     agente.current_coords = agente.home_coords
                     mensaje_espacial = " -> Vuelve a casa"
@@ -155,7 +101,57 @@ def run_simulation():
                 
                 agente.current_location_name = "Casa"
                 lugar_memoria = "Casa"
-            
+                
+            # B) Bloque Público: Búsqueda estricta en la ciudad
+            else:
+                lugar_actual = str(agente.current_location_name).strip()
+                info_lugar = environment.MAPA_CIUDAD.get(lugar_actual, {})
+                
+                # Evaluamos si el lugar físico actual le sirve para lo que quiere hacer ahora
+                tipos_actuales = info_lugar.get("tipo", [])
+                
+                if isinstance(tipos_actuales, str):
+                    tipos_actuales = [tipos_actuales]
+                    
+                # Comprobación universal limpia
+                tipo_coincide = nuevo_macro_estado in tipos_actuales
+                accion_soportada = nueva_micro_accion in info_lugar.get("micro_acciones", [])
+                
+                # Inteligencia Espacial: Si ya está en un local válido, no se mueve
+                if lugar_actual != "Casa" and tipo_coincide and accion_soportada:
+                    mensaje_espacial = f" -> Continúa aquí ({lugar_actual})"
+                    lugar_memoria = lugar_actual
+                    
+                # Si el lugar actual no vale (ej. estaba en el Gym y ahora quiere Tomar Algo)
+                else:
+                    lugares_posibles = environment.get_places_by_type_and_action(nuevo_macro_estado, nueva_micro_accion)
+                    
+                    if lugares_posibles:
+                        rho_personalizado = max(0.0, min(1.0, config.BASE_EXPLORATION_RHO + agente.exploration_rho_bonus))
+                        beta_personalizado = max(0.1, config.BASE_SPATIAL_BETA * agente.spatial_beta_modifier)
+
+                        destino_id, es_nuevo = spatial_engine.choose_destination(
+                            agent_coords=agente.current_coords,
+                            visited_places=agente.visited_places,
+                            places_db=lugares_posibles,
+                            agent_age_group=agente.age_group, 
+                            rho=rho_personalizado, 
+                            beta=beta_personalizado 
+                        )
+                        
+                        agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
+                        agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
+                        agente.current_location_name = destino_id
+                        
+                        tipo_visita = " [NUEVO] " if es_nuevo else " [HABITUAL] "
+                        mensaje_espacial = f" -> Se desplaza a: {destino_id} ({tipo_visita})"
+                        lugar_memoria = destino_id 
+                    else:
+                        # Fallback de seguridad (Si un filtro es demasiado estricto y no hay locales)
+                        mensaje_espacial = f" -> Pasea por la calle"
+                        lugar_memoria = "la calle"
+                        agente.current_location_name = "Calle"
+
             if lugar_memoria != "su ubicación actual":
                 agente.id_lugar_actual = lugar_memoria
         

@@ -24,7 +24,7 @@ TRANSITION_MATRIX = {
     }
 }
 
-# CAPA 2: MICRO-ACCIONES (Nomenclatura del usuario en snake_case)
+# CAPA 2: MICRO-ACCIONES (Encuesta del Empleo del Tiempo INE)
 MICRO_ACTIONS = {
     "DORMIR": {
         "dormir_profundamente": 85,
@@ -34,7 +34,7 @@ MICRO_ACTIONS = {
         "comer_en_casa": 45,            # (Basado en 31 Actividades culinarias: 63.7%)
         "comer_fuera_de_casa": 20,      # (Derivado de Visitas y vida social)
         "merendar_algo_rapido": 15,
-        "usar_rrss": 10,                # (Basado en 21 Uso de redes sociales: 32.3%) -> NUEVA ACCIÓN
+        "usar_rrss_comiendo": 10,       # (Basado en 21 Uso de redes sociales: 32.3%) -> NUEVA ACCIÓN
         "conversar_comiendo": 10
     },
     "TRABAJAR_ESTUDIAR": {
@@ -55,10 +55,11 @@ MICRO_ACTIONS = {
     "OCIO": {
         "dar_una_vuelta": 10,
         "conversar": 40,        # (Basado en 51 Vida social: 43.7%)
-        "usar_rrss": 10,
-        "hacer_ejercicio": 15,  # (Agregado de gimnasia, balón, acuáticos: ~10%)
+        "usar_rrss": 5,
+        "hacer_ejercicio": 10,  # (Agregado de gimnasia, balón, acuáticos: ~10%)
         "culturizarse": 10,
-        "tomar_algo": 15
+        "tomar_algo": 15,
+        "leer": 10
     }
 }
 
