@@ -73,9 +73,7 @@ def run_simulation():
             # 2. HILO COGNITIVO: CAPA 2 (MICRO-ACCIÓN)
             nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
 
-            resumen_virtual = ""
-            if nueva_micro_accion in ["usar_rrss", "ver_las_rrss"]:
-                resumen_virtual = markov_engine.simulate_rrss_session()
+            
             
             # 3. MOTOR SOCIAL Y DE COLISIONES
             if nueva_micro_accion in ["conversar", "conversar_comiendo"]:
@@ -86,6 +84,11 @@ def run_simulation():
                     if nuevo_macro_estado == "OCIO": nueva_micro_accion = "usar_rrss"
                     elif nuevo_macro_estado == "CASA": nueva_micro_accion = "usar_rrss"
                     elif nuevo_macro_estado == "COMER_BEBER": nueva_micro_accion = "usar_rrss_comiendo"
+                    elif nuevo_macro_estado == "TRABAJAR_ESTUDIAR": nueva_micro_accion = "usar_rrss"
+
+            resumen_virtual = ""
+            if nueva_micro_accion in ["usar_rrss", "usar_rrss_comiendo"]:
+                resumen_virtual = markov_engine.simulate_rrss_session()
 
             # 4. DECISIÓN ESPACIAL (G-EPR)
             mensaje_espacial = ""

@@ -33,6 +33,7 @@ GOLDBERG_RULES = {
                 "CASA": 1.2,
                 # IMPACTO CAPA 2 
                 "usar_rrss": 1.8,
+                "usar_rrss_comiendo": 1.8,
                 "ver_la_television": 1.5,
                 "jugar_videojuegos": 1.5,
                 "leer": 1.5,
@@ -73,6 +74,7 @@ GOLDBERG_RULES = {
                 "hacer_limpieza": 1.8,
                 "tareas_personales": 1.6,
                 "usar_rrss": 0.4,
+                "usar_rrss_comiendo": 0.4,
                 "ver_la_television": 0.6,
                 "tomar_algo": 0.5
             },
@@ -89,6 +91,7 @@ GOLDBERG_RULES = {
                 "hacer_limpieza": 0.3,
                 "tareas_personales": 0.3,
                 "usar_rrss": 1.6,
+                "usar_rrss_comiendo": 1.6,
                 "jugar_videojuegos": 1.5
             },
             "spatial_beta_modifier": 0.8        
@@ -105,7 +108,8 @@ GOLDBERG_RULES = {
                 "TRABAJAR_ESTUDIAR": 0.8,
                 "CASA": 1.2,
                 # IMPACTO CAPA 2 (Refugio en actividades pasivas)
-                "usar_rrss": 1.8,             
+                "usar_rrss": 1.8,
+                "usar_rrss_comiendo": 1.8,             
                 "ver_la_television": 1.5,
                 "trabajar": 0.7,
                 "ir_a_clase": 0.7,
@@ -116,7 +120,8 @@ GOLDBERG_RULES = {
             "biological_urgency_k": 3.5,        
             "energy_decay_multiplier": 0.8,     
             "markov_weight_modifiers": {
-                "usar_rrss": 0.7
+                "usar_rrss": 0.7,
+                "usar_rrss_comiendo": 0.7,
             }
         }
     },
