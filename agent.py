@@ -17,13 +17,11 @@ class Agent:
 
         self.backstory = ""
 
-        # ESTADO JERÁRQUICO INICIAL (Capa 1 y Capa 2)
-        self.current_macro_state = "DORMIR"
-        self.current_micro_action = "dormir_profundamente"
-
-        # Frecuencias ahora registran la macro y la micro acción de forma anidada
-        self.macro_frequencies = {"DORMIR": 1}
-        self.micro_frequencies = {"DORMIR": {"dormir_profundamente": 1}}
+        self.current_macro_state = "DESCANSO"
+        self.current_micro_action = "sueno_profundo"
+        
+        self.macro_frequencies = {"DESCANSO": 1}
+        self.micro_frequencies = {"DESCANSO": {"sueno_profundo": 1}}
         
         # VARIABLES BIOLÓGICAS
         self.energia = 100

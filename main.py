@@ -23,17 +23,6 @@ def run_simulation():
         print("No hay agentes. Saliendo...")
         sys.exit()
 
-    # TUS AGENTES CLONES PARA LA PRUEBA DE VACÍO
-    """agentes = []
-    for i in range(50):
-        agentes.append(
-            Agent(
-                agent_id=i, name=f"Clon_{i}", social_activity=50, 
-                traits_list=[], age=30, gender="male", occupation="Oficinista", 
-                qualification="Grado", interests="Nada"
-            )
-        )"""
-
     print("Cargando la red social de amistades...")
     load_friendships_from_csv(agentes, "friendships.csv")
 
@@ -74,28 +63,33 @@ def run_simulation():
             nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
 
             
-            
             # 3. MOTOR SOCIAL Y DE COLISIONES
-            if nueva_micro_accion in ["conversar", "conversar_comiendo"]:
+            acciones_conversacion = ["conversacion_social", "conversacion_con_companeros", "conversacion_con_convivientes", "interaccion_ingesta"]
+            if nueva_micro_accion in acciones_conversacion:
                 hablaron = social_engine.process_encounter(agente, agentes)
                 
                 # Si no había nadie con quien hablar, buscamos un "fallback" lógico
                 if not hablaron:
-                    if nuevo_macro_estado == "OCIO": nueva_micro_accion = "usar_rrss"
-                    elif nuevo_macro_estado == "CASA": nueva_micro_accion = "usar_rrss"
-                    elif nuevo_macro_estado == "COMER_BEBER": nueva_micro_accion = "usar_rrss_comiendo"
-                    elif nuevo_macro_estado == "TRABAJAR_ESTUDIAR": nueva_micro_accion = "usar_rrss"
+                    if nuevo_macro_estado == "OCIO": nueva_micro_accion = "ver_rrss"
+                    elif nuevo_macro_estado == "TAREAS_DOMESTICAS": nueva_micro_accion = "ver_rrss"
+                    elif nuevo_macro_estado == "ALIMENTACION": nueva_micro_accion = "ingesta_rrss"
+                    elif nuevo_macro_estado == "OBLIGACIONES": nueva_micro_accion = "revisar_rrss"
 
             resumen_virtual = ""
-            if nueva_micro_accion in ["usar_rrss", "usar_rrss_comiendo"]:
+            if nueva_micro_accion in ["ver_rrss", "revisar_rrss", "ingesta_rrss"]:
                 resumen_virtual = markov_engine.simulate_rrss_session()
 
             # 4. DECISIÓN ESPACIAL (G-EPR)
             mensaje_espacial = ""
             lugar_memoria = "su ubicación actual"
             
+            acciones_domesticas = [
+                "ingesta_en_hogar", "mantenimiento_del_hogar", "conversacion_con_convivientes", 
+                "consumo_audiovisual", "ocio_digital_activo"
+            ]
+            
             # A) Bloque Doméstico: El agente decide volver o quedarse en casa
-            if nuevo_macro_estado in ["CASA", "DORMIR"] or nueva_micro_accion == "comer_en_casa":
+            if nuevo_macro_estado in ["TAREAS_DOMESTICAS", "DESCANSO"] or nueva_micro_accion in acciones_domesticas:
                 if agente.current_coords != agente.home_coords:
                     agente.current_coords = agente.home_coords
                     mensaje_espacial = " -> Vuelve a casa"
@@ -217,7 +211,6 @@ def run_simulation():
             if turnos_en_este_macro > 0:
                 print(f" * Dentro de {macro} ({turnos_en_este_macro} turnos):")
                 
-                # Extraemos solo las micro-acciones pertenecientes a este macro-estado
                 micros_de_este_macro = global_micros.get(macro, {})
                 sorted_micros = sorted(micros_de_este_macro.items(), key=lambda x: x[1], reverse=True)
                 

@@ -5,70 +5,70 @@ import matplotlib.pyplot as plt
 MAPA_CIUDAD = {
     # ZONAS DE TRABAJO Y ESTUDIO 
     "Oficina_Centro": {
-        "coords": (50, 50), "tipo": "TRABAJAR_ESTUDIAR",
-        "micro_acciones": ["trabajar", "tareas_personales", "conversar", "usar_rrss"], 
+        "coords": (50, 50), "tipo": "OBLIGACIONES",
+        "micro_acciones": ["jornada_laboral", "gestiones_personales", "conversacion_con_companeros", "revisar_rrss"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 20.0, "25-44": 90.0, "45-64": 60.0, "65+": 0.0}
     },
     "Universidad_Norte": {
-        "coords": (50, 90), "tipo": "TRABAJAR_ESTUDIAR",
-        "micro_acciones": ["ir_a_clase", "tareas_personales", "conversar", "usar_rrss"], 
+        "coords": (50, 90), "tipo": "OBLIGACIONES",
+        "micro_acciones": ["jornada_academica", "gestiones_personales", "conversacion_con_companeros", "revisar_rrss"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 95.0, "25-44": 30.0, "45-64": 10.0, "65+": 0.0}
     },
     "Instituto_Sur": { 
-        "coords": (20, 20), "tipo": "TRABAJAR_ESTUDIAR",
-        "micro_acciones": ["ir_a_clase", "tareas_personales", "conversar", "usar_rrss"], 
+        "coords": (20, 20), "tipo": "OBLIGACIONES",
+        "micro_acciones": ["jornada_academica", "gestiones_personales", "conversacion_con_companeros", "revisar_rrss"], 
         "atractivo_por_edad": {"16-": 100.0, "16-24": 10.0, "25-44": 15.0, "45-64": 10.0, "65+": 0.0}
     },
     "Biblioteca_Municipal": { 
-        "coords": (60, 60), "tipo": ["TRABAJAR_ESTUDIAR", "OCIO"],
-        "micro_acciones": ["tareas_personales", "usar_rrss", "culturizarse", "leer"], 
+        "coords": (60, 60), "tipo": ["OBLIGACIONES", "OCIO"],
+        "micro_acciones": ["gestiones_personales", "revisar_rrss", "actividad_cultural", "lectura", "ver_rrss"], 
         "atractivo_por_edad": {"16-": 40.0, "16-24": 80.0, "25-44": 60.0, "45-64": 30.0, "65+": 20.0}
     },
 
     # ZONAS PÚBLICAS Y DE OCIO
     "Plaza_Mayor": {
-        "coords": (48, 52), "tipo": ["OCIO", "COMER_BEBER"],
-        "micro_acciones": ["dar_una_vuelta", "conversar", "usar_rrss", "merendar_algo_rapido", "leer"],
+        "coords": (48, 52), "tipo": ["OCIO", "ALIMENTACION"],
+        "micro_acciones": ["paseo_recreativo", "conversacion_social", "ver_rrss", "ingesta_ligera", "lectura"],
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 70.0, "45-64": 60.0, "65+": 80.0}
     },
     "Bar_Manolo": {
-        "coords": (10, 15), "tipo": ["OCIO", "COMER_BEBER"],
-        "micro_acciones": ["tomar_algo", "conversar", "comer_fuera_de_casa", "conversar_comiendo", "usar_rrss", "usar_rrss_comiendo"], 
+        "coords": (10, 15), "tipo": ["OCIO", "ALIMENTACION"],
+        "micro_acciones": ["ocio_hosteleria", "conversacion_social", "ingesta_en_restauracion", "interaccion_ingesta", "ver_rrss", "ingesta_rrss"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 40.0, "25-44": 80.0, "45-64": 90.0, "65+": 70.0}
     },
     "Discoteca_Sur": {
         "coords": (80, 10), "tipo": "OCIO",
-        "micro_acciones": ["tomar_algo", "conversar", "usar_rrss"], 
+        "micro_acciones": ["ocio_hosteleria", "conversacion_social", "ver_rrss"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 100.0, "25-44": 50.0, "45-64": 5.0, "65+": 0.0}
     },
     "Centro_Jubilados": { 
-        "coords": (70, 70), "tipo": ["OCIO", "COMER_BEBER"],
-        "micro_acciones": ["conversar", "tomar_algo", "leer", "usar_rrss", "culturizarse"], 
+        "coords": (70, 70), "tipo": ["OCIO", "ALIMENTACION"],
+        "micro_acciones": ["conversacion_social", "ocio_hosteleria", "lectura", "ver_rrss", "actividad_cultural"], 
         "atractivo_por_edad": {"16-": 0.0, "16-24": 0.0, "25-44": 5.0, "45-64": 50.0, "65+": 100.0}
     },
     "Cafeteria_Tranquila": { 
-        "coords": (30, 60), "tipo": ["OCIO", "COMER_BEBER"],
-        "micro_acciones": ["tomar_algo", "comer_fuera_de_casa", "merendar_algo_rapido", "conversar_comiendo", "leer", "conversar", "usar_rrss", "usar_rrss_comiendo"], 
+        "coords": (30, 60), "tipo": ["OCIO", "ALIMENTACION"],
+        "micro_acciones": ["ocio_hosteleria", "ingesta_en_restauracion", "ingesta_ligera", "interaccion_ingesta", "lectura", "conversacion_social", "ver_rrss", "ingesta_rrss"], 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 30.0, "25-44": 60.0, "45-64": 80.0, "65+": 90.0}
     },
     "Restaurante_Familiar": { 
-        "coords": (40, 40), "tipo": "COMER_BEBER",
-        "micro_acciones": ["comer_fuera_de_casa", "conversar_comiendo", "merendar_algo_rapido", "usar_rrss_comiendo"], 
+        "coords": (40, 40), "tipo": "ALIMENTACION",
+        "micro_acciones": ["ingesta_en_restauracion", "interaccion_ingesta", "ingesta_ligera", "ingesta_rrss"], 
         "atractivo_por_edad": {"16-": 50.0, "16-24": 40.0, "25-44": 85.0, "45-64": 85.0, "65+": 70.0}
     },
     "Polideportivo": {
         "coords": (20, 80), "tipo": "OCIO",
-        "micro_acciones": ["hacer_ejercicio", "conversar", "usar_rrss"],
+        "micro_acciones": ["actividad_fisica", "conversacion_social", "ver_rrss"],
         "atractivo_por_edad": {"16-": 80.0, "16-24": 90.0, "25-44": 60.0, "45-64": 30.0, "65+": 10.0}
     },
     "Parque_Central": {
-        "coords": (55, 45), "tipo": ["OCIO", "COMER_BEBER"],
-        "micro_acciones": ["dar_una_vuelta", "hacer_ejercicio", "conversar", "leer", "usar_rrss", "merendar_algo_rapido"], 
+        "coords": (55, 45), "tipo": ["OCIO", "ALIMENTACION"],
+        "micro_acciones": ["paseo_recreativo", "actividad_fisica", "conversacion_social", "lectura", "ver_rrss", "ingesta_ligera"], 
         "atractivo_por_edad": {"16-": 90.0, "16-24": 40.0, "25-44": 70.0, "45-64": 60.0, "65+": 90.0}
     },
     "Gimnasio_Centro": { 
         "coords": (70, 30), "tipo": "OCIO",
-        "micro_acciones": ["hacer_ejercicio", "usar_rrss"], 
+        "micro_acciones": ["actividad_fisica", "ver_rrss"], 
         "atractivo_por_edad": {"16-": 10.0, "16-24": 85.0, "25-44": 80.0, "45-64": 40.0, "65+": 5.0}
     }
 }
@@ -135,16 +135,19 @@ def plot_city_map(casas_generadas, agente_destacado=None):
     y_casas = [info['coords'][1] for info in casas_generadas.values()]
     plt.scatter(x_casas, y_casas, c='gray', marker='s', s=30, label='Viviendas', alpha=0.6)
     
-    # 2. Dibujar los Lugares Públicos (Adaptado a la nomenclatura Phygital)
-    colores = {"TRABAJAR_ESTUDIAR": "blue", "OCIO_PUBLICO": "red", "OCIO_INDIVIDUAL": "green"}
-    marcadores = {"TRABAJAR_ESTUDIAR": "s", "OCIO_PUBLICO": "*", "OCIO_INDIVIDUAL": "^"}
+    # 2. Dibujar los Lugares Públicos
+    colores = {"OBLIGACIONES": "blue", "OCIO": "red", "ALIMENTACION": "orange"}
+    marcadores = {"OBLIGACIONES": "s", "OCIO": "*", "ALIMENTACION": "^"}
     
     for place_id, info in MAPA_CIUDAD.items():
         x, y = info["coords"]
-        tipo = info["tipo"]
+        tipos = info["tipo"]
+        
+        # Si es un lugar con múltiples tipos, cogemos el principal para el color
+        tipo_principal = tipos[0] if isinstance(tipos, list) else tipos
         
         # Pinta el punto del lugar
-        plt.scatter(x, y, c=colores.get(tipo, "black"), marker=marcadores.get(tipo, "o"), 
+        plt.scatter(x, y, c=colores.get(tipo_principal, "black"), marker=marcadores.get(tipo_principal, "o"), 
                     s=200, edgecolors='black', zorder=2)
                     
         # Añade la etiqueta de texto flotante

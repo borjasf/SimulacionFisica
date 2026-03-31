@@ -10,14 +10,15 @@ def update_biological_needs(agente):
     micro = agente.current_micro_action
     
     # 1. ENERGÍA (Media matemática esperada: -6 por turno)
-    if estado == "DORMIR":
-        if micro == "dormir_profundamente":
+    if estado == "DESCANSO":
+        if micro == "sueno_profundo":
             agente.energia = min(100, agente.energia + (100 * agente.energy_recovery_mult))
-        else: # dormir_siesta
+        else: # descanso_diurno
             agente.energia = min(100, agente.energia + (40 * agente.energy_recovery_mult))
     else:
-        # Desgaste dinámico pero simplificado (Valores: 4, 6, u 8)
-        if micro in ["hacer_ejercicio", "hacer_limpieza", "dar_una_vuelta", "trabajar", "ir_a_clase", "tareas_personales"]:
+        # Desgaste dinámico pero simplificado (Valores: 5 o 7)
+        acciones_alto_desgaste = ["actividad_fisica", "mantenimiento_del_hogar", "paseo_recreativo", "jornada_laboral", "jornada_academica", "gestiones_personales"]
+        if micro in acciones_alto_desgaste:
             gasto_energia = 7  # Alto desgaste
         else: 
             gasto_energia = 5  # Bajo desgaste
@@ -25,14 +26,14 @@ def update_biological_needs(agente):
         agente.energia = max(0, agente.energia - (gasto_energia * agente.energy_decay_mult))
 
     # 2. SACIEDAD (Media matemática esperada: -18 por turno)
-    if estado == "COMER_BEBER":
-        if micro in ["comer_en_casa", "comer_fuera_de_casa", "conversar_comiendo"]:
+    if estado == "ALIMENTACION":
+        if micro in ["ingesta_en_hogar", "ingesta_en_restauracion", "interaccion_ingesta"]:
             agente.saciedad = min(100, agente.saciedad + 100)
-        elif micro in ["merendar_algo_rapido", "tomar_algo", "usar_rrss_comiendo"]:
+        elif micro in ["ingesta_ligera", "ingesta_rrss"]:
             agente.saciedad = min(100, agente.saciedad + 40) 
         
     else:
-        if micro in ["hacer_ejercicio", "hacer_limpieza"]:
+        if micro in ["actividad_fisica", "mantenimiento_del_hogar"]:
             gasto_saciedad = 20 # El esfuerzo físico da más hambre
         else:
             gasto_saciedad = 15 # Desgaste normal (trabajar, estudiar, tareas...)
@@ -48,8 +49,8 @@ def calculate_utilities(agente):
     deficit_saciedad = 100 - agente.saciedad
     
     utilidades = {
-        "DORMIR": (deficit_energia / 100.0) ** k,
-        "COMER_BEBER": (deficit_saciedad / 100.0) ** k
+        "DESCANSO": (deficit_energia / 100.0) ** k,
+        "ALIMENTACION": (deficit_saciedad / 100.0) ** k
     }
     
     return utilidades
@@ -68,10 +69,10 @@ def get_next_state_with_biology(agente, markov_probabilities, estados_posibles):
         peso_normal = markov_probabilities[i]
         peso_extra = 0
         
-        if estado == "DORMIR":
-            peso_extra = utilidades.get("DORMIR", 0)
-        elif estado == "COMER_BEBER":
-            peso_extra = utilidades.get("COMER_BEBER", 0)
+        if estado == "DESCANSO":
+            peso_extra = utilidades.get("DESCANSO", 0)
+        elif estado == "ALIMENTACION":
+            peso_extra = utilidades.get("ALIMENTACION", 0)
             
         peso_final = peso_normal + peso_extra
         pesos_combinados.append(peso_final)

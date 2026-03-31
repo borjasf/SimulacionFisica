@@ -1,72 +1,70 @@
 import random
 
-# CAPA 1: MATRIZ PRIMARIA FASE 1 (5 Macro-Estados)
+# CAPA 1: MATRIZ PRIMARIA FASE 1 (5 Macro-Estados Formales)
 TRANSITION_MATRIX = {
-    "DORMIR": {
-        "DORMIR": 0.0, "COMER_BEBER": 0.01, "TRABAJAR_ESTUDIAR": 0.45, 
-        "CASA": 0.35, "OCIO": 0.19
+    "DESCANSO": {
+        "DESCANSO": 0.0, "ALIMENTACION": 0.01, "OBLIGACIONES": 0.45, 
+        "TAREAS_DOMESTICAS": 0.35, "OCIO": 0.19
     },
-    "COMER_BEBER": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.0, "TRABAJAR_ESTUDIAR": 0.35, 
-        "CASA": 0.35, "OCIO": 0.29
+    "ALIMENTACION": {
+        "DESCANSO": 0.01, "ALIMENTACION": 0.0, "OBLIGACIONES": 0.35, 
+        "TAREAS_DOMESTICAS": 0.35, "OCIO": 0.29
     },
-    "TRABAJAR_ESTUDIAR": {
-        "DORMIR": 0.01, "COMER_BEBER": 0.1, "TRABAJAR_ESTUDIAR": 0.05, 
-        "CASA": 0.45, "OCIO": 0.48
+    "OBLIGACIONES": {
+        "DESCANSO": 0.01, "ALIMENTACION": 0.01, "OBLIGACIONES": 0.05, 
+        "TAREAS_DOMESTICAS": 0.45, "OCIO": 0.48
     },
-    "CASA": {
-        "DORMIR": 0.05, "COMER_BEBER": 0.05, "TRABAJAR_ESTUDIAR": 0.30, 
-        "CASA": 0.15, "OCIO": 0.45
+    "TAREAS_DOMESTICAS": {
+        "DESCANSO": 0.05, "ALIMENTACION": 0.05, "OBLIGACIONES": 0.30, 
+        "TAREAS_DOMESTICAS": 0.15, "OCIO": 0.45
     },
     "OCIO": {
-        "DORMIR": 0.025, "COMER_BEBER": 0.025, "TRABAJAR_ESTUDIAR": 0.20, 
-        "CASA": 0.55, "OCIO": 0.20
+        "DESCANSO": 0.03, "ALIMENTACION": 0.03, "OBLIGACIONES": 0.20, 
+        "TAREAS_DOMESTICAS": 0.54, "OCIO": 0.20
     }
 }
 
-# CAPA 2: MICRO-ACCIONES (Encuesta del Empleo del Tiempo INE)
+# CAPA 2: MICRO-ACCIONES (Formalizadas)
 MICRO_ACTIONS = {
-    "DORMIR": {
-        "dormir_profundamente": 85,
-        "dormir_siesta": 15
+    "DESCANSO": {
+        "sueno_profundo": 85,
+        "descanso_diurno": 15
     },
-    "COMER_BEBER": {
-        "comer_en_casa": 45,            # (Basado en 31 Actividades culinarias: 63.7%)
-        "comer_fuera_de_casa": 20,      # (Derivado de Visitas y vida social)
-        "merendar_algo_rapido": 15,
-        "usar_rrss_comiendo": 10,       # (Basado en 21 Uso de redes sociales: 32.3%) -> NUEVA ACCIÓN
-        "conversar_comiendo": 10
+    "ALIMENTACION": {
+        "ingesta_en_hogar": 45,
+        "ingesta_en_restauracion": 20,
+        "ingesta_ligera": 15,
+        "interaccion_ingesta": 10,
+        "ingesta_rrss": 10
     },
-    "TRABAJAR_ESTUDIAR": {
-        "trabajar": 35,                 # (Basado en 11 Trabajo principal: 31.6%)
-        "ir_a_clase": 35,
-        "tareas_personales": 15,        # (Basado en 324 Tareas de organización: 22.8%)
-        "conversar": 10,
-        "usar_rrss": 5
+    "OBLIGACIONES": {
+        "jornada_laboral": 35,
+        "jornada_academica": 35,
+        "gestiones_personales": 15,
+        "conversacion_con_companeros": 10,
+        "revisar_rrss": 5
     },
-    "CASA": {
-        "ver_la_television": 35,        # (Basado en 82 Ver televisión: 84.5%)
-        "usar_rrss": 20,                # (Basado en 21 Uso de redes sociales: 32.3%) -> NUEVA ACCIÓN
-        "hacer_limpieza": 15,           # (Basado en 321 Limpieza de la vivienda: 35.9%)
-        "jugar_videojuegos": 10,        # (Basado en 73 Juegos: 10.4%)
-        "conversar": 10,                # (Basado en 51 Vida social: 43.7%) -> NUEVA ACCIÓN (Aunque no es tan común en casa, lo dejamos para dar variedad)
-        "leer": 10                      # (Basado en 81 Lectura: 21.4%) -> NUEVA ACCIÓN
+    "TAREAS_DOMESTICAS": {
+        "mantenimiento_del_hogar": 75,
+        "conversacion_con_convivientes": 25
     },
     "OCIO": {
-        "dar_una_vuelta": 10,
-        "conversar": 40,        # (Basado en 51 Vida social: 43.7%)
-        "usar_rrss": 5,
-        "hacer_ejercicio": 10,  # (Agregado de gimnasia, balón, acuáticos: ~10%)
-        "culturizarse": 10,
-        "tomar_algo": 15,
-        "leer": 10
+        "conversacion_social": 25,
+        "ocio_hosteleria": 15,
+        "paseo_recreativo": 10,
+        "actividad_fisica": 10,
+        "actividad_cultural": 10,
+        "lectura": 10,
+        "consumo_audiovisual": 10,
+        "ocio_digital_activo": 5,
+        "ver_rrss": 5
     }
 }
 
 def get_markov_probabilities(current_macro_state):
     """Devuelve las probabilidades de la CAPA 1 (Macro-estados)."""
     if current_macro_state not in TRANSITION_MATRIX:
-        current_macro_state = "CASA"
+        current_macro_state = "TAREAS_DOMESTICAS" # Actualizado el fallback
     return list(TRANSITION_MATRIX[current_macro_state].keys()), list(TRANSITION_MATRIX[current_macro_state].values())
 
 def choose_micro_action(agente, macro_state):
@@ -84,18 +82,13 @@ def choose_micro_action(agente, macro_state):
         accion = acciones_posibles[i]
         peso_original = pesos_base[i]
         
-        # En la Fase 2 aquí leeremos los rasgos del agente para alterar el peso.
-        # Por ahora, usamos el modificador genérico o 1.0
         multiplicador = agente.markov_modifiers.get(accion, 1.0)
         pesos_personalizados.append(peso_original * multiplicador)
 
     return random.choices(acciones_posibles, weights=pesos_personalizados, k=1)[0]
 
 
-
 # CAPA 3: REDES SOCIALES (Cadena de Markov Absorbente)
-
-# El estado "salir" es el estado absorbente. Una vez se llega a él, el bucle termina.
 RRSS_TRANSITIONS = {
     "ver_contenido": {"ver_contenido": 0.40, "dar_like": 0.30, "comentar": 0.05, "publicar": 0.05, "salir": 0.20},
     "dar_like":      {"ver_contenido": 0.45, "dar_like": 0.00, "comentar": 0.15, "publicar": 0.00, "salir": 0.40},
@@ -108,10 +101,9 @@ def simulate_rrss_session():
     Simula una sesión completa de redes sociales en una fracción de segundo.
     Devuelve un string narrativo resumiendo todo lo que el agente hizo.
     """
-    estado_actual = "ver_contenido" # Siempre se entra a la app viendo el feed
+    estado_actual = "ver_contenido" 
     acciones_realizadas = {"ver_contenido": 0, "dar_like": 0, "comentar": 0, "publicar": 0}
     
-    # Bucle intra-turno (Límite máximo de 15 acciones para evitar bucles infinitos por seguridad)
     for _ in range(15):
         if estado_actual == "salir":
             break
@@ -121,7 +113,6 @@ def simulate_rrss_session():
         probs = RRSS_TRANSITIONS[estado_actual]
         estado_actual = random.choices(list(probs.keys()), weights=list(probs.values()), k=1)[0]
         
-    # --- TRADUCTOR NARRATIVO ---
     resumen = []
     if acciones_realizadas["ver_contenido"] > 0:
         resumen.append("hizo scroll viendo publicaciones")
@@ -137,7 +128,6 @@ def simulate_rrss_session():
     if not resumen:
         return "abrió la red social pero la cerró al instante sin hacer nada"
         
-    # Formateamos la lista a lenguaje natural (Ej: "hizo scroll, dio 2 likes y escribió 1 comentario")
     if len(resumen) > 1:
         texto_final = ", ".join(resumen[:-1]) + " y " + resumen[-1]
     else:
