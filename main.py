@@ -44,42 +44,32 @@ def run_simulation():
             # 1. HILO FÍSICO: CAPA 1 (MACRO-ESTADO) Y BIOLOGÍA
             biological_engine.update_biological_needs(agente)
             
-            estados_posibles, probabilidades_rutina = markov_engine.get_markov_probabilities(estado_anterior_macro)
-
-            probabilidades_personalizadas = []
-            for i in range(len(estados_posibles)):
-                estado_evaluado = estados_posibles[i]
-                peso_original = probabilidades_rutina[i]
-                multiplicador = agente.markov_modifiers.get(estado_evaluado, 1.0)
-                probabilidades_personalizadas.append(peso_original * multiplicador)
-            
-            nuevo_macro_estado = biological_engine.get_next_state_with_biology(
-                agente, 
-                probabilidades_personalizadas, 
-                estados_posibles
-            )
-            
-            # 2. HILO COGNITIVO: CAPA 2 (MICRO-ACCIÓN)
-            nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
-
-            
-            # 3. MOTOR SOCIAL Y DE COLISIONES
-            acciones_conversacion = ["conversacion_social", "conversacion_con_companeros", "conversacion_con_convivientes", "interaccion_ingesta"]
-            if nueva_micro_accion in acciones_conversacion:
-                hablaron = social_engine.process_encounter(agente, agentes)
+            # 2. HILO COGNITIVO (Con sistema de Memoria de Intenciones)
+            if agente.pending_micro_action:
+                # Si acaba de llegar de un viaje, ejecuta su intención original al 100%
+                nuevo_macro_estado = agente.pending_macro_state
+                nueva_micro_accion = agente.pending_micro_action
                 
-                # Si no había nadie con quien hablar, buscamos un "fallback" lógico
-                if not hablaron:
-                    if nuevo_macro_estado == "OCIO": nueva_micro_accion = "ver_rrss"
-                    elif nuevo_macro_estado == "TAREAS_DOMESTICAS": nueva_micro_accion = "ver_rrss"
-                    elif nuevo_macro_estado == "ALIMENTACION": nueva_micro_accion = "ingesta_rrss"
-                    elif nuevo_macro_estado == "OBLIGACIONES": nueva_micro_accion = "revisar_rrss"
+                # Limpiamos la intención para el futuro
+                agente.pending_macro_state = None
+                agente.pending_micro_action = None
+            else:
+                # Si no estaba viajando, la ruleta de Markov decide qué hacer
+                estados_posibles, probabilidades_rutina = markov_engine.get_markov_probabilities(estado_anterior_macro)
 
-            resumen_virtual = ""
-            if nueva_micro_accion in ["ver_rrss", "revisar_rrss", "ingesta_rrss"]:
-                resumen_virtual = markov_engine.simulate_rrss_session()
+                probabilidades_personalizadas = []
+                for i in range(len(estados_posibles)):
+                    estado_evaluado = estados_posibles[i]
+                    peso_original = probabilidades_rutina[i]
+                    multiplicador = agente.markov_modifiers.get(estado_evaluado, 1.0)
+                    probabilidades_personalizadas.append(peso_original * multiplicador)
+                
+                nuevo_macro_estado = biological_engine.get_next_state_with_biology(
+                    agente, probabilidades_personalizadas, estados_posibles
+                )
+                nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
 
-            # 4. DECISIÓN ESPACIAL (G-EPR)
+            # 3. DECISIÓN ESPACIAL Y DESPLAZAMIENTO (LA INTERCEPCIÓN)
             mensaje_espacial = ""
             lugar_memoria = "su ubicación actual"
             
@@ -88,38 +78,37 @@ def run_simulation():
                 "consumo_audiovisual", "ocio_digital_activo"
             ]
             
-            # A) Bloque Doméstico: El agente decide volver o quedarse en casa
+            # A) Bloque Doméstico
             if nuevo_macro_estado in ["TAREAS_DOMESTICAS", "DESCANSO"] or nueva_micro_accion in acciones_domesticas:
                 if agente.current_coords != agente.home_coords:
+                    # INTERCEPCIÓN: Guardamos lo que iba a hacer y lo mandamos de viaje a casa
+                    agente.pending_macro_state = nuevo_macro_estado
+                    agente.pending_micro_action = nueva_micro_accion
+                    
                     agente.current_coords = agente.home_coords
-                    mensaje_espacial = " -> Vuelve a casa"
+                    agente.current_location_name = "Casa"
+                    
+                    nueva_micro_accion = "desplazamiento_urbano"
+                    mensaje_espacial = " -> Viajando hacia casa"
+                    lugar_memoria = "de camino a casa"
                 else:
                     mensaje_espacial = " -> Se queda en casa"
-                
-                agente.current_location_name = "Casa"
-                lugar_memoria = "Casa"
-                
-            # B) Bloque Público: Búsqueda estricta en la ciudad
+                    agente.current_location_name = "Casa"
+                    lugar_memoria = "Casa"
+                    
+            # B) Bloque Público
             else:
                 lugar_actual = str(agente.current_location_name).strip()
                 info_lugar = environment.MAPA_CIUDAD.get(lugar_actual, {})
-                
-                # Evaluamos si el lugar físico actual le sirve para lo que quiere hacer ahora
                 tipos_actuales = info_lugar.get("tipo", [])
+                if isinstance(tipos_actuales, str): tipos_actuales = [tipos_actuales]
                 
-                if isinstance(tipos_actuales, str):
-                    tipos_actuales = [tipos_actuales]
-                    
-                # Comprobación universal limpia
                 tipo_coincide = nuevo_macro_estado in tipos_actuales
                 accion_soportada = nueva_micro_accion in info_lugar.get("micro_acciones", [])
                 
-                # Inteligencia Espacial: Si ya está en un local válido, no se mueve
                 if lugar_actual != "Casa" and tipo_coincide and accion_soportada:
                     mensaje_espacial = f" -> Continúa aquí ({lugar_actual})"
                     lugar_memoria = lugar_actual
-                    
-                # Si el lugar actual no vale (ej. estaba en el Gym y ahora quiere Tomar Algo)
                 else:
                     lugares_posibles = environment.get_places_by_type_and_action(nuevo_macro_estado, nueva_micro_accion)
                     
@@ -137,24 +126,53 @@ def run_simulation():
                         )
                         
                         agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
+                        
+                        # INTERCEPCIÓN: Guardamos lo que iba a hacer y lo mandamos de viaje al nuevo destino
+                        agente.pending_macro_state = nuevo_macro_estado
+                        agente.pending_micro_action = nueva_micro_accion
+                        
                         agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
                         agente.current_location_name = destino_id
                         
+                        nueva_micro_accion = "desplazamiento_urbano"
                         tipo_visita = " [NUEVO] " if es_nuevo else " [HABITUAL] "
-                        mensaje_espacial = f" -> Se desplaza a: {destino_id} ({tipo_visita})"
-                        lugar_memoria = destino_id 
+                        mensaje_espacial = f" -> Viajando hacia: {destino_id} ({tipo_visita})"
+                        lugar_memoria = f"de camino a {destino_id}"
+                        
                     else:
-                        # Fallback de seguridad (Si un filtro es demasiado estricto y no hay locales)
                         mensaje_espacial = f" -> Pasea por la calle"
                         lugar_memoria = "la calle"
                         agente.current_location_name = "Calle"
+                        
+                        agente.pending_macro_state = nuevo_macro_estado
+                        agente.pending_micro_action = nueva_micro_accion
+                        nueva_micro_accion = "desplazamiento_urbano"
 
-            if lugar_memoria != "su ubicación actual":
+            if lugar_memoria != "su ubicación actual" and lugar_memoria != "la calle":
                 agente.id_lugar_actual = lugar_memoria
-        
+
+            # 4. MOTOR SOCIAL Y DE COLISIONES
+            # Sólo interactúan o usan RRSS si NO se están desplazando
+            acciones_conversacion = ["conversacion_social", "conversacion_con_companeros", "conversacion_con_convivientes", "interaccion_ingesta"]
+            if nueva_micro_accion in acciones_conversacion:
+                hablaron = social_engine.process_encounter(agente, agentes)
+                
+                # Si no había nadie con quien hablar, buscamos un "fallback" lógico
+                if not hablaron:
+                    if nuevo_macro_estado == "OCIO": nueva_micro_accion = "ver_rrss"
+                    elif nuevo_macro_estado == "TAREAS_DOMESTICAS": nueva_micro_accion = "ver_rrss"
+                    elif nuevo_macro_estado == "ALIMENTACION": nueva_micro_accion = "ingesta_rrss"
+                    elif nuevo_macro_estado == "OBLIGACIONES": nueva_micro_accion = "revisar_rrss"
+
+            resumen_virtual = ""
+            if nueva_micro_accion in ["ver_rrss", "revisar_rrss", "ingesta_rrss"]:
+                resumen_virtual = markov_engine.simulate_rrss_session()
+
             # 5. ACTUALIZACIÓN DE MEMORIA Y LOGS
             agente.update_memory(nuevo_macro_estado, nueva_micro_accion, lugar_memoria, turno_global, virtual_summary=resumen_virtual)
-            agente.update_state(nuevo_macro_estado, nueva_micro_accion)
+            # Avisamos al agente si este turno fue un evento implícito
+            es_implicito = (nueva_micro_accion == "desplazamiento_urbano")
+            agente.update_state(nuevo_macro_estado, nueva_micro_accion, is_implicit=es_implicito)
             
             if config.PRINT_LOGS:
                 if resumen_virtual:
@@ -179,49 +197,63 @@ def run_simulation():
         
     finally:
         # INFORME ESTADÍSTICO DE CAPA 1 Y CAPA 2
-        print("\n" + "="*60)
+        print("\n" + "="*80)
         print("INFORME ESTADÍSTICO JERÁRQUICO (Fase 1 & 2)")
-        print("="*60)
+        print("="*80)
         print(f"Turnos totales simulados: {turno_global - 1}")
         
-        global_macros = {}
-        global_micros = {}
-        total_turns = 0
+        v1_macros, v1_micros = {}, {}
+        v2_macros, v2_micros = {}, {}
+        v1_total, v2_total = 0, 0
 
         for a in agentes:
+            # Acumular Versión 1 (Completa)
             for estado, count in a.macro_frequencies.items():
-                global_macros[estado] = global_macros.get(estado, 0) + count
-                total_turns += count
-                
+                v1_macros[estado] = v1_macros.get(estado, 0) + count
+                v1_total += count
             for macro, micros_dict in a.micro_frequencies.items():
-                if macro not in global_micros:
-                    global_micros[macro] = {}
+                if macro not in v1_micros: v1_micros[macro] = {}
                 for micro, count in micros_dict.items():
-                    global_micros[macro][micro] = global_micros[macro].get(micro, 0) + count
+                    v1_micros[macro][micro] = v1_micros[macro].get(micro, 0) + count
 
-        print("\n--- DISTRIBUCIÓN DE CAPA 1 (Macro-estados) ---")
-        sorted_macros = sorted(global_macros.items(), key=lambda x: x[1], reverse=True)
-        for estado, count in sorted_macros:
-            porcentaje = (count / total_turns) * 100 if total_turns > 0 else 0
-            print(f" - {estado}: {porcentaje:.2f}% ({count} turnos totales)")
+            # Acumular Versión 2 (Pura de Markov)
+            for estado, count in a.filtered_macro_frequencies.items():
+                v2_macros[estado] = v2_macros.get(estado, 0) + count
+                v2_total += count
+            for macro, micros_dict in a.filtered_micro_frequencies.items():
+                if macro not in v2_micros: v2_micros[macro] = {}
+                for micro, count in micros_dict.items():
+                    v2_micros[macro][micro] = v2_micros[macro].get(micro, 0) + count
 
-        print("\n--- DISTRIBUCIÓN DE CAPA 2 (Micro-acciones por Estado) ---")
-        for macro, dict_micros in markov_engine.MICRO_ACTIONS.items():
-            turnos_en_este_macro = global_macros.get(macro, 0)
-            if turnos_en_este_macro > 0:
-                print(f" * Dentro de {macro} ({turnos_en_este_macro} turnos):")
-                
-                micros_de_este_macro = global_micros.get(macro, {})
-                sorted_micros = sorted(micros_de_este_macro.items(), key=lambda x: x[1], reverse=True)
-                
-                for micro_name, micro_count in sorted_micros:
-                    if micro_count > 0:
-                        porcentaje_relativo = (micro_count / turnos_en_este_macro) * 100
-                        print(f"      > {micro_name.replace('_', ' ')}: {porcentaje_relativo:.2f}%")
+        def imprimir_bloque(titulo, macros, micros, total):
+            print(f"\n{titulo}")
+            print("-" * len(titulo))
+            print("--- DISTRIBUCIÓN DE CAPA 1 (Macro-estados) ---")
+            sorted_macros = sorted(macros.items(), key=lambda x: x[1], reverse=True)
+            for estado, count in sorted_macros:
+                porcentaje = (count / total) * 100 if total > 0 else 0
+                print(f" - {estado}: {porcentaje:.2f}% ({count} turnos)")
+
+            print("\n--- DISTRIBUCIÓN DE CAPA 2 (Micro-acciones por Estado) ---")
+            for macro, dict_micros in micros.items():
+                turnos_en_este_macro = macros.get(macro, 0)
+                if turnos_en_este_macro > 0:
+                    print(f" * Dentro de {macro} ({turnos_en_este_macro} turnos):")
+                    sorted_micros = sorted(dict_micros.items(), key=lambda x: x[1], reverse=True)
+                    for micro_name, micro_count in sorted_micros:
+                        if micro_count > 0:
+                            porcentaje_relativo = (micro_count / turnos_en_este_macro) * 100
+                            print(f"      > {micro_name.replace('_', ' ')}: {porcentaje_relativo:.2f}%")
+
+        imprimir_bloque("VERSIÓN 1: ESTADÍSTICAS COMPLETAS (Incluye estado inicial y desplazamientos)", v1_macros, v1_micros, v1_total)
+        imprimir_bloque("VERSIÓN 2: ESTADÍSTICAS PURAS DE MARKOV (Excluye rutinas implícitas)", v2_macros, v2_micros, v2_total)
 
         total_amigos = sum(len(a.amigos) for a in agentes)
         media_amigos = total_amigos / len(agentes) if agentes else 0
-        print("\n--- MÉTRICAS SOCIALES ---")
+        
+        print("\n" + "="*80)
+        print("MÉTRICAS SOCIALES Y ESPACIALES")
+        print("="*80)
         print(f" - Media de amigos por agente: {media_amigos:.2f}")
 
         print("\n--- LUGARES MÁS VISITADOS ---")
@@ -233,7 +265,7 @@ def run_simulation():
         sorted_places = sorted(global_places.items(), key=lambda x: x[1], reverse=True)
         for lugar, visitas in sorted_places[:5]: 
             print(f" - {lugar}: {visitas} visitas")
-        print("="*60 + "\n")
+        print("="*80 + "\n")
 
         sys.exit(0)
 

@@ -22,6 +22,9 @@ class Agent:
         
         self.macro_frequencies = {"DESCANSO": 1}
         self.micro_frequencies = {"DESCANSO": {"sueno_profundo": 1}}
+
+        self.filtered_macro_frequencies = {}
+        self.filtered_micro_frequencies = {}
         
         # VARIABLES BIOLÓGICAS
         self.energia = 100
@@ -47,6 +50,10 @@ class Agent:
         self.long_term_memory = "Últimamente mi rutina ha sido bastante normal y estable."
 
         self.amigos = []
+
+        # GUARDA ACCIÓN ANTERIOR PARA RECORDARLA DESPUÉS DEL DESPLAZAMIENTO
+        self.pending_macro_state = None
+        self.pending_micro_action = None
 
         self._apply_traits()
 
@@ -104,16 +111,23 @@ class Agent:
     def update_long_term_memory(self, nueva_reflexion):
         self.long_term_memory = nueva_reflexion
             
-    def update_state(self, new_macro, new_micro):
+    def update_state(self, new_macro, new_micro, is_implicit=False):
         """Actualiza el estado jerárquico y los contadores estadísticos anidados."""
         self.current_macro_state = new_macro
         self.current_micro_action = new_micro
         
+        # 1. Estadística Completa (Versión 1)
         self.macro_frequencies[new_macro] = self.macro_frequencies.get(new_macro, 0) + 1
-        
         if new_macro not in self.micro_frequencies:
             self.micro_frequencies[new_macro] = {}
         self.micro_frequencies[new_macro][new_micro] = self.micro_frequencies[new_macro].get(new_micro, 0) + 1
 
-    def __repr__(self):
+        # 2. Estadística Pura de Markov (Versión 2)
+        if not is_implicit:
+            self.filtered_macro_frequencies[new_macro] = self.filtered_macro_frequencies.get(new_macro, 0) + 1
+            if new_macro not in self.filtered_micro_frequencies:
+                self.filtered_micro_frequencies[new_macro] = {}
+            self.filtered_micro_frequencies[new_macro][new_micro] = self.filtered_micro_frequencies[new_macro].get(new_micro, 0) + 1
+
+            
         return f"<Agent {self.name} | {self.current_macro_state} -> {self.current_micro_action}>"
