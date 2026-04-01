@@ -1,4 +1,5 @@
 from trait_rules import GOLDBERG_RULES
+import demographic_rules
 
 class Agent:
     def __init__(self, agent_id, name, social_activity, traits_list, age, gender, occupation, qualification, interests):
@@ -23,8 +24,8 @@ class Agent:
         self.macro_frequencies = {"DESCANSO": 1}
         self.micro_frequencies = {"DESCANSO": {"sueno_profundo": 1}}
 
-        self.filtered_macro_frequencies = {}
-        self.filtered_micro_frequencies = {}
+        self.filtered_macro_frequencies = {"DESCANSO": 1}
+        self.filtered_micro_frequencies = {"DESCANSO": {"sueno_profundo": 1}}
         
         # VARIABLES BIOLÓGICAS
         self.energia = 100
@@ -56,6 +57,7 @@ class Agent:
         self.pending_micro_action = None
 
         self._apply_traits()
+        self._apply_demographics()
 
     def _calculate_age_group(self, age):
         if age < 16: return "16-"
@@ -86,6 +88,20 @@ class Agent:
                     if "markov_weight_modifiers" in rules:
                         for action, mult in rules["markov_weight_modifiers"].items():
                             self.markov_modifiers[action] = self.markov_modifiers.get(action, 1.0) * mult
+
+    def _apply_demographics(self):
+        """Aplica los filtros de ocupación y los multiplicadores de edad."""
+        
+        # 1. Filtros estrictos de Ocupación (Ceros matemáticos)
+        occ_mods = demographic_rules.get_occupation_modifiers(self.occupation, self.age)
+        for action, mult in occ_mods.items():
+            self.markov_modifiers[action] = self.markov_modifiers.get(action, 1.0) * mult
+            
+        # 2. Multiplicadores por Franja de Edad
+        if self.age_group in demographic_rules.AGE_RULES:
+            age_mods = demographic_rules.AGE_RULES[self.age_group]
+            for action, mult in age_mods.items():
+                self.markov_modifiers[action] = self.markov_modifiers.get(action, 1.0) * mult
 
     def update_memory(self, new_macro, new_micro, location_name, turno_global, virtual_summary=""):
         """Gestiona la memoria a corto plazo. Si hay actividad virtual, la prioriza en la narrativa."""
@@ -129,5 +145,5 @@ class Agent:
                 self.filtered_micro_frequencies[new_macro] = {}
             self.filtered_micro_frequencies[new_macro][new_micro] = self.filtered_micro_frequencies[new_macro].get(new_micro, 0) + 1
 
-            
+    def __repr__(self):
         return f"<Agent {self.name} | {self.current_macro_state} -> {self.current_micro_action}>"

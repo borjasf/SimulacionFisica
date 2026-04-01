@@ -72,14 +72,25 @@ def run_simulation():
             # 3. DECISIÓN ESPACIAL Y DESPLAZAMIENTO (LA INTERCEPCIÓN)
             mensaje_espacial = ""
             lugar_memoria = "su ubicación actual"
+            lugar_actual = str(agente.current_location_name).strip()
             
             acciones_domesticas = [
                 "ingesta_en_hogar", "mantenimiento_del_hogar", "conversacion_con_convivientes", 
                 "consumo_audiovisual", "ocio_digital_activo"
             ]
             
+            # Acciones híbridas (las hacen donde estén: si están en casa se quedan, si están fuera buscan local)
+            acciones_hibridas = ["ver_rrss", "ingesta_rrss", "lectura", "gestiones_personales"]
+
+            # Evaluamos si la rutina exige que el agente esté en casa
+            es_motivo_casero = (
+                nuevo_macro_estado in ["TAREAS_DOMESTICAS", "DESCANSO"] or 
+                nueva_micro_accion in acciones_domesticas or
+                (nueva_micro_accion in acciones_hibridas and lugar_actual == "Casa")
+            )
+            
             # A) Bloque Doméstico
-            if nuevo_macro_estado in ["TAREAS_DOMESTICAS", "DESCANSO"] or nueva_micro_accion in acciones_domesticas:
+            if es_motivo_casero:
                 if agente.current_coords != agente.home_coords:
                     # INTERCEPCIÓN: Guardamos lo que iba a hacer y lo mandamos de viaje a casa
                     agente.pending_macro_state = nuevo_macro_estado
@@ -98,7 +109,6 @@ def run_simulation():
                     
             # B) Bloque Público
             else:
-                lugar_actual = str(agente.current_location_name).strip()
                 info_lugar = environment.MAPA_CIUDAD.get(lugar_actual, {})
                 tipos_actuales = info_lugar.get("tipo", [])
                 if isinstance(tipos_actuales, str): tipos_actuales = [tipos_actuales]

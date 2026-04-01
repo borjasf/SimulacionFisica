@@ -65,8 +65,8 @@ def process_encounter(agent, agents):
             companion_previous_action = companion.current_micro_action.replace('_', ' ')
             
             # Forzamos la micro-acción del compañero a "conversar" para alinear las estadísticas
-            companion.current_micro_action = "conversar"
-            
+            companion.current_micro_action = agent.current_micro_action    
+                    
             if config.PRINT_LOGS:
                 print(f"\n   ¡Encuentro! {agent.name} coincide con {companion.name} en {location}.")
                 print(f"   Afinidad: {score} pts. {context}")
