@@ -12,6 +12,7 @@ import spatial_engine
 import biological_engine
 import config
 import social_engine
+import data_exporter
 
 from agent import Agent
 
@@ -276,6 +277,8 @@ def run_simulation():
         for lugar, visitas in sorted_places[:5]: 
             print(f" - {lugar}: {visitas} visitas")
         print("="*80 + "\n")
+
+        data_exporter.export_simulation_data(agentes, turno_global - 1)
 
         sys.exit(0)
 

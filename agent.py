@@ -25,8 +25,8 @@ class Agent:
         self.macro_frequencies = {"DESCANSO": 1}
         self.micro_frequencies = {"DESCANSO": {"sueno_profundo": 1}}
 
-        self.filtered_macro_frequencies = {"DESCANSO": 1}
-        self.filtered_micro_frequencies = {"DESCANSO": {"sueno_profundo": 1}}
+        self.filtered_macro_frequencies = {}
+        self.filtered_micro_frequencies = {}
         
         # VARIABLES BIOLÓGICAS
         self.energia = 100
