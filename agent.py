@@ -10,6 +10,7 @@ class Agent:
         
         self.age = int(age)
         self.age_group = self._calculate_age_group(self.age)
+        #self.age_group = "25-44" # Para pruebas, todos en la misma franja
 
         self.gender = gender
         self.occupation = occupation

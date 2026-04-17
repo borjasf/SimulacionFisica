@@ -25,5 +25,5 @@ FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos li
 
 # --- MODO TESTER / DEBUG ---
 MOCK_LLM = True         # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
-PRINT_LOGS = True        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
-MAX_TURNS = 100         # Si es > 0, la simulación se detendrá sola al llegar a este turno
+PRINT_LOGS = False        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
+MAX_TURNS = 10000         # Si es > 0, la simulación se detendrá sola al llegar a este turno
