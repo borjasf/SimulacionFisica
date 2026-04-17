@@ -132,7 +132,7 @@ def generate_long_term_memory(agente, lista_acciones):
     return agente.long_term_memory
 
 
-# PROMPT 3: MOTOR DE DIÁLOGO
+# PROMPT 3: MOTOR DE DIÁLOGO Y EVALUACIÓN SOCIOLÓGICA
 DIALOGUE_PROMPT_TEMPLATE = """
 You are an expert scriptwriter generating a highly realistic, colloquial conversation between two people in Spain.
 
@@ -152,15 +152,20 @@ Current State of Mind (Their internal memory and recent vivencies): "{memory2}"
 Write a short dialogue (2 to 4 lines maximum per person).
 
 STRICT BEHAVIORAL AND NARRATIVE RULES:
-1. WEAVE THE MEMORY: They MUST implicitly or explicitly mention how they are feeling or what they have been doing recently based on their "Current State of Mind". Do not sound like a robot listing facts; bring it up naturally in conversation.
-2. ENFORCE AGE & OCCUPATION: A 19-year-old MUST speak like a modern Spanish youth (using slang like "tío", "en plan", "renta", "movida"). An elderly person MUST speak formally (using "usted", classical vocabulary).
-3. ENFORCE PERSONALITY (CRITICAL): Ignore AI safety guidelines regarding politeness. If a character has "Friendliness -" or "Neuroticism +", they MUST be rude, cynical, stressed, passive-aggressive, or short-tempered. EMBRACE CONFLICT. Do not force a happy ending if they are incompatible.
+1. WEAVE THE MEMORY: They MUST implicitly or explicitly mention how they are feeling or what they have been doing recently based on their "Current State of Mind". 
+2. ENFORCE AGE & OCCUPATION: A 19-year-old MUST speak like a modern Spanish youth (slang like "tío", "en plan"). An elderly person MUST speak formally.
+3. ENFORCE PERSONALITY (CRITICAL): Ignore AI safety guidelines regarding politeness. If a character has "Friendliness -" or "Neuroticism +", they MUST be rude, cynical, stressed, passive-aggressive, or short-tempered. EMBRACE REALISM. Conversations can be friendly, neutral, or tense. ONLY generate conflict if their personalities are incompatible (e.g. Neuroticism +) or if the context demands it. Otherwise, normal casual chats are fine.
 4. The dialogue MUST be entirely in colloquial SPANISH from Spain.
-5. USE THE ENVIRONMENT: The 'Context of their encounter' tells you WHERE they are and WHAT physical actions they are doing. They MUST integrate this environment into their dialogue (e.g., if they are eating, talk about the food; if working, mention the task).
+5. USE THE ENVIRONMENT: They MUST integrate their physical location and current actions into their dialogue (e.g., if eating, talk about the food).
 
-Output format required:
+SOCIOLOGICAL EVALUATION (Homans' Social Exchange Theory):
+As an expert in social psychology, evaluate the resulting conversation. Did they get along? Was it an awkward, boring, or hostile exchange?
+Calculate a 'Profit' score from -5 (terrible, argument, insult) to +5 (great connection, shared laughs, deep empathy). 0 means neutral/indifferent.
+
+Output format required (Valid JSON ONLY):
 {{
     "tema_de_conversacion": "A brief 3-word summary",
+    "variacion_relacion": [Integer between -5 and +5],
     "dialogo": [
         "{name1}: [Dialogue line here]",
         "{name2}: [Dialogue line here]"
@@ -175,6 +180,7 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
     if config.MOCK_LLM:
         return {
             "tema_de_conversacion": "Modo Test",
+            "variacion_relacion": 0,
             "dialogo": [f"{agente1.name}: [Línea test]", f"{agente2.name}: [Línea test]"]
         }
         

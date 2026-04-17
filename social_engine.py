@@ -59,7 +59,7 @@ def process_encounter(agent, agents):
             valid_companions.sort(key=lambda x: x[1], reverse=True)
             companion, score, context = valid_companions[0] 
             
-            # --- INTERRUPCIÓN COGNITIVA FASE 2 ---
+            # INTERRUPCIÓN COGNITIVA FASE 2
             # Guardamos qué hacían para dárselo de contexto al LLM
             agent_action = agent.current_micro_action.replace('_', ' ')
             companion_previous_action = companion.current_micro_action.replace('_', ' ')
@@ -106,13 +106,45 @@ def process_encounter(agent, agents):
                 contexto_phygital 
             )
 
-            if str(companion.id) not in agent.amigos:
-                agent.amigos.append(str(companion.id))
-            if str(agent.id) not in companion.amigos:
-                companion.amigos.append(str(agent.id))
+            # EVOLUCIÓN DE LA RELACIÓN (AFINIDAD CONTINUA)
+            # Extraemos el valor del LLM. Si falla o es Mock, usamos +2 por defecto.
+            impacto_charla = dialogue_json.get('variacion_relacion', 2) 
+            
+            puntuacion_homofilia_base = score * 100 # Convertimos el 0.XX a escala 0-100
+            
+            for (a, b) in [(agent, companion), (companion, agent)]:
+                # 1. Si no se conocían, inicializamos su relación basada en la Homofilia
+                if str(b.id) not in a.affinity_network:
+                    a.affinity_network[str(b.id)] = puntuacion_homofilia_base
+                
+                # 2. Aplicamos el impacto de la charla evaluado por la IA
+                a.affinity_network[str(b.id)] += impacto_charla
+                
+                # Limitamos los valores matemáticamente entre 0 y 100
+                a.affinity_network[str(b.id)] = max(0, min(100, a.affinity_network[str(b.id)]))
+                
+                # 3. EVALUACIÓN DE UMBRALES (Granovetter)
+                afinidad_actual = a.affinity_network[str(b.id)]
+                
+                if afinidad_actual >= 60: # Umbral para hacerse amigos
+                    if str(b.id) not in a.amigos:
+                        a.amigos.append(str(b.id))
+                        if config.PRINT_LOGS and a == agent:
+                            print(f"   [!] ¡{agent.name} y {companion.name} se han hecho amigos (Lazo Fuerte)!")
+                            
+                elif afinidad_actual < 40: # Umbral para perder la amistad
+                    if str(b.id) in a.amigos:
+                        a.amigos.remove(str(b.id))
+                        if config.PRINT_LOGS and a == agent:
+                            print(f"   [!] {agent.name} y {companion.name} se han distanciado y ya no son amigos.")
 
+            # IMPRESIÓN DEL LOG 
             if config.PRINT_LOGS:
                 print(f"\n TEMA: {dialogue_json.get('tema_de_conversacion', 'General')}")
+                
+                signo = "+" if impacto_charla >= 0 else ""
+                print(f" IMPACTO RELACIÓN: {signo}{impacto_charla} puntos (Afinidad actual: {int(agent.affinity_network[str(companion.id)])}/100)")
+                
                 for line in dialogue_json.get('dialogo', []):
                     print(f"    {line}")
                     time.sleep(config.SLEEP_DIALOGUE)  

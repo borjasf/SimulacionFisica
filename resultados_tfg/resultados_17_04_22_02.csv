@@ -1,0 +1,52 @@
+=== REPORTE DE SIMULACION TFG ===
+Identificador;17_04_22_02
+Turnos Totales Simulados;49
+
+
+=== CAPA 1: MACRO-ESTADOS ===
+Version;Macro_Estado;Turnos_Absolutos;Porcentaje
+V1_Completa;DESCANSO;220;81.48%
+V1_Completa;TAREAS_DOMESTICAS;19;7.04%
+V1_Completa;OCIO;16;5.93%
+V1_Completa;OBLIGACIONES;15;5.56%
+V2_Pura;TAREAS_DOMESTICAS;19;63.33%
+V2_Pura;OBLIGACIONES;8;26.67%
+V2_Pura;OCIO;3;10.0%
+
+
+=== CAPA 2: MICRO-ACCIONES ===
+Version;Macro_Estado;Micro_Accion;Turnos_Absolutos;Porcentaje_Relativo
+V1_Completa;DESCANSO;sueno_profundo;220;100.0%
+V1_Completa;OBLIGACIONES;desplazamiento_urbano;7;46.67%
+V1_Completa;OBLIGACIONES;gestiones_personales;7;46.67%
+V1_Completa;OBLIGACIONES;jornada_laboral;1;6.67%
+V1_Completa;TAREAS_DOMESTICAS;mantenimiento_del_hogar;15;78.95%
+V1_Completa;TAREAS_DOMESTICAS;ver_rrss;2;10.53%
+V1_Completa;TAREAS_DOMESTICAS;conversacion_con_convivientes;2;10.53%
+V1_Completa;OCIO;desplazamiento_urbano;13;81.25%
+V1_Completa;OCIO;ocio_hosteleria;1;6.25%
+V1_Completa;OCIO;ver_rrss;1;6.25%
+V1_Completa;OCIO;actividad_fisica;1;6.25%
+V2_Pura;OBLIGACIONES;gestiones_personales;7;87.5%
+V2_Pura;OBLIGACIONES;jornada_laboral;1;12.5%
+V2_Pura;TAREAS_DOMESTICAS;mantenimiento_del_hogar;15;78.95%
+V2_Pura;TAREAS_DOMESTICAS;ver_rrss;2;10.53%
+V2_Pura;TAREAS_DOMESTICAS;conversacion_con_convivientes;2;10.53%
+V2_Pura;OCIO;ocio_hosteleria;1;33.33%
+V2_Pura;OCIO;ver_rrss;1;33.33%
+V2_Pura;OCIO;actividad_fisica;1;33.33%
+
+
+=== MOTOR ESPACIAL: LUGARES VISITADOS ===
+Lugar;Visitas_Totales
+Oficina_Centro;5
+Polideportivo;5
+Centro_Jubilados;2
+Instituto_Sur;1
+Parque_Central;1
+Biblioteca_Municipal;1
+Universidad_Norte;1
+Cafeteria_Tranquila;1
+Bar_Manolo;1
+Gimnasio_Centro;1
+Plaza_Mayor;1

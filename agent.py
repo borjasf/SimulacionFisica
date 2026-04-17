@@ -52,6 +52,7 @@ class Agent:
         self.long_term_memory = "Últimamente mi rutina ha sido bastante normal y estable."
 
         self.amigos = []
+        self.affinity_network = {}
 
         # GUARDA ACCIÓN ANTERIOR PARA RECORDARLA DESPUÉS DEL DESPLAZAMIENTO
         self.pending_macro_state = None

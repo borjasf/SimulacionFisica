@@ -1,0 +1,59 @@
+=== REPORTE DE SIMULACION TFG ===
+Identificador;17_04_21_32
+Turnos Totales Simulados;80
+
+
+=== CAPA 1: MACRO-ESTADOS ===
+Version;Macro_Estado;Turnos_Absolutos;Porcentaje
+V1_Completa;DESCANSO;222;74.0%
+V1_Completa;OBLIGACIONES;36;12.0%
+V1_Completa;TAREAS_DOMESTICAS;24;8.0%
+V1_Completa;OCIO;17;5.67%
+V1_Completa;ALIMENTACION;1;0.33%
+V2_Pura;TAREAS_DOMESTICAS;24;52.17%
+V2_Pura;OBLIGACIONES;14;30.43%
+V2_Pura;OCIO;6;13.04%
+V2_Pura;DESCANSO;2;4.35%
+
+
+=== CAPA 2: MICRO-ACCIONES ===
+Version;Macro_Estado;Micro_Accion;Turnos_Absolutos;Porcentaje_Relativo
+V1_Completa;DESCANSO;sueno_profundo;222;100.0%
+V1_Completa;OBLIGACIONES;desplazamiento_urbano;22;61.11%
+V1_Completa;OBLIGACIONES;gestiones_personales;7;19.44%
+V1_Completa;OBLIGACIONES;jornada_laboral;3;8.33%
+V1_Completa;OBLIGACIONES;revisar_rrss;2;5.56%
+V1_Completa;OBLIGACIONES;conversacion_con_companeros;2;5.56%
+V1_Completa;OCIO;desplazamiento_urbano;11;64.71%
+V1_Completa;OCIO;ver_rrss;3;17.65%
+V1_Completa;OCIO;ocio_hosteleria;2;11.76%
+V1_Completa;OCIO;consumo_audiovisual;1;5.88%
+V1_Completa;TAREAS_DOMESTICAS;mantenimiento_del_hogar;18;75.0%
+V1_Completa;TAREAS_DOMESTICAS;conversacion_con_convivientes;4;16.67%
+V1_Completa;TAREAS_DOMESTICAS;ver_rrss;2;8.33%
+V1_Completa;ALIMENTACION;desplazamiento_urbano;1;100.0%
+V2_Pura;OCIO;ver_rrss;3;50.0%
+V2_Pura;OCIO;ocio_hosteleria;2;33.33%
+V2_Pura;OCIO;consumo_audiovisual;1;16.67%
+V2_Pura;OBLIGACIONES;gestiones_personales;7;50.0%
+V2_Pura;OBLIGACIONES;jornada_laboral;3;21.43%
+V2_Pura;OBLIGACIONES;revisar_rrss;2;14.29%
+V2_Pura;OBLIGACIONES;conversacion_con_companeros;2;14.29%
+V2_Pura;TAREAS_DOMESTICAS;mantenimiento_del_hogar;18;75.0%
+V2_Pura;TAREAS_DOMESTICAS;conversacion_con_convivientes;4;16.67%
+V2_Pura;TAREAS_DOMESTICAS;ver_rrss;2;8.33%
+V2_Pura;DESCANSO;sueno_profundo;2;100.0%
+
+
+=== MOTOR ESPACIAL: LUGARES VISITADOS ===
+Lugar;Visitas_Totales
+Oficina_Centro;15
+Universidad_Norte;5
+Parque_Central;3
+Cafeteria_Tranquila;3
+Biblioteca_Municipal;2
+Discoteca_Sur;2
+Bar_Manolo;1
+Polideportivo;1
+Restaurante_Familiar;1
+Instituto_Sur;1

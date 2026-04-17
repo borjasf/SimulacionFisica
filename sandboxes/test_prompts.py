@@ -1,6 +1,12 @@
+import sys
+import os
+import json
+
+# --- MAGIA PARA IMPORTAR DESDE LA CARPETA PADRE ---
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import llm_client
 import config
-import json
 
 # ==============================================================================
 # ENTORNO DE PRUEBAS DE ESTRÉS PARA PROMPTS (QA TESTING)
@@ -18,13 +24,17 @@ class MockAgent:
         self.traits = traits
         self.interests = interests
         self.qualification = qualification
-        self.last_reflection = last_reflection
+        self.long_term_memory = last_reflection  # Ajustado al nuevo nombre
         self.gender = "unknown"
 
 def imprimir_resultado_json(titulo, json_data):
     """Formatea la salida en la consola para leerla fácil."""
     print(f"\n{'='*60}\n{titulo}\n{'-'*60}")
-    print(json.dumps(json_data, indent=2, ensure_ascii=False))
+    # Si es un string (como la memoria), lo imprimimos tal cual. Si es diccionario, como JSON.
+    if isinstance(json_data, dict):
+        print(json.dumps(json_data, indent=2, ensure_ascii=False))
+    else:
+        print(json_data)
     print("="*60)
 
 def run_test_1_espejo():
@@ -34,10 +44,10 @@ def run_test_1_espejo():
     agente_fiestero = MockAgent("Leo", 22, "Estudiante", ['Sociability +', 'Friendliness +'])
     agente_agobiado = MockAgent("Arthur", 25, "Programador", ['Sociability -', 'Neuroticism +'])
     
-    res_fiestero = llm_client.generate_daily_reflection(agente_fiestero, acciones_comunes)
+    res_fiestero = llm_client.generate_long_term_memory(agente_fiestero, acciones_comunes)
     imprimir_resultado_json("Reflexión de LEO (Extrovertido)", res_fiestero)
     
-    res_agobiado = llm_client.generate_daily_reflection(agente_agobiado, acciones_comunes)
+    res_agobiado = llm_client.generate_long_term_memory(agente_agobiado, acciones_comunes)
     imprimir_resultado_json("Reflexión de ARTHUR (Introvertido/Ansioso)", res_agobiado)
 
 def run_test_2_choque():
@@ -47,10 +57,11 @@ def run_test_2_choque():
     
     contexto = "Se acaban de conocer por primera vez en la cola del supermercado porque Karen le ha pisado a Steve sin querer."
     
+    # Llamada ajustada a los 5 parámetros actuales
     resultado = llm_client.generate_social_dialogue(
         agente_borde, agente_pesado, 
         "Estresada y con prisa", "Feliz y relajado", 
-        [], [], contexto
+        contexto
     )
     imprimir_resultado_json("Diálogo (Karen vs Steve)", resultado)
 
@@ -64,7 +75,7 @@ def run_test_3_generacional():
     resultado = llm_client.generate_social_dialogue(
         agente_mayor, agente_joven, 
         "Tranquilo paseando", "Aburrido mirando el móvil", 
-        [], [], contexto
+        contexto
     )
     imprimir_resultado_json("Diálogo (Eusebio vs Kevin)", resultado)
 
@@ -74,12 +85,11 @@ def run_test_4_nicho():
     agente_b = MockAgent("Leonard", 32, "Físico", ['Intellectual +'], "Física Cuántica, Agujeros Negros")
     
     contexto = "Son amigos. Quieren ponerse al día y hablar sobre su interés común en la Física Cuántica."
-    memoria_falsa = [{"texto": "Leí un artículo fascinante sobre el entrelazamiento cuántico esta mañana."}]
     
     resultado = llm_client.generate_social_dialogue(
         agente_a, agente_b, 
-        "Emocionado por la ciencia", "Curioso", 
-        memoria_falsa, [], contexto
+        "Emocionado por la ciencia cuántica", "Curioso y receptivo", 
+        contexto
     )
     imprimir_resultado_json("Diálogo Nerd (Sheldon vs Leonard)", resultado)
 
