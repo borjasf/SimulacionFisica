@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from google import genai
 import json
 import config
+import requests
 
 TRADUCTOR_GOLDBERG = {
     "Sociability +": "Highly extroverted, gregarious, and constantly seeks social interaction.",
@@ -233,7 +234,9 @@ Psychological Profile: {traits}.
 Current state of mind: "{memory}"
 
 You have decided to spend your current time doing something related to: {macro_state}.
-Based ONLY on your age, occupation, and personality, which of the following specific actions do you choose to do?
+
+CRUCIAL RULE FOR REALISM:
+Think about logical sequence. If you are tired, rest. If you just woke up, do not go back to sleep. Do not repeat the exact same actions redundantly. Progress naturally.
 
 VALID ACTIONS (You must copy the EXACT text of one of these):
 {valid_actions}
@@ -246,7 +249,10 @@ Output format required:
 """
 
 def decide_micro_action(agente, macro_estado, opciones_validas):
-    """Pide al LLM que decida qué micro-acción tomar basándose en su perfil."""
+    """
+    Pide al LLM LOCAL (Ollama) que decida qué micro-acción tomar.
+    Esto ahorra cuota de Gemini y es mucho más rápido.
+    """
     if config.MOCK_LLM:
         import random
         return random.choice(opciones_validas)
@@ -260,25 +266,44 @@ def decide_micro_action(agente, macro_estado, opciones_validas):
         macro_state=macro_estado, valid_actions=acciones_str
     )
     
+    # CONEXIÓN AL CEREBRO LOCAL (OLLAMA)
+    url_local = "http://localhost:11434/api/generate"
+    payload = {
+        "model": "llama3.2:1b",  # El modelo que acabas de descargar
+        "prompt": prompt,
+        "format": "json",        # Forzamos a que Ollama devuelva un JSON estricto
+        "stream": False,
+        "options": {
+            "temperature": 0.2   # Temperatura baja para que sea lógico y no creativo
+        }
+    }
+    
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config={'response_mime_type': 'application/json', 'temperature': 0.2}
-        )
+        # Hacemos la petición a nuestro propio ordenador
+        response = requests.post(url_local, json=payload, timeout=10)
         
-        texto_limpio = response.text.strip()
-        if texto_limpio.startswith("```json"):
-            texto_limpio = texto_limpio.replace("```json", "").replace("```", "").strip()
+        if response.status_code == 200:
+            respuesta_json = response.json()
+            texto_limpio = respuesta_json.get("response", "").strip()
             
-        data = json.loads(texto_limpio)
-        accion_elegida = data.get("micro_accion", "")
-        
-        if accion_elegida in opciones_validas:
-            return accion_elegida
+            # Limpieza por si el modelo añade marcas de markdown
+            if texto_limpio.startswith("```json"):
+                texto_limpio = texto_limpio.replace("```json", "").replace("```", "").strip()
+                
+            data = json.loads(texto_limpio)
+            accion_elegida = data.get("micro_accion", "")
+            
+            # Verificación de seguridad
+            if accion_elegida in opciones_validas:
+                if config.PRINT_LOGS:
+                    print(f"   [LLM Local] {agente.name} decidió: {accion_elegida}")
+                return accion_elegida
+                
     except Exception as e:
-        pass 
+        if config.PRINT_LOGS:
+            print(f"   [Error LLM Local] Falló Ollama: {e}. Usando Fallback.")
+        pass # Si falla (ej. Ollama está apagado), saltamos al fallback
         
-    # Fallback de seguridad: Si la IA falla, decidimos al azar para que no crashee
+    # --- FALLBACK DE SEGURIDAD (MARKOV) ---
     import random
     return random.choice(opciones_validas)

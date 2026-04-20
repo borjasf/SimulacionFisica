@@ -28,6 +28,11 @@ HOMOPHILY_PROB_MULTIPLIER = 0.20    # Cada punto de homofilia suma un 10% de pro
 FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos lideren el orden de prioridad
 
 
+# --- MOTOR DE DECISIÓN DE RUTINA ---
+# "MARKOV": Usa probabilidades matemáticas basadas en el INE (Rápido, estadístico)
+# "LLM": Usa Inteligencia Artificial para decidir semánticamente (Lento, psicológico)
+DECISION_ENGINE = "LLM"
+
 # --- MODO TESTER / DEBUG ---
 MOCK_LLM = False         # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
 PRINT_LOGS = True        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
