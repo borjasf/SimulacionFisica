@@ -13,8 +13,12 @@ import biological_engine
 import config
 import social_engine
 import data_exporter
-
 from agent import Agent
+
+import random
+
+if config.RANDOM_SEED is not None:
+    random.seed(config.RANDOM_SEED)
 
 def run_simulation():
     print("Iniciando la inicialización del ecosistema...")

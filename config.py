@@ -1,3 +1,8 @@
+# --- PARÁMETROS DE REPRODUCIBILIDAD ---
+# 'None' para simulaciones aleatorias reales. 
+# Número entero (ej. 42) para hacer pruebas deterministas y auditables.
+RANDOM_SEED = None
+
 # --- CONSTANTES DE TIEMPO ---
 SLEEP_TICK = 0.05       # Pausa del bucle principal
 SLEEP_DIALOGUE = 2.0    # Pausa de lectura en consola para los diálogos
