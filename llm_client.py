@@ -225,3 +225,60 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
             f"{agente2.name}: ¡Claro {agente1.name}! Cuídate."
         ]
     }
+
+# PROMPT 4: MOTOR DE DECISIÓN DE MICRO-ACCIONES (LLM-CENTRIC)
+ACTION_PROMPT_TEMPLATE = """
+You are {name}, a {age}-year-old {occupation}.
+Psychological Profile: {traits}.
+Current state of mind: "{memory}"
+
+You have decided to spend your current time doing something related to: {macro_state}.
+Based ONLY on your age, occupation, and personality, which of the following specific actions do you choose to do?
+
+VALID ACTIONS (You must copy the EXACT text of one of these):
+{valid_actions}
+
+Return ONLY a JSON with the key 'micro_accion'. Do not add any formatting or extra text.
+Output format required:
+{{
+    "micro_accion": "exact_name_from_list"
+}}
+"""
+
+def decide_micro_action(agente, macro_estado, opciones_validas):
+    """Pide al LLM que decida qué micro-acción tomar basándose en su perfil."""
+    if config.MOCK_LLM:
+        import random
+        return random.choice(opciones_validas)
+        
+    rasgos_str = " ".join([TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente.traits])
+    acciones_str = ", ".join(opciones_validas)
+    
+    prompt = ACTION_PROMPT_TEMPLATE.format(
+        name=agente.name, age=agente.age, occupation=agente.occupation, 
+        traits=rasgos_str, memory=agente.long_term_memory,
+        macro_state=macro_estado, valid_actions=acciones_str
+    )
+    
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config={'response_mime_type': 'application/json', 'temperature': 0.2}
+        )
+        
+        texto_limpio = response.text.strip()
+        if texto_limpio.startswith("```json"):
+            texto_limpio = texto_limpio.replace("```json", "").replace("```", "").strip()
+            
+        data = json.loads(texto_limpio)
+        accion_elegida = data.get("micro_accion", "")
+        
+        if accion_elegida in opciones_validas:
+            return accion_elegida
+    except Exception as e:
+        pass 
+        
+    # Fallback de seguridad: Si la IA falla, decidimos al azar para que no crashee
+    import random
+    return random.choice(opciones_validas)

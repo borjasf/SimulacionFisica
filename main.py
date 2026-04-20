@@ -72,7 +72,21 @@ def run_simulation():
                 nuevo_macro_estado = biological_engine.get_next_state_with_biology(
                     agente, probabilidades_personalizadas, estados_posibles
                 )
-                nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
+
+                # INTERRUPTOR DE ARQUITECTURA (MARKOV o LLM)
+                if config.DECISION_ENGINE == "MARKOV":
+                    nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
+                
+                elif config.DECISION_ENGINE == "LLM":
+                    # Extraemos las opciones válidas para este estado de la matriz de Markov
+                    opciones_validas = list(markov_engine.MICRO_ACCIONES[nuevo_macro_estado].keys())
+                    
+                    # Le pedimos a la IA que decida
+                    nueva_micro_accion = llm_client.decide_micro_action(agente, nuevo_macro_estado, opciones_validas)
+                    
+                    # Interceptor de seguridad por si la IA se inventa una palabra
+                    if nueva_micro_accion not in opciones_validas:
+                        nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
 
             # 3. DECISIÓN ESPACIAL Y DESPLAZAMIENTO (LA INTERCEPCIÓN)
             mensaje_espacial = ""
