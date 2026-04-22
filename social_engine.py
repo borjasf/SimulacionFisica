@@ -110,7 +110,7 @@ def process_encounter(agent, agents):
             # Extraemos el valor del LLM. Si falla o es Mock, usamos +2 por defecto.
             impacto_charla = dialogue_json.get('variacion_relacion', 2) 
             
-            puntuacion_homofilia_base = score * 100 # Convertimos el 0.XX a escala 0-100
+            puntuacion_homofilia_base = score * 10 # Convertimos el 0.XX a escala 0-100
             
             for (a, b) in [(agent, companion), (companion, agent)]:
                 # 1. Si no se conocían, inicializamos su relación basada en la Homofilia

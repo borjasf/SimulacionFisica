@@ -20,20 +20,24 @@ MAX_RETRIEVED_MEMORIES = 3  # Número máximo de recuerdos a inyectar en el prom
 # --- CONSTANTES DE RED SOCIAL Y PROBABILIDAD (MODELO CONTINUO) ---
 # Probabilidades de interacción al cruzarse
 FRIEND_INTERACTION_PROB = 0.85      # Probabilidad base de que dos amigos se paren a hablar (85%)
-MIN_INTERACTION_PROB = 0.5         # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
+MIN_INTERACTION_PROB = 0.5          # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
 MAX_INTERACTION_PROB = 0.95         # Techo probabilístico: Límite máximo para desconocidos afines (95%)
 
 # Multiplicadores
-HOMOPHILY_PROB_MULTIPLIER = 0.20    # Cada punto de homofilia suma un 10% de probabilidad
+HOMOPHILY_PROB_MULTIPLIER = 0.20    # Cada punto de homofilia suma un 20% de probabilidad
 FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos lideren el orden de prioridad
 
 
 # --- MOTOR DE DECISIÓN DE RUTINA ---
 # "MARKOV": Usa probabilidades matemáticas basadas en el INE (Rápido, estadístico)
 # "LLM": Usa Inteligencia Artificial para decidir semánticamente (Lento, psicológico)
-DECISION_ENGINE = "LLM"
+DECISION_ENGINE = "MARKOV"
+
+# Validación de seguridad
+if DECISION_ENGINE not in ["MARKOV", "LLM"]:
+    raise ValueError(f"DECISION_ENGINE debe ser 'MARKOV' o 'LLM', pero recibió '{DECISION_ENGINE}'")
 
 # --- MODO TESTER / DEBUG ---
 MOCK_LLM = False         # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
 PRINT_LOGS = True        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
-MAX_TURNS = 50       # Si es > 0, la simulación se detendrá sola al llegar a este turno
+MAX_TURNS = 1000       # Si es > 0, la simulación se detendrá sola al llegar a este turno

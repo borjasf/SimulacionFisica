@@ -57,6 +57,9 @@ class Agent:
         # GUARDA ACCIÓN ANTERIOR PARA RECORDARLA DESPUÉS DEL DESPLAZAMIENTO
         self.pending_macro_state = None
         self.pending_micro_action = None
+        
+        # UBICACIÓN RECORDADA PARA PROPÓSITOS NARRATIVOS
+        self.id_lugar_actual = None
 
         self._apply_traits()
         self._apply_demographics()

@@ -15,8 +15,6 @@ import social_engine
 import data_exporter
 from agent import Agent
 
-import random
-
 if config.RANDOM_SEED is not None:
     random.seed(config.RANDOM_SEED)
 
@@ -87,6 +85,11 @@ def run_simulation():
                     # Interceptor de seguridad por si la IA se inventa una palabra
                     if nueva_micro_accion not in opciones_validas:
                         nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
+                
+                else:
+                    # Fallback seguro si config.DECISION_ENGINE es inválido
+                    print(f"[AVISO] config.DECISION_ENGINE = '{config.DECISION_ENGINE}' no es válido. Usando MARKOV por defecto.")
+                    nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
 
             # 3. DECISIÓN ESPACIAL Y DESPLAZAMIENTO (LA INTERCEPCIÓN)
             mensaje_espacial = ""
