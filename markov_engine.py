@@ -1,6 +1,10 @@
 import random
 
 # CAPA 1: MATRIZ PRIMARIA FASE 1 (5 Macro-Estados Formales)
+# Probabilidades base de transición entre macro-estados, ajustables por edad y ocupación.
+# Estudiadas mediante una Cadena de Markov, probadas mediante enumeradas ejecuciones hasta llegar
+# a una distribución estable y realista. Se intentan impedir transiciones cíclicas o repetición de estados
+# continuamente, para evitar agentes "atascados" en patrones poco realistas (e.g., solo descansando o solo en obligaciones). 
 TRANSITION_MATRIX = {
     "DESCANSO": {
         "DESCANSO": 0.0, "ALIMENTACION": 0.01, "OBLIGACIONES": 0.45, 
@@ -24,42 +28,67 @@ TRANSITION_MATRIX = {
     }
 }
 
-# CAPA 2: MICRO-ACCIONES (Formalizadas)
-MICRO_ACTIONS = {
+# CAPA 2: MICRO-ACCIONES
+# PROBABILIDADES BASE DE MICRO-ACCIONES (Pesos relativos sumando 100 por categoría)
+# Justificados con la Encuesta de Empleo del Tiempo (EET) del INE.
+# Diferencias ligeras para dar mayor peso a las modificaciones por edad y personalidad
+# en los archivos demographic_rules.py y trait_rules.py, respectivamente.
+
+MICRO_ACCIONES = {
     "DESCANSO": {
-        "sueno_profundo": 85,
-        "descanso_diurno": 15
+        # INE (Grupo 01): Dormir tiene 100% de participación con ~8.5h. 
+        # Ocio pasivo/descanso diurno (Grupo 53) tiene 21.8% con ~1.2h.
+        # Atenuado de 85/15 a 80/20 para dar más margen a siestas en perfiles concretos.
+        "sueno_profundo": 80,
+        "descanso_diurno": 20
     },
+    
     "ALIMENTACION": {
-        "ingesta_en_hogar": 45,
+        # INE (Grupo 02): Mayoritariamente en el hogar, pero se atenúan 
+        # las caídas bruscas para permitir variedad de estilos de vida (oficinistas vs caseros).
+        "ingesta_en_hogar": 40,
         "ingesta_en_restauracion": 20,
-        "ingesta_ligera": 15,
-        "interaccion_ingesta": 10,
-        "ingesta_rrss": 10
+        "ingesta_ligera": 20,          # Almuerzos/meriendas rápidas
+        "interaccion_ingesta": 10,     # Comer socializando
+        "ingesta_rrss": 10             # Comer mirando pantallas (comportamiento moderno)
     },
+    
     "OBLIGACIONES": {
-        "jornada_laboral": 35,
-        "jornada_academica": 35,
-        "gestiones_personales": 15,
-        "conversacion_con_companeros": 10,
-        "revisar_rrss": 5
+        # INE: El Grupo 1 (Trabajo) y Grupo 2 (Estudios) son excluyentes gracias 
+        # a demographic_rules.py. Aún siendo predominantes el trabajo y estudio,
+        # la probabilidad base de las obligaciones se distribuyen para permitir acciones variadas.
+        "jornada_laboral": 30,
+        "jornada_academica": 30,
+        "gestiones_personales": 20,    # INE (Grupo 37): Gestiones y compras
+        "conversacion_con_companeros": 12, # Pausas para el café
+        "revisar_rrss": 8              # Procrastinación base
     },
+    
     "TAREAS_DOMESTICAS": {
-        "mantenimiento_del_hogar": 75,
-        "conversacion_con_convivientes": 25
+        # INE (Grupo 32 vs 511): Mantenimiento del hogar domina en horas (casi 1h 10m),
+        # pero la vida social en familia es frecuente (unos 45m).
+        "mantenimiento_del_hogar": 70,
+        "conversacion_con_convivientes": 30
     },
+    
     "OCIO": {
-        "conversacion_social": 25,
-        "ocio_hosteleria": 15,
-        "paseo_recreativo": 10,
+        # Reajuste masivo basado en INE:
+        # 1. Medios de comunicación (Grupo 8): 88.3% participación (TV).
+        # 2. Vida social (Grupo 5): 57.7% participación. Conversación y hostelería.
+        # 3. Deportes (Grupo 6): 39.8% participación.
+        # 4. Cultura: Se reduce a 5 por ser la de menor frecuencia diaria habitual.
+        "consumo_audiovisual": 20,     # Lidera el ocio base por la EET del INE
+        "conversacion_social": 15,
+        "ocio_hosteleria": 12,
+        "paseo_recreativo": 12,        # Ocio exterior de bajo impacto
         "actividad_fisica": 10,
-        "actividad_cultural": 10,
-        "lectura": 10,
-        "consumo_audiovisual": 10,
-        "ocio_digital_activo": 5,
-        "ver_rrss": 5
+        "ver_rrss": 10,                # (Ocio digital pasivo)
+        "lectura": 8,
+        "ocio_digital_activo": 8,      # Videojuegos y PC
+        "actividad_cultural": 5        # Cine/Teatro/Museos (Raro de hacer a diario)
     }
 }
+
 
 def get_markov_probabilities(current_macro_state):
     """Devuelve las probabilidades de la CAPA 1 (Macro-estados)."""
@@ -72,7 +101,7 @@ def choose_micro_action(agente, macro_state):
     Decide la acción específica de la CAPA 2 basándose en los pesos base 
     y aplicando los modificadores de personalidad del agente.
     """
-    acciones_dict = MICRO_ACTIONS.get(macro_state, {"accion_por_defecto": 100})
+    acciones_dict = MICRO_ACCIONES.get(macro_state, {"accion_por_defecto": 100})
     
     acciones_posibles = list(acciones_dict.keys())
     pesos_base = list(acciones_dict.values())
