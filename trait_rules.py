@@ -1,11 +1,5 @@
-# ==============================================================================
-# ARCHIVO: trait_rules.py
-# DESCRIPCIÓN: Traducción matemática de los 5 Grandes Rasgos de Personalidad 
+# Traducción matemática de los 5 Grandes Rasgos de Personalidad 
 # (Goldberg, 1990) aplicados a la CAPA 1 (MACRO-ESTADOS) y CAPA 2 (MICRO-ACCIONES).
-# 
-# Documentación Adicional Pesos:
-# 1. Andresen et al. (2024) 2. Shui et al. (2023) 3. Mehl (2017) [Método EAR]
-# ==============================================================================
 
 GOLDBERG_RULES = {
     "Sociability": {
@@ -96,7 +90,7 @@ GOLDBERG_RULES = {
         "+": {
             "markov_weight_modifiers": {
                 # IMPACTO CAPA 1 (Macro-estados)
-                "OBLIGACIONES": 1.3,
+                "OBLIGACIONES": 1.2,
                 "TAREAS_DOMESTICAS": 1.2,
                 
                 # IMPACTO CAPA 2 (Micro-acciones)
@@ -105,36 +99,34 @@ GOLDBERG_RULES = {
                 "jornada_laboral": 1.5,         # Reflejo de "Efficient" y "Systematic"
                 "jornada_academica": 1.5,
                 "mantenimiento_del_hogar": 1.8, # Mapeo directo del clúster "Neat/Organized"
-                "gestiones_personales": 1.6,    # Reflejo de "Thorough" (Meticuloso)
+                "gestiones_personales": 1.5,   
                 
                 # Penalizaciones (Evitación de la procrastinación/desperdicio de tiempo)
                 "ver_rrss": 0.4,                # Oposición al clúster de eficiencia
                 "revisar_rrss": 0.4,
                 "ingesta_rrss": 0.4,
                 "consumo_audiovisual": 0.6,
-                "ocio_hosteleria": 0.5
             },
-            "spatial_beta_modifier": 1.3        # Rutinas espaciales más estrictas (Systematic)
+            "spatial_beta_modifier": 1.2        # Rutinas espaciales más estrictas (Systematic)
         },
         "-": {
             "markov_weight_modifiers": {
                 # IMPACTO CAPA 1
-                "OBLIGACIONES": 0.7,
-                "TAREAS_DOMESTICAS": 0.7,       # Corregido: La desorganización reduce las tareas
-                
+                "OBLIGACIONES": 0.8,
+                "TAREAS_DOMESTICAS": 0.8,       
                 # IMPACTO CAPA 2
                 # Justificación: Goldberg (1990) Tabla 3, Factor III (Polo Negativo). 
                 # Altas cargas en "Disorganized", "Careless", "Inconsistent", "Sloppy".
-                "jornada_laboral": 0.6,         # Reflejo de "Inconsistent" (Inconstante)
+                "jornada_laboral": 0.6,         # Reflejo de "Inconsistent"
                 "jornada_academica": 0.6,
-                "mantenimiento_del_hogar": 0.3, # Mapeo directo de "Sloppy/Disorganized"
-                "gestiones_personales": 0.3,
+                "mantenimiento_del_hogar": 0.4, # Mapeo directo de "Sloppy/Disorganized"
+                "gestiones_personales": 0.6,
                 
                 # Refugio en la distracción pasiva (Comportamiento "Careless")
                 "ver_rrss": 1.6,              
                 "revisar_rrss": 1.6,
                 "ingesta_rrss": 1.6,
-                "ocio_digital_activo": 1.5
+                "consumo_audiovisual": 1.3
             },
             "spatial_beta_modifier": 0.8        # Movimientos y rutas más erráticas
         }
