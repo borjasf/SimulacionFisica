@@ -38,6 +38,6 @@ if DECISION_ENGINE not in ["MARKOV", "LLM"]:
     raise ValueError(f"DECISION_ENGINE debe ser 'MARKOV' o 'LLM', pero recibió '{DECISION_ENGINE}'")
 
 # --- MODO TESTER / DEBUG ---
-MOCK_LLM = False         # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
-PRINT_LOGS = True        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
-MAX_TURNS = 1000       # Si es > 0, la simulación se detendrá sola al llegar a este turno
+MOCK_LLM = True         # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
+PRINT_LOGS = False        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
+MAX_TURNS = 5000     # Si es > 0, la simulación se detendrá sola al llegar a este turno

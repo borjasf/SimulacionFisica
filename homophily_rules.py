@@ -9,7 +9,7 @@ def calculate_homophily_score(agent_a, agent_b):
     score = 0
     match_reasons = []
 
-    # 0. BONUS DE PERSONALIDAD (Amiability / Sociability)
+    # 0. BONUS DE PERSONALIDAD (Friendliness / Sociability)
     # El bonus fraccional proviene directamente de los multiplicadores 
     # de Goldberg matemáticos generados en trait_rules, no de una decisión arbitraria.
     bonus_a = agent_a.homophily_base_bonus / 10.0 

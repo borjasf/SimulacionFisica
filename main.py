@@ -157,19 +157,32 @@ def run_simulation():
                             beta=beta_personalizado 
                         )
                         
-                        agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
-                        
                         # INTERCEPCIÓN: Guardamos lo que iba a hacer y lo mandamos de viaje al nuevo destino
                         agente.pending_macro_state = nuevo_macro_estado
                         agente.pending_micro_action = nueva_micro_accion
                         
-                        agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
-                        agente.current_location_name = destino_id
-                        
-                        nueva_micro_accion = "desplazamiento_urbano"
-                        tipo_visita = " [NUEVO] " if es_nuevo else " [HABITUAL] "
-                        mensaje_espacial = f" -> Viajando hacia: {destino_id} ({tipo_visita})"
-                        lugar_memoria = f"de camino a {destino_id}"
+                        if destino_id == "Casa":
+                            # Si el motor espacial devuelve "Casa", usa home_coords del agente
+                            agente.current_coords = agente.home_coords
+                            agente.current_location_name = "Casa"
+                            nueva_micro_accion = "desplazamiento_urbano"
+                            mensaje_espacial = " -> Viajando hacia casa"
+                            lugar_memoria = "de camino a casa"
+                        elif destino_id is None:
+                            # Si spatial_engine no puede encontrar destino válido, el agente pasea por la calle
+                            mensaje_espacial = f" -> Pasea por la calle"
+                            lugar_memoria = "la calle"
+                            agente.current_location_name = "Calle"
+                            nueva_micro_accion = "desplazamiento_urbano"
+                        else:
+                            # Destino válido en MAPA_CIUDAD
+                            agente.visited_places[destino_id] = agente.visited_places.get(destino_id, 0) + 1
+                            agente.current_coords = environment.MAPA_CIUDAD[destino_id]["coords"]
+                            agente.current_location_name = destino_id
+                            nueva_micro_accion = "desplazamiento_urbano"
+                            tipo_visita = " [NUEVO] " if es_nuevo else " [HABITUAL] "
+                            mensaje_espacial = f" -> Viajando hacia: {destino_id} ({tipo_visita})"
+                            lugar_memoria = f"de camino a {destino_id}"
                         
                     else:
                         mensaje_espacial = f" -> Pasea por la calle"
@@ -192,7 +205,7 @@ def run_simulation():
                 # Si no había nadie con quien hablar, buscamos un "fallback" lógico
                 if not hablaron:
                     if nuevo_macro_estado == "OCIO": nueva_micro_accion = "ver_rrss"
-                    elif nuevo_macro_estado == "TAREAS_DOMESTICAS": nueva_micro_accion = "ver_rrss"
+                    elif nuevo_macro_estado == "TAREAS_DOMESTICAS": nueva_micro_accion = "mantenimiento_del_hogar"
                     elif nuevo_macro_estado == "ALIMENTACION": nueva_micro_accion = "ingesta_rrss"
                     elif nuevo_macro_estado == "OBLIGACIONES": nueva_micro_accion = "revisar_rrss"
 

@@ -69,7 +69,10 @@ def process_encounter(agent, agents):
                     
             if config.PRINT_LOGS:
                 print(f"\n   ¡Encuentro! {agent.name} coincide con {companion.name} en {location}.")
-                print(f"   Afinidad: {score} pts. {context}")
+                if score <= 100:
+                    print(f"   Afinidad: {score} pts. {context}")
+                else:
+                    print(f"   Afinidad total. {context}")
                 print(f"   Los agentes ordenan su mente antes de hablar...")
             
             # FASE 1: ACTUALIZACIÓN DE MEMORIA A LARGO PLAZO

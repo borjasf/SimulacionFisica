@@ -1,0 +1,58 @@
+=== REPORTE DE SIMULACION TFG ===
+Identificador;22_04_19_41
+Turnos Totales Simulados;70
+
+
+=== CAPA 1: MACRO-ESTADOS ===
+Version;Macro_Estado;Turnos_Absolutos;Porcentaje
+V1_Completa;DESCANSO;220;75.86%
+V1_Completa;OBLIGACIONES;29;10.0%
+V1_Completa;TAREAS_DOMESTICAS;22;7.59%
+V1_Completa;OCIO;16;5.52%
+V1_Completa;ALIMENTACION;3;1.03%
+V2_Pura;TAREAS_DOMESTICAS;22;51.16%
+V2_Pura;OBLIGACIONES;11;25.58%
+V2_Pura;OCIO;9;20.93%
+V2_Pura;ALIMENTACION;1;2.33%
+
+
+=== CAPA 2: MICRO-ACCIONES ===
+Version;Macro_Estado;Micro_Accion;Turnos_Absolutos;Porcentaje_Relativo
+V1_Completa;DESCANSO;sueno_profundo;220;100.0%
+V1_Completa;OCIO;desplazamiento_urbano;7;43.75%
+V1_Completa;OCIO;consumo_audiovisual;3;18.75%
+V1_Completa;OCIO;ocio_hosteleria;2;12.5%
+V1_Completa;OCIO;ver_rrss;2;12.5%
+V1_Completa;OCIO;lectura;1;6.25%
+V1_Completa;OCIO;ocio_digital_activo;1;6.25%
+V1_Completa;OBLIGACIONES;desplazamiento_urbano;18;62.07%
+V1_Completa;OBLIGACIONES;gestiones_personales;9;31.03%
+V1_Completa;OBLIGACIONES;jornada_laboral;1;3.45%
+V1_Completa;OBLIGACIONES;revisar_rrss;1;3.45%
+V1_Completa;ALIMENTACION;desplazamiento_urbano;2;66.67%
+V1_Completa;ALIMENTACION;ingesta_en_hogar;1;33.33%
+V1_Completa;TAREAS_DOMESTICAS;mantenimiento_del_hogar;21;95.45%
+V1_Completa;TAREAS_DOMESTICAS;conversacion_con_convivientes;1;4.55%
+V2_Pura;OCIO;consumo_audiovisual;3;33.33%
+V2_Pura;OCIO;ocio_hosteleria;2;22.22%
+V2_Pura;OCIO;ver_rrss;2;22.22%
+V2_Pura;OCIO;lectura;1;11.11%
+V2_Pura;OCIO;ocio_digital_activo;1;11.11%
+V2_Pura;OBLIGACIONES;gestiones_personales;9;81.82%
+V2_Pura;OBLIGACIONES;jornada_laboral;1;9.09%
+V2_Pura;OBLIGACIONES;revisar_rrss;1;9.09%
+V2_Pura;TAREAS_DOMESTICAS;mantenimiento_del_hogar;21;95.45%
+V2_Pura;TAREAS_DOMESTICAS;conversacion_con_convivientes;1;4.55%
+V2_Pura;ALIMENTACION;ingesta_en_hogar;1;100.0%
+
+
+=== MOTOR ESPACIAL: LUGARES VISITADOS ===
+Lugar;Visitas_Totales
+Oficina_Centro;10
+Cafeteria_Tranquila;4
+Universidad_Norte;4
+Instituto_Sur;3
+Bar_Manolo;2
+Plaza_Mayor;2
+Parque_Central;1
+Biblioteca_Municipal;1

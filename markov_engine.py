@@ -98,23 +98,36 @@ def get_markov_probabilities(current_macro_state):
 
 def choose_micro_action(agente, macro_state):
     """
-    Decide la acción específica de la CAPA 2 basándose en los pesos base 
-    y aplicando los modificadores de personalidad del agente.
+    Decide la acción específica aplicando modificadores de personalidad.
+    Incluye protección matemática (Suavizado) para evitar colapsos de probabilidad 0.
     """
-    acciones_dict = MICRO_ACCIONES.get(macro_state, {"accion_por_defecto": 100})
+    # Si el macro_estado no existe, devolvemos un diccionario seguro temporal
+    acciones_dict = MICRO_ACCIONES.get(macro_state, {"ver_rrss": 100})
     
     acciones_posibles = list(acciones_dict.keys())
     pesos_base = list(acciones_dict.values())
     
-    pesos_personalizados = []
+    pesos_finales = []
     for i in range(len(acciones_posibles)):
         accion = acciones_posibles[i]
         peso_original = pesos_base[i]
         
         multiplicador = agente.markov_modifiers.get(accion, 1.0)
-        pesos_personalizados.append(peso_original * multiplicador)
+        
+        # Respetar los Ceros Estructurales (Reglas demográficas estrictas)
+        if multiplicador == 0.0:
+            peso_final = 0.0
+        else:
+            # Suavizado: Garantizamos un peso mínimo de 1.0 para mantener viva la opción
+            peso_final = max(1.0, peso_original * multiplicador)
+            
+        pesos_finales.append(peso_final)
 
-    return random.choices(acciones_posibles, weights=pesos_personalizados, k=1)[0]
+    # Seguro anti-crashes de Python (ValueError: Total of weights must be greater than zero)
+    if sum(pesos_finales) <= 0:
+        return acciones_posibles[0] 
+
+    return random.choices(acciones_posibles, weights=pesos_finales, k=1)[0]
 
 
 # CAPA 3: REDES SOCIALES (Cadena de Markov Absorbente)

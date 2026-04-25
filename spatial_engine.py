@@ -68,6 +68,7 @@ def choose_destination(agent_coords, visited_places, places_db, agent_age_group,
             else:
                 # 2. Si NO conoce ningún lugar y tampoco hay lugares aptos en toda la ciudad...
                 # (Es un caso extremo, ej. un niño en una ciudad solo de discotecas)
+                # Retornamos "Casa" como destino válido (será manejado en main.py con home_coords)
                 return "Casa", False
     # 2. Selección del destino mediante Ruleta Proporcional
     places_list = list(candidates.keys())

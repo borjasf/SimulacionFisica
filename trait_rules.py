@@ -60,7 +60,7 @@ GOLDBERG_RULES = {
         }
     },
     
-    "Amiability": {
+    "Friendliness": {
         "+": {
             "markov_weight_modifiers": {
                 # IMPACTO CAPA 2 (Micro-acciones)
@@ -92,7 +92,7 @@ GOLDBERG_RULES = {
         }
     },
     
-    "Conscientiousness": {
+    "Scrupulousness": {
         "+": {
             "markov_weight_modifiers": {
                 # IMPACTO CAPA 1 (Macro-estados)
@@ -189,7 +189,7 @@ GOLDBERG_RULES = {
         }
     },
     
-    "Openness": {
+    "Intellectual": {
         "+": {
             # IMPACTO ESPACIAL Y DE RUTINA
             # Justificación: Goldberg (1990) Tabla 3, Factor V.

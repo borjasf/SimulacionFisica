@@ -59,7 +59,7 @@ if __name__ == "__main__":
         agent_id="A1", 
         name="Carlos (El Rutinario)", 
         social_activity=0.2, 
-        traits_list=["Conscientiousness +", "Sociability -", "Openness -"], 
+        traits_list=["Scrupulousness +", "Sociability -", "Intellectual -"], 
         age=40
     )
     
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         agent_id="A2", 
         name="Ana (La Inestable)", 
         social_activity=0.9, 
-        traits_list=["Conscientiousness -", "Neuroticism +", "Sociability +", "Openness +"], 
+        traits_list=["Scrupulousness -", "Neuroticism +", "Sociability +", "Intellectual +"], 
         age=22
     )
     

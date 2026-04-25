@@ -4,7 +4,7 @@ def update_biological_needs(agente):
     """
     Actualiza las variables fisiológicas en cada turno usando la CAPA 1 (Macro-estados).
     Dentro de cada estado, se ajusta el gasto usando la CAPA 2 (Micro-acciones).
-    Se aplican los multiplicadores de personalidad (Surgency, Conscientiousness, Neuroticism).
+    Se aplican los multiplicadores de personalidad (Sociability, Scrupulousness, Neuroticism).
     """
     estado = agente.current_macro_state
     micro = agente.current_micro_action
@@ -14,7 +14,7 @@ def update_biological_needs(agente):
         if micro == "sueno_profundo":
             agente.energia = min(100, agente.energia + (100 * agente.energy_recovery_mult))
         else: # descanso_diurno
-            agente.energia = min(100, agente.energia + (40 * agente.energy_recovery_mult))
+            agente.energia = min(100, agente.energia + (50 * agente.energy_recovery_mult))
     else:
         # Desgaste dinámico pero simplificado (Valores: 5 o 7)
         acciones_alto_desgaste = ["actividad_fisica", "mantenimiento_del_hogar", "paseo_recreativo", "jornada_laboral", "jornada_academica", "gestiones_personales"]
