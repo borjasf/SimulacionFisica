@@ -28,7 +28,7 @@ def process_encounter(agent, agents):
             int_b = set([i.strip().lower() for i in a.interests.split(',')])
             shared = int_a.intersection(int_b)
             
-            _, puntuacion, _ = homophily_rules.calculate_homophily_score(agent, a)
+            puntuacion, _ = homophily_rules.calculate_homophily_score(agent, a)
             
             if son_amigos:
                 probabilidad = config.FRIEND_INTERACTION_PROB  

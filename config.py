@@ -20,7 +20,7 @@ MAX_RETRIEVED_MEMORIES = 3  # Número máximo de recuerdos a inyectar en el prom
 # --- CONSTANTES DE RED SOCIAL Y PROBABILIDAD (MODELO CONTINUO) ---
 # Probabilidades de interacción al cruzarse
 FRIEND_INTERACTION_PROB = 0.85      # Probabilidad base de que dos amigos se paren a hablar (85%)
-MIN_INTERACTION_PROB = 0.5          # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
+MIN_INTERACTION_PROB = 0.05          # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
 MAX_INTERACTION_PROB = 0.95         # Techo probabilístico: Límite máximo para desconocidos afines (95%)
 
 # Multiplicadores
