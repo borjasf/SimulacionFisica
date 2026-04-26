@@ -4,20 +4,10 @@ def calculate_homophily_score(agent_a, agent_b):
     """
     Calcula la probabilidad de interacción entre dos agentes basándose en la
     similitud de sus atributos (Selección Homofílica equiponderada).
-    Devuelve un booleano, los puntos totales y el contexto narrativo.
+    Devuelve los puntos totales y el contexto narrativo.
     """
     score = 0
     match_reasons = []
-
-    # 0. BONUS DE PERSONALIDAD (Friendliness / Sociability)
-    # El bonus fraccional proviene directamente de los multiplicadores 
-    # de Goldberg matemáticos generados en trait_rules, no de una decisión arbitraria.
-    bonus_a = agent_a.homophily_base_bonus / 20.0 
-    bonus_b = agent_b.homophily_base_bonus / 20.0
-    score += (bonus_a + bonus_b)
-    
-    if bonus_a > 0 or bonus_b > 0:
-        match_reasons.append("Su carácter abierto facilitó el acercamiento.")
 
     # 1. SIMILITUD DEMOGRÁFICA (Edad)
     diferencia_edad = abs(agent_a.age - agent_b.age)
@@ -47,29 +37,22 @@ def calculate_homophily_score(agent_a, agent_b):
         match_reasons.append(f"Comparten intereses en: {intereses_str}.")
 
     # 4. SIMILITUD PSICOLÓGICA
+    # Solo suma si AMBOS tienen el rasgo +
+    
+    # Sociability: +1 solo si ambos
     if "Sociability +" in agent_a.traits and "Sociability +" in agent_b.traits:
         score += 1
-        match_reasons.append("Ambos tienen personalidades muy extrovertidas y sociables.")
-    elif ("Sociability +" in agent_a.traits and "Sociability -" in agent_b.traits) or \
-         ("Sociability -" in agent_a.traits and "Sociability +" in agent_b.traits):
-        score -= 1
-        match_reasons.append("Chocan en temperamento: uno es sociable y el otro introvertido.")
+        match_reasons.append("Ambos tienen personalidades extrovertidas y sociables.")
 
+    # Friendliness: +1 solo si ambos
     if "Friendliness +" in agent_a.traits and "Friendliness +" in agent_b.traits:
         score += 1
-        match_reasons.append("Ambos tienen una actitud amable y cooperativa.")
-    elif ("Friendliness +" in agent_a.traits and "Friendliness -" in agent_b.traits) or \
-         ("Friendliness -" in agent_a.traits and "Friendliness +" in agent_b.traits):
-        score -= 1
-        match_reasons.append("Diferencia de empatía: uno es amable y el otro es distante.")
+        match_reasons.append("Ambos tienen actitud amable y cooperativa.")
 
+    # Intellectual: +1 solo si ambos
     if "Intellectual +" in agent_a.traits and "Intellectual +" in agent_b.traits:
         score += 1
-        match_reasons.append("Comparten curiosidad intelectual y interés por aprender.")
-    elif ("Intellectual +" in agent_a.traits and "Intellectual -" in agent_b.traits) or \
-         ("Intellectual -" in agent_a.traits and "Intellectual +" in agent_b.traits):
-        score -= 1
-        match_reasons.append("Divergencia en intereses: uno es intelectual y el otro convencional.")
+        match_reasons.append("Comparten curiosidad intelectual e interés por aprender.")
 
     # EVALUACIÓN FINAL
     if match_reasons:

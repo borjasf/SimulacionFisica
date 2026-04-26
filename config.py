@@ -24,7 +24,7 @@ MIN_INTERACTION_PROB = 0.05          # Suelo probabilístico: Interacción por p
 MAX_INTERACTION_PROB = 0.95         # Techo probabilístico: Límite máximo para desconocidos afines (95%)
 
 # Multiplicadores
-HOMOPHILY_PROB_MULTIPLIER = 0.20    # Cada punto de homofilia suma un 20% de probabilidad
+HOMOPHILY_PROB_MULTIPLIER = 0.25    # Cada punto de homofilia suma un 15% de probabilidad
 FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos lideren el orden de prioridad
 
 
