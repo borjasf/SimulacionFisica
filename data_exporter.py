@@ -1,52 +1,52 @@
-# ARCHIVO: data_exporter.py
-# DESCRIPCIÓN: Exporta todas las estadísticas a un ÚNICO archivo CSV,
-# organizado por bloques, e identificado por día, mes, hora y minuto.
-
 import csv
 import os
 from datetime import datetime
 
 def export_simulation_data(agentes, turnos_totales, base_folder="resultados_tfg"):
     """
-    Agrega las estadísticas y las exporta a un único archivo CSV estructurado.
+    Agrega estadísticas de todos los agentes y exporta a archivo CSV con timestamp.
+    Incluye macro-estados, micro-acciones y lugares visitados.
     """
     if not os.path.exists(base_folder):
         os.makedirs(base_folder)
 
-    # Crear el nombre del archivo con formato día_mes_hora_minuto
+    # Crear nombre de archivo con timestamp día_mes_hora_minuto
     timestamp = datetime.now().strftime("%d_%m_%H_%M")
     filename = f"resultados_{timestamp}.csv"
     filepath = os.path.join(base_folder, filename)
         
-    print(f"\n[EXPORTACIÓN] Guardando reporte completo en: '{filepath}'...")
+    print(f"\nExportando reporte a: '{filepath}'...")
 
-    # 1. DICCIONARIOS AGREGADORES
+    # Agregadores de estadísticas
     v1_macros, v1_micros = {}, {}
     v2_macros, v2_micros = {}, {}
     global_places = {}
 
+    # Acumular estadísticas de todos los agentes
     for a in agentes:
-        # Acumular Versión 1 (Completa)
+        # Versión 1: Estadísticas completas
         for estado, count in a.macro_frequencies.items():
             v1_macros[estado] = v1_macros.get(estado, 0) + count
         for macro, micros_dict in a.micro_frequencies.items():
-            if macro not in v1_micros: v1_micros[macro] = {}
+            if macro not in v1_micros: 
+                v1_micros[macro] = {}
             for micro, count in micros_dict.items():
                 v1_micros[macro][micro] = v1_micros[macro].get(micro, 0) + count
 
-        # Acumular Versión 2 (Pura de Markov)
+        # Versión 2: Solo transiciones Markov pura
         for estado, count in a.filtered_macro_frequencies.items():
             v2_macros[estado] = v2_macros.get(estado, 0) + count
         for macro, micros_dict in a.filtered_micro_frequencies.items():
-            if macro not in v2_micros: v2_micros[macro] = {}
+            if macro not in v2_micros: 
+                v2_micros[macro] = {}
             for micro, count in micros_dict.items():
                 v2_micros[macro][micro] = v2_micros[macro].get(micro, 0) + count
                 
-        # Acumular Lugares
+        # Lugares visitados
         for lugar, visitas in a.visited_places.items():
             global_places[lugar] = global_places.get(lugar, 0) + visitas
 
-    # 2. ESCRITURA EN UN ÚNICO ARCHIVO CSV
+    # Escribir CSV con delimitador punto y coma
     with open(filepath, mode='w', newline='', encoding='utf-8') as f:
         # Usamos punto y coma (;) para que Excel lo separe en columnas automáticamente
         writer = csv.writer(f, delimiter=';')

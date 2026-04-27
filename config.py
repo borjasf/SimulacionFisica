@@ -1,43 +1,33 @@
-# --- PARÁMETROS DE REPRODUCIBILIDAD ---
-# 'None' para simulaciones aleatorias reales. 
-# Número entero (ej. 42) para hacer pruebas deterministas y auditables.
+# Configuración global de la simulación
+
+# Reproducibilidad: None para aleatoriedad real, número para determinismo auditado
 RANDOM_SEED = None
 
-# --- CONSTANTES DE TIEMPO ---
-SLEEP_TICK = 0.05       # Pausa del bucle principal
-SLEEP_DIALOGUE = 2.0    # Pausa de lectura en consola para los diálogos
+# Timing de ejecución
+SLEEP_TICK = 0.05       # Pausa del bucle principal (segundos)
+SLEEP_DIALOGUE = 2.0    # Pausa para mostrar diálogos en consola
 
-# --- CONSTANTES ESPACIALES (MODELO G-EPR) ---
-# [A review of human mobility...]
-BASE_EXPLORATION_RHO = 0.8 #Página 12. En la referencia [20] del documento es 0.6 de base, pero al ser ejecuciones "cortas" y las personas venir de base sin conocimiento previo, intentamos acelerar ese proceso de reconocimiento de lugares.
-BASE_GAMMA = 0.5 #Página 12.
-BASE_SPATIAL_BETA = 2.0 # Página 15 del estudio: "The distance exponent β is typically found to be around 2, consistent with a gravity model of mobility."
+# Parámetros del modelo G-EPR de exploración espacial
+# Controla el balance entre exploración de lugares nuevos y retorno a conocidos
+BASE_EXPLORATION_RHO = 0.8      # Intensidad de exploración (rho)
+BASE_GAMMA = 0.7                # Exponente de saturación (gamma)
+BASE_SPATIAL_BETA = 2.0         # Exponente de distancia en modelo de gravedad
 
-MEMORY_DECAY_FACTOR = 0.05  # Factor de decaimiento temporal (a mayor número, olvidan más rápido)
-MAX_IMPORTANCE_SCORE = 10.0 # Normalizador de la nota de importancia (por defecto es del 1 al 10)
-MAX_RETRIEVED_MEMORIES = 3  # Número máximo de recuerdos a inyectar en el prompt del LLM
+# Probabilidades de interacción social entre agentes
+FRIEND_INTERACTION_PROB = 0.85      # Amigos se hablan con certeza
+MIN_INTERACTION_PROB = 0.05          # Mínimo: solo por azar
+MAX_INTERACTION_PROB = 0.95         # Máximo: límite en desconocidos afines
+HOMOPHILY_PROB_MULTIPLIER = 0.3    # Cada punto de compatibilidad suma probabilidad
+FRIEND_PRIORITY_BONUS = 500         # Bonus para priorizar amigos en encuentros
 
-# --- CONSTANTES DE RED SOCIAL Y PROBABILIDAD (MODELO CONTINUO) ---
-# Probabilidades de interacción al cruzarse
-FRIEND_INTERACTION_PROB = 0.85      # Probabilidad base de que dos amigos se paren a hablar (85%)
-MIN_INTERACTION_PROB = 0.05          # Suelo probabilístico: Interacción por puro azar entre opuestos (5%)
-MAX_INTERACTION_PROB = 0.95         # Techo probabilístico: Límite máximo para desconocidos afines (95%)
+# Motor de decisión: selecciona entre estocástico o semántico
+DECISION_ENGINE = "MARKOV"          # "MARKOV" (rápido, INE) o "LLM" (lento, IA)
 
-# Multiplicadores
-HOMOPHILY_PROB_MULTIPLIER = 0.25    # Cada punto de homofilia suma un 15% de probabilidad
-FRIEND_PRIORITY_BONUS = 500         # Puntuación inflada para que los amigos lideren el orden de prioridad
-
-
-# --- MOTOR DE DECISIÓN DE RUTINA ---
-# "MARKOV": Usa probabilidades matemáticas basadas en el INE (Rápido, estadístico)
-# "LLM": Usa Inteligencia Artificial para decidir semánticamente (Lento, psicológico)
-DECISION_ENGINE = "MARKOV"
-
-# Validación de seguridad
+# Validación del motor de decisión
 if DECISION_ENGINE not in ["MARKOV", "LLM"]:
-    raise ValueError(f"DECISION_ENGINE debe ser 'MARKOV' o 'LLM', pero recibió '{DECISION_ENGINE}'")
+    raise ValueError(f"DECISION_ENGINE debe ser 'MARKOV' o 'LLM'")
 
-# --- MODO TESTER / DEBUG ---
-MOCK_LLM = True         # Si es True, no llama a Gemini (ahorra tiempo y dinero en pruebas largas)
-PRINT_LOGS = False        # Apaga los prints de los turnos para que la consola vaya a máxima velocidad
-MAX_TURNS = 5000     # Si es > 0, la simulación se detendrá sola al llegar a este turno
+# Modo de prueba y configuración de output
+MOCK_LLM = True         # True: no llamar a Gemini (pruebas rápidas)
+PRINT_LOGS = False        # False: sin logs por consola (velocidad máxima)
+MAX_TURNS = 10000     # Límite de turnos (0 = sin límite)

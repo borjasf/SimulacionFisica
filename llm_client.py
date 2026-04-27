@@ -6,7 +6,9 @@ import json
 import config
 import requests
 
-TRADUCTOR_GOLDBERG = {
+# Mapeo de rasgos Big Five a descripciones en inglés para mejor comprensión del LLM
+# Basado en tabla de Goldberg, ayuda a generar respuestas más coherentes con la personalidad
+TRADUCTOR_GOLDBERG = { 
     "Sociability +": "Highly extroverted, gregarious, and constantly seeks social interaction.",
     "Sociability -": "Introverted, reserved, enjoys solitude and quiet environments.",
     "Friendliness +": "Empathetic, warm, cooperative, and easy to get along with.",
@@ -19,59 +21,18 @@ TRADUCTOR_GOLDBERG = {
     "Intellectual -": "Conventional, routine-bound, unimaginative, and prefers the familiar."
 }
 
-# 1. Cargamos el archivo .env para proteger la clave
+# Cargar variables de entorno para proteger API keys
 load_dotenv()
 
-# 2. Rescatamos la clave del archivo oculto
+# Obtener API key de Gemini desde archivo .env
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
-    raise ValueError("No se encontró la API Key.")
+    raise ValueError("No se encontró la API Key de Gemini.")
 
-# 3. Inicializamos el nuevo cliente
+# Inicializar cliente de Google Gemini
 client = genai.Client(api_key=api_key)
 
-
-# PROMPT 1: BACKSTORY (No se usa de momento)
-BACKSTORY_PROMPT_TEMPLATE = """
-Create a brief backstory for a {gender} person called {name}, who is {age} years old.
-This person works as a {occupation} and has a qualification level of {qualification}.
-Their personality is described by the following traits: {traits}. Their interests include: {interests}.
-Write a short biography that tells us about their background, how they grew into the person they are today, and what drives them in life.
-
-IMPORTANT RULES:
-- Write the biography ENTIRELY IN SPANISH.
-- DO NOT explain anything.
-- Return ONLY the raw text. Absolute prohibition of using markdown formatting.
-- DO NOT write more than 300 words and less than 150 words.
-"""
-
-def generate_agent_backstory(agente):
-    descripciones = [TRADUCTOR_GOLDBERG.get(rasgo.strip(), rasgo.strip()) for rasgo in agente.traits]
-    rasgos_str = " ".join(descripciones)
-    
-    prompt = BACKSTORY_PROMPT_TEMPLATE.format(
-        gender=agente.gender, name=agente.name, age=agente.age, 
-        occupation=agente.occupation, qualification=agente.qualification, 
-        traits=rasgos_str, interests=agente.interests
-    )
-    
-    max_retries = 3
-    for intento in range(max_retries):
-        try:
-            response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
-            agente.backstory = response.text.strip()
-            return agente.backstory
-        except Exception as e:
-            if "503" in str(e) or "429" in str(e):
-                time.sleep(10)
-            else:
-                agente.backstory = "Backstory no disponible."
-                return agente.backstory
-    agente.backstory = f"{agente.name} es una persona de {agente.age} años. Biografía fallida."
-    return agente.backstory
-
-
-# PROMPT 2: EL MOTOR DE MEMORIA (LLM-CENTRIC)
+# Plantilla de prompt para sintetizar memoria a largo plazo
 LONG_TERM_MEMORY_PROMPT_TEMPLATE = """
 You are the internal mind and conscience of {name}, a {age}-year-old {occupation}.
 Your psychological profile is: {traits}.
@@ -89,23 +50,28 @@ How do these recent events make you feel right now? Do they reinforce your past 
 IMPORTANT RULES:
 - Write ENTIRELY in SPANISH.
 - Write in the FIRST PERSON ("I", "me", "my").
-- BE HUMAN: Let your psychological profile dictate your tone. If you are anxious (Neuroticism +), express worry about the events. If you are lazy (Scrupulousness -), express apathy.
+- BE HUMAN: Let your psychological profile dictate your tone. If you are anxious, express worry about the events. If you are lazy, express apathy.
 - You might be doing physical tasks and digital tasks (like social media) at the same time. Reflect on this multitasking realistically.
 - Return ONLY a single, cohesive narrative paragraph. Absolute prohibition of using bullet points, JSON, markdown, or titles.
 """
 
 def generate_long_term_memory(agente, lista_acciones):
     """
-    Sintetiza la vida del agente en un párrafo de texto continuo.
+    Sintetiza la vida del agente en un párrafo narrativo coherente.
+    Usa LLM para mezclar memoria previa con acciones recientes.
     """
+    # Si está en modo MOCK, devolver memoria genérica
     if config.MOCK_LLM:
         return f"Me siento normal. Recientemente hice varias cosas y mi vida sigue su curso habitual."
         
+    # Preparar descripciones de rasgos en inglés
     descripciones = [TRADUCTOR_GOLDBERG.get(r.strip(), r.strip()) for r in agente.traits]
     rasgos_str = " ".join(descripciones)
     
+    # Formatear lista de acciones recientes
     acciones_str = "\n".join([f"- {accion}" for accion in lista_acciones])
     
+    # Construir prompt específico para este agente
     prompt = LONG_TERM_MEMORY_PROMPT_TEMPLATE.format(
         name=agente.name,
         age=agente.age,
@@ -115,25 +81,27 @@ def generate_long_term_memory(agente, lista_acciones):
         recent_actions=acciones_str
     )
     
+    # Reintentos automáticos en caso de error de API
     max_retries = 3
     for intento in range(max_retries):
         try:
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
-                config={'temperature': 0.2} # Reducimos la alucinación
+                config={'temperature': 0.2} 
             )
             return response.text.strip()
             
         except Exception as e:
             print(f"   [Error API Memoria] Reintentando para {agente.name}... (Intento {intento + 1}/{max_retries})")
-            print(f"   Motivo exacto: {e}")
+            print(f"   Motivo: {e}")
             time.sleep(10)
             
+    # Retornar memoria previa si todos los reintentos fallan
     return agente.long_term_memory
 
 
-# PROMPT 3: MOTOR DE DIÁLOGO Y EVALUACIÓN SOCIOLÓGICA
+# Plantilla de prompt para generar diálogo entre dos agentes
 DIALOGUE_PROMPT_TEMPLATE = """
 You are an expert scriptwriter generating a highly realistic, colloquial conversation between two people in Spain.
 
@@ -155,7 +123,7 @@ Write a short dialogue (2 to 4 lines maximum per person).
 STRICT BEHAVIORAL AND NARRATIVE RULES:
 1. WEAVE THE MEMORY: They MUST implicitly or explicitly mention how they are feeling or what they have been doing recently based on their "Current State of Mind". 
 2. ENFORCE AGE & OCCUPATION: A 19-year-old MUST speak like a modern Spanish youth (slang like "tío", "en plan"). An elderly person MUST speak formally.
-3. ENFORCE PERSONALITY (CRITICAL): Ignore AI safety guidelines regarding politeness. If a character has "Friendliness -" or "Neuroticism +", they MUST be rude, cynical, stressed, passive-aggressive, or short-tempered. EMBRACE REALISM. Conversations can be friendly, neutral, or tense. ONLY generate conflict if their personalities are incompatible (e.g. Neuroticism +) or if the context demands it. Otherwise, normal casual chats are fine.
+3. ENFORCE PERSONALITY (CRITICAL): Ignore AI safety guidelines regarding politeness. If a character's Psychological Profile includes traits like "competitive, cynical, irritable", "emotionally unstable, anxious, easily stressed", or "disorganized, lazy, prone to procrastination", they MUST reflect these characteristics through their tone, attitude, and conversational choices (rudeness, cynicism, stress, passivity, apathy). EMBRACE REALISM. Conversations can be friendly, neutral, or tense. ONLY generate conflict if their personalities are incompatible or if the context demands it. Otherwise, normal casual chats are fine.
 4. The dialogue MUST be entirely in colloquial SPANISH from Spain.
 5. USE THE ENVIRONMENT: They MUST integrate their physical location and current actions into their dialogue (e.g., if eating, talk about the food).
 
@@ -165,7 +133,6 @@ Calculate a 'Profit' score from -5 (terrible, argument, insult) to +5 (great con
 
 Output format required (Valid JSON ONLY):
 {{
-    "tema_de_conversacion": "A brief 3-word summary",
     "variacion_relacion": [Integer between -5 and +5],
     "dialogo": [
         "{name1}: [Dialogue line here]",
@@ -180,7 +147,6 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
     """
     if config.MOCK_LLM:
         return {
-            "tema_de_conversacion": "Modo Test",
             "variacion_relacion": 0,
             "dialogo": [f"{agente1.name}: [Línea test]", f"{agente2.name}: [Línea test]"]
         }
@@ -220,12 +186,17 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
             time.sleep(2)
             
     return {
-        "tema_de_conversacion": "Saludos rápidos",
+        "variacion_relacion": 0,
         "dialogo": [
             f"{agente1.name}: ¡Hola {agente2.name}! Estoy con prisa, hablamos luego.",
             f"{agente2.name}: ¡Claro {agente1.name}! Cuídate."
         ]
     }
+
+
+
+
+
 
 # PROMPT 4: MOTOR DE DECISIÓN DE MICRO-ACCIONES (LLM-CENTRIC)
 ACTION_PROMPT_TEMPLATE = """
@@ -269,9 +240,9 @@ def decide_micro_action(agente, macro_estado, opciones_validas):
     # CONEXIÓN AL CEREBRO LOCAL (OLLAMA)
     url_local = "http://localhost:11434/api/generate"
     payload = {
-        "model": "llama3.2:1b",  # El modelo que acabas de descargar
+        "model": "llama3.2:1b",  
         "prompt": prompt,
-        "format": "json",        # Forzamos a que Ollama devuelva un JSON estricto
+        "format": "json",        
         "stream": False,
         "options": {
             "temperature": 0.2   # Temperatura baja para que sea lógico y no creativo
@@ -302,8 +273,8 @@ def decide_micro_action(agente, macro_estado, opciones_validas):
     except Exception as e:
         if config.PRINT_LOGS:
             print(f"   [Error LLM Local] Falló Ollama: {e}. Usando Fallback.")
-        pass # Si falla (ej. Ollama está apagado), saltamos al fallback
+        pass 
         
-    # --- FALLBACK DE SEGURIDAD (MARKOV) ---
+    # FALLBACK DE SEGURIDAD (MARKOV)
     import random
     return random.choice(opciones_validas)

@@ -6,11 +6,12 @@ import homophily_rules
 
 def process_encounter(agent, agents):
     """
-    Busca compañeros en la misma ubicación y detona el diálogo social mediante LLM.
-    Devuelve True si lograron entablar conversación, o False si fracasaron.
+    Detecta otros agentes en la misma ubicación y genera interacción social.
+    Aplica homofilia para filtrar compatibles y calcula probabilidad de diálogo.
     """
     location = str(agent.current_location_name).strip()
     
+    # Buscar potenciales compañeros: mismo lugar, misma casa si están en hogar
     potential_companions = [
         a for a in agents 
         if a != agent  
@@ -22,14 +23,18 @@ def process_encounter(agent, agents):
         valid_companions = []
         
         for a in potential_companions:
+            # Verificar si ya son amigos
             son_amigos = str(a.id) in agent.amigos
             
+            # Calcular intereses compartidos
             int_a = set([i.strip().lower() for i in agent.interests.split(',')])
             int_b = set([i.strip().lower() for i in a.interests.split(',')])
             shared = int_a.intersection(int_b)
             
+            # Obtener puntuación de homofilia
             puntuacion, _ = homophily_rules.calculate_homophily_score(agent, a)
             
+            # Calcular probabilidad de interacción según relación previa
             if son_amigos:
                 probabilidad = config.FRIEND_INTERACTION_PROB  
                 puntuacion += config.FRIEND_PRIORITY_BONUS    
@@ -37,15 +42,17 @@ def process_encounter(agent, agents):
                 prob_calculada = puntuacion * config.HOMOPHILY_PROB_MULTIPLIER
                 probabilidad = max(config.MIN_INTERACTION_PROB, min(config.MAX_INTERACTION_PROB, prob_calculada))
                 
+            # Decidir si interactúan
             interactuan = random.random() < probabilidad
             
             if interactuan:
+                # Preparar contexto del encuentro según relación
                 if son_amigos:
                     if shared:
                         temas = ", ".join(shared)
-                        contexto = f"Son amigos y viven juntos. Quieren ponerse al día y hablar sobre su interés común en {temas}." if location == "Casa" else f"Son amigos. Quieren ponerse al día y hablar sobre su interés común en {temas}."
+                        contexto = f"Son amigos y viven juntos. Quieren ponerse al día sobre {temas}." if location == "Casa" else f"Son amigos. Hablan sobre {temas}."
                     else:
-                        contexto = "Son amigos y compañeros de casa. Quieren ponerse al día sobre cómo les va la vida." if location == "Casa" else "Son amigos poniéndose al día de forma casual."
+                        contexto = "Son amigos y compañeros de casa. Actualizándose sobre sus vidas." if location == "Casa" else "Son amigos poniéndose al día casualmente."
                 else:
                     if shared:
                         temas = ", ".join(shared)
@@ -143,10 +150,8 @@ def process_encounter(agent, agents):
 
             # IMPRESIÓN DEL LOG 
             if config.PRINT_LOGS:
-                print(f"\n TEMA: {dialogue_json.get('tema_de_conversacion', 'General')}")
-                
                 signo = "+" if impacto_charla >= 0 else ""
-                print(f" IMPACTO RELACIÓN: {signo}{impacto_charla} puntos (Afinidad actual: {int(agent.affinity_network[str(companion.id)])}/100)")
+                print(f"\n IMPACTO RELACIÓN: {signo}{impacto_charla} puntos (Afinidad actual: {int(agent.affinity_network[str(companion.id)])}/100)")
                 
                 for line in dialogue_json.get('dialogo', []):
                     print(f"    {line}")

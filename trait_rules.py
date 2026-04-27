@@ -1,81 +1,69 @@
-# Traducción matemática de los 5 Grandes Rasgos de Personalidad 
-# (Goldberg, 1990) aplicados a la CAPA 1 (MACRO-ESTADOS) y CAPA 2 (MICRO-ACCIONES).
+# Implementación matemática de los 5 Grandes Rasgos de Personalidad (Big Five)
+# Mapea rasgos a modificadores de probabilidad en macro-estados y micro-acciones
 
 GOLDBERG_RULES = {
     "Sociability": {
         "+": {
             "markov_weight_modifiers": {
-                # IMPACTO CAPA 1 (Macro-estados)
+                # Extrovertido: Mayor propensión a ocio social
                 "OCIO": 1.2,
                 "TAREAS_DOMESTICAS": 0.8,
                 
-                # IMPACTO CAPA 2 (Micro-acciones)
-                # Justificación: Goldberg (1990) Tabla 3, Factor I. Altas cargas en 
-                # adjetivos "Talkative", "Sociable" y "Active".
-                "ocio_hosteleria": 2.5,        # Máxima expresión de "Active/Sociable"
-                "conversacion_social": 1.8,    # Reflejo directo del clúster "Talkative"
+                # Micro-acciones: Actividades con interacción social elevada
+                "ocio_hosteleria": 2.5,
+                "conversacion_social": 1.8,
                 "conversacion_con_companeros": 1.8,
                 "conversacion_con_convivientes": 1.8,
                 "interaccion_ingesta": 1.5,
                 "ingesta_en_restauracion": 1.3,
                 
-                # Penalizaciones lógicas (Evitación de la inactividad asocial)
+                # Penalización de actividades solitarias
                 "consumo_audiovisual": 0.5,
                 "ocio_digital_activo": 0.5,
-                "lectura": 0.4                 # Penalizado por oponerse al clúster "Talkative"
+                "lectura": 0.4
             },
-            "exploration_rho_bonus": 0.15,      # Mayor tendencia a explorar (Active)
-            "homophily_base_bonus": 10          # Facilidad de conexión inicial
+            "exploration_rho_bonus": 0.15,
+            "homophily_base_bonus": 10
         },
         "-": {
             "markov_weight_modifiers": {
-                # IMPACTO CAPA 1
+                # Introvertido: Mayor tendencia a actividades en solitario
                 "OCIO": 0.8,
                 "TAREAS_DOMESTICAS": 1.2,
                 
-                # IMPACTO CAPA 2
-                # Justificación: Goldberg (1990) Tabla 3, Factor I (Polo Negativo). 
-                # Altas cargas en adjetivos "Quiet", "Reserved", "Introverted", "Silent".
-                "ver_rrss": 1.8,               # Interacción asíncrona ("Reserved")
+                # Micro-acciones: Interacción asincrónica o pasiva
+                "ver_rrss": 1.8,
                 "revisar_rrss": 1.8,
                 "ingesta_rrss": 1.8,
                 "consumo_audiovisual": 1.5,
                 "ocio_digital_activo": 1.5,
-                "lectura": 1.5,                # Reflejo directo del clúster "Quiet/Silent"
+                "lectura": 1.5,
                 
-                # Penalizaciones de interacción (Inhibición social)
+                # Penalización de interacción presencial
                 "conversacion_social": 0.3,
                 "conversacion_con_companeros": 0.3,
                 "conversacion_con_convivientes": 0.3,
                 "interaccion_ingesta": 0.3,
-                "ocio_hosteleria": 0.1         # Fuerte penalización a entornos "Noisy/Active"
+                "ocio_hosteleria": 0.1
             },
-            "exploration_rho_bonus": -0.15      # Menor tendencia a cambiar de rutina
+            "exploration_rho_bonus": -0.15
         }
     },
     
     "Friendliness": {
         "+": {
             "markov_weight_modifiers": {
-                # IMPACTO CAPA 2 (Micro-acciones)
-                # Justificación: Goldberg (1990) Tabla 3, Factor II. Altas cargas en
-                # adjetivos "Sympathetic", "Kind", "Warm", "Cooperative", "Friendly".
-                # Refleja un aumento moderado en la receptividad social, no en la búsqueda 
-                # activa (que pertenece a Sociability).
+                # Amable: Aumenta receptividad en interacciones
                 "conversacion_social": 1.4,
                 "conversacion_con_companeros": 1.4,
                 "conversacion_con_convivientes": 1.4,
                 "interaccion_ingesta": 1.4
             },
-            # Mapeo directo de adjetivos "Trusting" y "Forgiving" reduciendo la fricción relacional
-            "homophily_base_bonus": 15          
+            "homophily_base_bonus": 15
         },
         "-": {
             "markov_weight_modifiers": {
-                # IMPACTO CAPA 2
-                # Justificación: Goldberg (1990) Tabla 3, Factor II (Polo Negativo).
-                # Altas cargas en "Cold", "Unfriendly", "Uncooperative", "Selfish".
-                # Evitación de la interacción social empática o cooperativa.
+                # Hostil: Evita interacción empática
                 "conversacion_social": 0.5,
                 "conversacion_con_companeros": 0.5,
                 "conversacion_con_convivientes": 0.5,

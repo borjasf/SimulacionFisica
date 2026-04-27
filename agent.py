@@ -2,65 +2,71 @@ from trait_rules import GOLDBERG_RULES
 import demographic_rules
 
 class Agent:
+    """Representa un agente con estado psicológico, fisiológico y espacial."""
+    
     def __init__(self, agent_id, name, social_activity, traits_list, age, gender, occupation, qualification, interests):
+        """Inicializa un agente con sus atributos demográficos y estado inicial."""
+        # Atributos básicos
         self.id = agent_id
         self.name = name
         self.social_activity = float(social_activity)
         self.traits = traits_list
         
+        # Datos demográficos
         self.age = int(age)
         self.age_group = self._calculate_age_group(self.age)
-        #self.age_group = "25-44" # Para pruebas, todos en la misma franja
-
         self.gender = gender
         self.occupation = occupation
         self.qualification = qualification
         self.interests = interests
-
         self.backstory = ""
 
+        # Estado actual
         self.current_macro_state = "DESCANSO"
         self.current_micro_action = "sueno_profundo"
         
+        # Estadísticas de actividad (versión completa)
         self.macro_frequencies = {"DESCANSO": 1}
         self.micro_frequencies = {"DESCANSO": {"sueno_profundo": 1}}
 
+        # Estadísticas puras de Markov (excluye desplazamientos e inicio)
         self.filtered_macro_frequencies = {}
         self.filtered_micro_frequencies = {}
         
-        # VARIABLES BIOLÓGICAS
+        # Parámetros fisiológicos
         self.energia = 100
         self.saciedad = 100
-
         self.energy_decay_mult = 1.0
         self.energy_recovery_mult = 1.0
         self.urgency_k = 3.0
+        
+        # Modificadores de personalidad aplicados a diferentes motores
         self.exploration_rho_bonus = 0.0
         self.spatial_beta_modifier = 1.0
         self.homophily_base_bonus = 0
         self.markov_modifiers = {}
         
-        # VARIABLES ESPACIALES 
+        # Ubicación espacial
         self.home_coords = None     
         self.current_coords = None  
         self.visited_places = {}    
         self.current_location_name = "Casa"
 
-        # MEMORIA
+        # Sistema de memoria
         self.short_term_memory = "Acabo de despertar." 
         self.action_buffer = []     
         self.long_term_memory = "Últimamente mi rutina ha sido bastante normal y estable."
 
+        # Red social
         self.amigos = []
         self.affinity_network = {}
 
-        # GUARDA ACCIÓN ANTERIOR PARA RECORDARLA DESPUÉS DEL DESPLAZAMIENTO
+        # Intención pendiente (se ejecuta cuando llega a un destino)
         self.pending_macro_state = None
         self.pending_micro_action = None
-        
-        # UBICACIÓN RECORDADA PARA PROPÓSITOS NARRATIVOS
         self.id_lugar_actual = None
 
+        # Aplicar modificadores personalizados
         self._apply_traits()
         self._apply_demographics()
 

@@ -2,52 +2,46 @@ import config
 
 def calculate_homophily_score(agent_a, agent_b):
     """
-    Calcula la probabilidad de interacción entre dos agentes basándose en la
-    similitud de sus atributos (Selección Homofílica equiponderada).
-    Devuelve los puntos totales y el contexto narrativo.
+    Calcula compatibilidad entre dos agentes considerando similitud de atributos.
+    Retorna puntuación total y razones de compatibilidad.
     """
     score = 0
     match_reasons = []
 
-    # 1. SIMILITUD DEMOGRÁFICA (Edad)
-    diferencia_edad = abs(agent_a.age - agent_b.age)
-    if diferencia_edad <= 10:
+    # Similitud de edad: +1 si diferencia <10 años, +1 extra si <5 años
+    age_diff = abs(agent_a.age - agent_b.age)
+    if age_diff <= 10:
         score += 1
-        if diferencia_edad <= 5:
-            score += 1  # Bonus extra si la edad es muy similar
+        if age_diff <= 5:
+            score += 1
             match_reasons.append("Tienen edades muy similares.")
         else:
             match_reasons.append("Tienen edades similares.")
 
-    # 2. SIMILITUD PROFESIONAL
+    # Similitud ocupacional: +1 si trabajan en mismo ámbito
     if agent_a.occupation.lower() != "unemployed" and agent_a.occupation.lower() == agent_b.occupation.lower():
         score += 1
-        match_reasons.append(f"Ambos trabajan en el ámbito de {agent_a.occupation}.")
+        match_reasons.append(f"Ambos trabajan en {agent_a.occupation}.")
 
-    # 3. SIMILITUD DE INTERESES (Se piensa que en implementaciones futuras pueden haber más de 1 interés por persona)
-    intereses_a = set([i.strip().lower() for i in agent_a.interests.split(',')])
-    intereses_b = set([i.strip().lower() for i in agent_b.interests.split(',')])
+    # Intereses compartidos: 1 punto por cada interés común
+    interests_a = set([i.strip().lower() for i in agent_a.interests.split(',')])
+    interests_b = set([i.strip().lower() for i in agent_b.interests.split(',')])
     
-    shared_interests = intereses_a.intersection(intereses_b)
+    shared_interests = interests_a.intersection(interests_b)
     
     if shared_interests:
-        # 1 punto por CADA interés compartido. A más intereses, más puntuación natural.
         score += len(shared_interests) 
-        intereses_str = ", ".join(shared_interests)
-        match_reasons.append(f"Comparten intereses en: {intereses_str}.")
+        interests_str = ", ".join(shared_interests)
+        match_reasons.append(f"Comparten intereses: {interests_str}.")
 
-    # 4. SIMILITUD PSICOLÓGICA
-    # Solo suma si AMBOS tienen el rasgo +
-    
-    # Sociability: +1 solo si ambos
+    # Similitud psicológica: +1 por cada rasgo positivo compartido
     if "Sociability +" in agent_a.traits and "Sociability +" in agent_b.traits:
         score += 1
-        match_reasons.append("Ambos tienen personalidades extrovertidas y sociables.")
+        match_reasons.append("Ambos extrovertidos y sociables.")
 
-    # Friendliness: +1 solo si ambos
     if "Friendliness +" in agent_a.traits and "Friendliness +" in agent_b.traits:
         score += 1
-        match_reasons.append("Ambos tienen actitud amable y cooperativa.")
+        match_reasons.append("Ambos amables y cooperativos.")
 
     # Intellectual: +1 solo si ambos
     if "Intellectual +" in agent_a.traits and "Intellectual +" in agent_b.traits:

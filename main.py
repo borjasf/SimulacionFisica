@@ -15,51 +15,60 @@ import social_engine
 import data_exporter
 from agent import Agent
 
+# Configurar reproducibilidad si está activada
 if config.RANDOM_SEED is not None:
     random.seed(config.RANDOM_SEED)
 
 def run_simulation():
+    """
+    Ejecuta la simulación multi-agente.
+    Integra todos los motores: biológico, Markov, espacial y social.
+    """
     print("Iniciando la inicialización del ecosistema...")
     
+    # Cargar agentes desde CSV
     agentes = load_agents_from_csv("users.csv")
     if not agentes:
         print("No hay agentes. Saliendo...")
         sys.exit()
 
+    # Cargar red de amistades pre-existentes
     print("Cargando la red social de amistades...")
     load_friendships_from_csv(agentes, "friendships.csv")
 
+    # Asignar hogares aleatorios a cada agente
     print("Generando el entorno urbano...")
-    casas_ciudad = environment.assign_homes(agentes)
+    environment.assign_homes(agentes)
 
+    # Pesos de selección: agentes más sociables se seleccionan más frecuentemente
     pesos_actividad = [(math.sqrt(agente.social_activity) + 1) for agente in agentes]
 
-    print("\n--- ¡Comienza el simulador espacial Phygital! (Ctrl+C para detener) ---\n")
+    print("\n--- Simulador iniciado (Ctrl+C para detener) ---\n")
     
     turno_global = 1
     
     try:
         while True:
+            # Seleccionar agente proporcionalmente a su sociabilidad
             agente = random.choices(agentes, weights=pesos_actividad, k=1)[0]
             
             estado_anterior_macro = agente.current_macro_state
             
-            # 1. HILO FÍSICO: CAPA 1 (MACRO-ESTADO) Y BIOLOGÍA
+            # Motor biológico: actualizar necesidades fisiológicas
             biological_engine.update_biological_needs(agente)
             
-            # 2. HILO COGNITIVO (Con sistema de Memoria de Intenciones)
+            # Motor de decisión: determinar macro-estado y micro-acción
+            # Si el agente estaba viajando, ejecutar su intención original
             if agente.pending_micro_action:
-                # Si acaba de llegar de un viaje, ejecuta su intención original al 100%
                 nuevo_macro_estado = agente.pending_macro_state
                 nueva_micro_accion = agente.pending_micro_action
-                
-                # Limpiamos la intención para el futuro
                 agente.pending_macro_state = None
                 agente.pending_micro_action = None
             else:
-                # Si no estaba viajando, la ruleta de Markov decide qué hacer
+                # Aplicar transición de Markov modulada por necesidades biológicas
                 estados_posibles, probabilidades_rutina = markov_engine.get_markov_probabilities(estado_anterior_macro)
 
+                # Personalizar probabilidades según rasgos del agente
                 probabilidades_personalizadas = []
                 for i in range(len(estados_posibles)):
                     estado_evaluado = estados_posibles[i]
@@ -67,35 +76,32 @@ def run_simulation():
                     multiplicador = agente.markov_modifiers.get(estado_evaluado, 1.0)
                     probabilidades_personalizadas.append(peso_original * multiplicador)
                 
+                # Decisión de macro-estado considerando urgencias biológicas
                 nuevo_macro_estado = biological_engine.get_next_state_with_biology(
                     agente, probabilidades_personalizadas, estados_posibles
                 )
 
-                # INTERRUPTOR DE ARQUITECTURA (MARKOV o LLM)
+                # Elegir micro-acción según motor configurado (Markov o LLM)
                 if config.DECISION_ENGINE == "MARKOV":
                     nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
                 
                 elif config.DECISION_ENGINE == "LLM":
-                    # Extraemos las opciones válidas para este estado de la matriz de Markov
                     opciones_validas = list(markov_engine.MICRO_ACCIONES[nuevo_macro_estado].keys())
-                    
-                    # Le pedimos a la IA que decida
                     nueva_micro_accion = llm_client.decide_micro_action(agente, nuevo_macro_estado, opciones_validas)
-                    
-                    # Interceptor de seguridad por si la IA se inventa una palabra
+                    # Fallback: si LLM devuelve acción inválida, usar Markov
                     if nueva_micro_accion not in opciones_validas:
                         nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
                 
                 else:
-                    # Fallback seguro si config.DECISION_ENGINE es inválido
-                    print(f"[AVISO] config.DECISION_ENGINE = '{config.DECISION_ENGINE}' no es válido. Usando MARKOV por defecto.")
+                    print(f"[Aviso] Motor de decisión inválido. Usando MARKOV.")
                     nueva_micro_accion = markov_engine.choose_micro_action(agente, nuevo_macro_estado)
 
-            # 3. DECISIÓN ESPACIAL Y DESPLAZAMIENTO (LA INTERCEPCIÓN)
+            # Motor espacial: decidir destino con exploración/retorno preferencial
             mensaje_espacial = ""
             lugar_memoria = "su ubicación actual"
             lugar_actual = str(agente.current_location_name).strip()
             
+            # Acciones que requieren desplazamiento
             acciones_domesticas = [
                 "ingesta_en_hogar", "mantenimiento_del_hogar", "conversacion_con_convivientes", 
                 "consumo_audiovisual", "ocio_digital_activo"
@@ -241,76 +247,75 @@ def run_simulation():
         traceback.print_exc()
         
     finally:
-        # INFORME ESTADÍSTICO DE CAPA 1 Y CAPA 2
-        print("\n" + "="*80)
-        print("INFORME ESTADÍSTICO JERÁRQUICO (Fase 1 & 2)")
+        # RECOLECCIÓN DE ESTADÍSTICAS PURAS (Sin desplazamientos ni DORMIR inicial)
+        print("\n")
         print("="*80)
-        print(f"Turnos totales simulados: {turno_global - 1}")
+        print("INFORME FINAL DE SIMULACIÓN")
+        print("="*80)
+        print(f"Turnos totales: {turno_global - 1} | Agentes: {len(agentes)}")
         
-        v1_macros, v1_micros = {}, {}
-        v2_macros, v2_micros = {}, {}
-        v1_total, v2_total = 0, 0
+        macros, micros = {}, {}
+        total = 0
+        desplazamientos = 0
 
         for a in agentes:
-            # Acumular Versión 1 (Completa)
-            for estado, count in a.macro_frequencies.items():
-                v1_macros[estado] = v1_macros.get(estado, 0) + count
-                v1_total += count
-            for macro, micros_dict in a.micro_frequencies.items():
-                if macro not in v1_micros: v1_micros[macro] = {}
-                for micro, count in micros_dict.items():
-                    v1_micros[macro][micro] = v1_micros[macro].get(micro, 0) + count
-
-            # Acumular Versión 2 (Pura de Markov)
+            # Acumular estadísticas puras de Markov
             for estado, count in a.filtered_macro_frequencies.items():
-                v2_macros[estado] = v2_macros.get(estado, 0) + count
-                v2_total += count
+                macros[estado] = macros.get(estado, 0) + count
+                total += count
             for macro, micros_dict in a.filtered_micro_frequencies.items():
-                if macro not in v2_micros: v2_micros[macro] = {}
+                if macro not in micros: micros[macro] = {}
                 for micro, count in micros_dict.items():
-                    v2_micros[macro][micro] = v2_micros[macro].get(micro, 0) + count
+                    micros[macro][micro] = micros[macro].get(micro, 0) + count
+                    if micro == "desplazamiento_urbano":
+                        desplazamientos += count
 
-        def imprimir_bloque(titulo, macros, micros, total):
-            print(f"\n{titulo}")
-            print("-" * len(titulo))
-            print("--- DISTRIBUCIÓN DE CAPA 1 (Macro-estados) ---")
-            sorted_macros = sorted(macros.items(), key=lambda x: x[1], reverse=True)
-            for estado, count in sorted_macros:
-                porcentaje = (count / total) * 100 if total > 0 else 0
-                print(f" - {estado}: {porcentaje:.2f}% ({count} turnos)")
+        # SECCIÓN 1: DISTRIBUCIÓN DE MACRO-ESTADOS
+        print("\nMACRO-ESTADOS (Distribución de Actividades)")
+        sorted_macros = sorted(macros.items(), key=lambda x: x[1], reverse=True)
+        for estado, count in sorted_macros:
+            porcentaje = (count / total) * 100 if total > 0 else 0
+            barra = "█" * int(porcentaje / 2)
+            print(f"  {estado:20s} {porcentaje:6.1f}%  {barra} {count} turnos")
 
-            print("\n--- DISTRIBUCIÓN DE CAPA 2 (Micro-acciones por Estado) ---")
-            for macro, dict_micros in micros.items():
-                turnos_en_este_macro = macros.get(macro, 0)
-                if turnos_en_este_macro > 0:
-                    print(f" * Dentro de {macro} ({turnos_en_este_macro} turnos):")
-                    sorted_micros = sorted(dict_micros.items(), key=lambda x: x[1], reverse=True)
-                    for micro_name, micro_count in sorted_micros:
-                        if micro_count > 0:
-                            porcentaje_relativo = (micro_count / turnos_en_este_macro) * 100
-                            print(f"      > {micro_name.replace('_', ' ')}: {porcentaje_relativo:.2f}%")
+        # SECCIÓN 2: MICRO-ACCIONES POR MACRO-ESTADO
+        print("\nMICRO-ACCIONES (Detalles por Actividad)")
+        for macro in sorted(micros.keys()):
+            dict_micros = micros[macro]
+            turnos_en_macro = macros.get(macro, 0)
+            if turnos_en_macro > 0:
+                print(f"\n  {macro}:")
+                sorted_micros = sorted(dict_micros.items(), key=lambda x: x[1], reverse=True)
+                for micro_name, micro_count in sorted_micros:
+                    if micro_count > 0:
+                        porcentaje = (micro_count / turnos_en_macro) * 100
+                        print(f"    {micro_name:30s} {porcentaje:6.1f}%")
 
-        imprimir_bloque("VERSIÓN 1: ESTADÍSTICAS COMPLETAS (Incluye estado inicial y desplazamientos)", v1_macros, v1_micros, v1_total)
-        imprimir_bloque("VERSIÓN 2: ESTADÍSTICAS PURAS DE MARKOV (Excluye rutinas implícitas)", v2_macros, v2_micros, v2_total)
+        # SECCIÓN 3: MOVILIDAD ESPACIAL
+        print("\nMOVILIDAD ESPACIAL")
+        pct_desplazamiento = (desplazamientos / total) * 100 if total > 0 else 0
+        pct_sedentario = 100 - pct_desplazamiento
+        print(f"  Desplazamientos:        {pct_desplazamiento:6.1f}%")
+        print(f"  Permanencia en lugar:   {pct_sedentario:6.1f}%")
 
+        # SECCIÓN 4: MÉTRICAS SOCIALES
         total_amigos = sum(len(a.amigos) for a in agentes)
         media_amigos = total_amigos / len(agentes) if agentes else 0
         
-        print("\n" + "="*80)
-        print("MÉTRICAS SOCIALES Y ESPACIALES")
-        print("="*80)
-        print(f" - Media de amigos por agente: {media_amigos:.2f}")
+        print("\nMÉTRICAS SOCIALES")
+        print(f"  Amigos promedio/agente: {media_amigos:6.2f}")
+        print(f"  Total conexiones:       {total_amigos}")
 
-        print("\n--- LUGARES MÁS VISITADOS ---")
+        # SECCIÓN 5: LUGARES MÁS VISITADOS
         global_places = {}
         for a in agentes:
             for lugar, visitas in a.visited_places.items():
                 global_places[lugar] = global_places.get(lugar, 0) + visitas
 
+        print("\nLUGARES MÁS VISITADOS")
         sorted_places = sorted(global_places.items(), key=lambda x: x[1], reverse=True)
-        for lugar, visitas in sorted_places[:5]: 
-            print(f" - {lugar}: {visitas} visitas")
-        print("="*80 + "\n")
+        for i, (lugar, visitas) in enumerate(sorted_places[:8], 1):
+            print(f"  {i}. {lugar:25s} {visitas:6d} visitas")
 
         data_exporter.export_simulation_data(agentes, turno_global - 1)
 

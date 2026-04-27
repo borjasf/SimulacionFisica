@@ -2,8 +2,9 @@ import random
 import matplotlib.pyplot as plt
 
 
+# Mapa urbano con 12 ubicaciones diferenciadas por tipo, atractivo por edad y acciones permitidas
 MAPA_CIUDAD = {
-    # ZONAS DE TRABAJO Y ESTUDIO 
+    # Zonas de trabajo y estudio
     "Oficina_Centro": {
         "coords": (50, 50), "tipo": "OBLIGACIONES",
         "micro_acciones": ["jornada_laboral", "gestiones_personales", "conversacion_con_companeros", "revisar_rrss"], 
@@ -25,7 +26,7 @@ MAPA_CIUDAD = {
         "atractivo_por_edad": {"16-": 40.0, "16-24": 80.0, "25-44": 60.0, "45-64": 30.0, "65+": 20.0}
     },
 
-    # ZONAS PÚBLICAS Y DE OCIO
+    # Zonas públicas y de ocio
     "Plaza_Mayor": {
         "coords": (48, 52), "tipo": ["OCIO", "ALIMENTACION"],
         "micro_acciones": ["paseo_recreativo", "conversacion_social", "ver_rrss", "ingesta_ligera", "lectura"],

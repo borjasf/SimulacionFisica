@@ -4,47 +4,46 @@ from agent import Agent
 
 def load_agents_from_csv(filepath):
     """
-    Lee el archivo users.csv, crea las instancias de Agent y las devuelve 
-    ordenadas por su nivel de social_activity (de mayor a menor).
+    Lee archivo users.csv, instancia agentes y los ordena por actividad social.
     """
     agents_list = []
     
     try:
-        # Abrimos el CSV
+        # Abrir CSV y leer filas
         with open(filepath, mode='r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
             
             for row in reader:
-                # EXTRACCIÓN DEL ID (Usamos 'username' según el CSV real)
+                # Extraer ID del agente
                 agent_id = row.get('username', row.get('id', 'unknown')).strip()
                 name = row.get('name', 'SinNombre')
                 
-                # EXTRACCIÓN DE EDAD
+                # Extraer edad (por defecto 30)
                 try:
-                    age = int(row.get('age', 30)) # 30 por defecto
+                    age = int(row.get('age', 30))
                 except ValueError:
                     age = 30
                 
-                # EXTRACCIÓN DE SOCIAL ACTIVITY
+                # Extraer actividad social (por defecto 0.0)
                 try:
-                    social_activity = float(row.get('social_activity', 0.0)) # 0.0 por defecto
+                    social_activity = float(row.get('social_activity', 0.0))
                 except ValueError:
                     social_activity = 0.0
 
-                # EXTRACCIÓN DE RASGOS (lista en string)
+                # Extraer lista de rasgos desde string
                 traits_raw = row.get('traits', "[]")
                 try:
                     traits_list = ast.literal_eval(traits_raw)
                 except (ValueError, SyntaxError):
                     traits_list = []
                     
-                # EXTRAEMOS LOS NUEVOS CAMPOS PARA LA BACKSTORY
+                # Extraer datos demográficos para narrativa
                 gender = row.get('gender', 'unknown')
                 occupation = row.get('occupation', 'unemployed')
                 qualification = row.get('qualification', 'none')
                 interests = row.get('interests', 'various')
                 
-                # Creamos el agente con todos sus datos
+                # Instanciar nuevo agente con todos sus atributos
                 new_agent = Agent(
                     agent_id=agent_id, 
                     name=name, 
@@ -99,9 +98,8 @@ def load_friendships_from_csv(agents_list, filepath="friendships.csv"):
         for agent_id, agent_obj in diccionario_agentes.items():
             if agent_id in seguimientos:
                 for followed_id in seguimientos[agent_id]:
-                    # COMPROBACIÓN CLAVE: ¿El seguido también sigue a nuestro agente?
                     if followed_id in seguimientos and agent_id in seguimientos[followed_id]:
-                        # Es mutuo. Verificamos que el amigo exista en la partida y lo añadimos
+                        # Es mutuo. Verificamos que el amigo exista en el mundo y lo añadimos
                         if followed_id in diccionario_agentes and followed_id not in agent_obj.amigos:
                             agent_obj.amigos.append(followed_id)
                             

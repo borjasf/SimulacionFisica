@@ -2,47 +2,44 @@ import random
 
 def update_biological_needs(agente):
     """
-    Actualiza las variables fisiológicas en cada turno usando la CAPA 1 (Macro-estados).
-    Dentro de cada estado, se ajusta el gasto usando la CAPA 2 (Micro-acciones).
-    Se aplican los multiplicadores de personalidad (Sociability, Scrupulousness, Neuroticism).
+    Actualiza energía y saciedad según el estado y acción del agente.
+    Aplica multiplicadores de personalidad a consumo y recuperación.
     """
     estado = agente.current_macro_state
     micro = agente.current_micro_action
     
-    # 1. ENERGÍA (Media matemática esperada: -6 por turno)
+    # Actualizar energía según estado
     if estado == "DESCANSO":
+        # En descanso se recupera energía: máximo recuperable según tipo de descanso
         if micro == "sueno_profundo":
             agente.energia = min(100, agente.energia + (100 * agente.energy_recovery_mult))
-        else: # descanso_diurno
+        else:  # descanso_diurno
             agente.energia = min(100, agente.energia + (50 * agente.energy_recovery_mult))
     else:
-        # Desgaste dinámico pero simplificado (Valores: 5 o 7)
-        acciones_alto_desgaste = ["actividad_fisica", "mantenimiento_del_hogar", "paseo_recreativo", "jornada_laboral", "jornada_academica", "gestiones_personales"]
-        if micro in acciones_alto_desgaste:
-            gasto_energia = 7  # Alto desgaste
-        else: 
-            gasto_energia = 5  # Bajo desgaste
-            
+        # En otras actividades se consume energía según intensidad física
+        acciones_alto_desgaste = ["actividad_fisica", "mantenimiento_del_hogar", "paseo_recreativo", 
+                                  "jornada_laboral", "jornada_academica", "gestiones_personales"]
+        gasto_energia = 7 if micro in acciones_alto_desgaste else 5
         agente.energia = max(0, agente.energia - (gasto_energia * agente.energy_decay_mult))
 
-    # 2. SACIEDAD (Media matemática esperada: -18 por turno)
+    # Actualizar saciedad según estado
     if estado == "ALIMENTACION":
+        # En alimentación se incrementa saciedad: cantidad varía por tipo de ingesta
         if micro in ["ingesta_en_hogar", "ingesta_en_restauracion", "interaccion_ingesta"]:
             agente.saciedad = min(100, agente.saciedad + 100)
         elif micro in ["ingesta_ligera", "ingesta_rrss"]:
             agente.saciedad = min(100, agente.saciedad + 40) 
-        
     else:
-        if micro in ["actividad_fisica", "mantenimiento_del_hogar"]:
-            gasto_saciedad = 20 # El esfuerzo físico da más hambre
-        else:
-            gasto_saciedad = 15 # Desgaste normal (trabajar, estudiar, tareas...)
-            
+        # En otras actividades se consume saciedad: más en actividad física
+        gasto_saciedad = 20 if micro in ["actividad_fisica", "mantenimiento_del_hogar"] else 15
         agente.saciedad = max(0, agente.saciedad - gasto_saciedad)
 
 
 def calculate_utilities(agente):
-    """Calcula el estrés fisiológico usando la curva exponencial."""
+    """
+    Calcula deficiencia fisiológica mediante curva exponencial.
+    Mayor deficiencia = mayor urgencia de satisfacer necesidad.
+    """
     k = agente.urgency_k 
     
     deficit_energia = 100 - agente.energia

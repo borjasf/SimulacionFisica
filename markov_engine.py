@@ -1,10 +1,8 @@
 import random
 
-# CAPA 1: MATRIZ PRIMARIA FASE 1 (5 Macro-Estados Formales)
-# Probabilidades base de transición entre macro-estados, ajustables por edad y ocupación.
-# Estudiadas mediante una Cadena de Markov, probadas mediante enumeradas ejecuciones hasta llegar
-# a una distribución estable y realista. Se intentan impedir transiciones cíclicas o repetición de estados
-# continuamente, para evitar agentes "atascados" en patrones poco realistas (e.g., solo descansando o solo en obligaciones). 
+# Matriz de transición entre 5 macro-estados
+# Probabilidades base calibradas mediante Cadena de Markov con distribución realista
+# Se evita que agentes queden atrapados en patrones repetitivos
 TRANSITION_MATRIX = {
     "DESCANSO": {
         "DESCANSO": 0.0, "ALIMENTACION": 0.01, "OBLIGACIONES": 0.45, 
@@ -28,35 +26,27 @@ TRANSITION_MATRIX = {
     }
 }
 
-# CAPA 2: MICRO-ACCIONES
-# PROBABILIDADES BASE DE MICRO-ACCIONES (Pesos relativos sumando 100 por categoría)
-# Justificados con la Encuesta de Empleo del Tiempo (EET) del INE.
-# Diferencias ligeras para dar mayor peso a las modificaciones por edad y personalidad
-# en los archivos demographic_rules.py y trait_rules.py, respectivamente.
-
+# Micro-acciones por macro-estado
+# Pesos relativos basados en la Encuesta de Empleo del Tiempo (INE)
+# Permiten variabilidad mientras mantienen proporciones realistas
 MICRO_ACCIONES = {
     "DESCANSO": {
-        # INE (Grupo 01): Dormir tiene 100% de participación con ~8.5h. 
-        # Ocio pasivo/descanso diurno (Grupo 53) tiene 21.8% con ~1.2h.
-        # Atenuado de 85/15 a 80/20 para dar más margen a siestas en perfiles concretos.
+        # INE: Dormir 8.5h (85%), descanso diurno 1.2h (15%)
         "sueno_profundo": 80,
         "descanso_diurno": 20
     },
     
     "ALIMENTACION": {
-        # INE (Grupo 02): Mayoritariamente en el hogar, pero se atenúan 
-        # las caídas bruscas para permitir variedad de estilos de vida (oficinistas vs caseros).
+        # INE: Mayormente en hogar, con variación según estilo de vida
         "ingesta_en_hogar": 40,
         "ingesta_en_restauracion": 20,
-        "ingesta_ligera": 20,          # Almuerzos/meriendas rápidas
+        "ingesta_ligera": 20,
         "interaccion_ingesta": 10,     # Comer socializando
-        "ingesta_rrss": 10             # Comer mirando pantallas (comportamiento moderno)
+        "ingesta_rrss": 10             # Comer frente a pantallas
     },
     
     "OBLIGACIONES": {
-        # INE: El Grupo 1 (Trabajo) y Grupo 2 (Estudios) son excluyentes gracias 
-        # a demographic_rules.py. Aún siendo predominantes el trabajo y estudio,
-        # la probabilidad base de las obligaciones se distribuyen para permitir acciones variadas.
+        # INE: Trabajo y estudios son mutuamente excluyentes por edad/ocupación
         "jornada_laboral": 30,
         "jornada_academica": 30,
         "gestiones_personales": 20,    # INE (Grupo 37): Gestiones y compras

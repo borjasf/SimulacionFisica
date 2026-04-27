@@ -3,11 +3,11 @@ import json
 import time
 
 # ==============================================================================
-# 🏆 SUPER BENCHMARK AUTOMATIZADO DE MODELOS LOCALES (OLLAMA) 🏆
+# BENCHMARK AUTOMATIZADO DE MODELOS LOCALES (OLLAMA)
 # ==============================================================================
 
 # Lista de todos los modelos que vamos a poner a competir
-MODELOS_A_PROBAR = ["qwen2.5:1.5b", "qwen2.5:3b", "phi3"]
+MODELOS_A_PROBAR = ["llama3.2:1b", "llama3.2:3b", "qwen2.5:1.5b", "qwen2.5:3b", "phi3"]
 
 PROMPT_BASE = """
 You are {name}, a {age}-year-old {occupation}.
@@ -30,89 +30,92 @@ Output format required:
 """
 
 CASOS_TEST = [
-    # --- 🟢 CASOS EXTREMOS (La lógica debería ser obvia) ---
     {
-        "test_name": "[OBVIO] EL FIESTERO EN EL OCIO",
+        "test_name": "El fiestero en el ocio",
         "name": "Leo", "age": 21, "occupation": "Estudiante",
         "traits": "Sociability High, Extroversion High",
         "memory": "Me apetece muchísimo salir, beber algo y ver gente.",
         "macro_state": "OCIO",
-        "valid_actions": "lectura, consumo_audiovisual, ocio_hosteleria, paseo_recreativo" # Esperado: ocio_hosteleria
+        "valid_actions": "lectura, consumo_audiovisual, ocio_hosteleria, paseo_recreativo",
+        "respuesta_correcta": ["ocio_hosteleria"]
     },
     {
-        "test_name": "[OBVIO] EL ANCIANO AGOTADO",
+        "test_name": "El anciano agotado",
         "name": "Eusebio", "age": 82, "occupation": "Jubilado",
         "traits": "Neuroticism High, Energy Low",
         "memory": "Me duelen los huesos y no quiero ruidos.",
         "macro_state": "OCIO",
-        "valid_actions": "actividad_fisica, ocio_hosteleria, lectura, ir_a_discoteca" # Esperado: lectura
+        "valid_actions": "actividad_fisica, ocio_hosteleria, lectura, ir_a_discoteca",
+        "respuesta_correcta": ["lectura"]
     },
     {
-        "test_name": "[OBVIO] EL ADICTO AL TRABAJO",
+        "test_name": "El adicto al trabajo",
         "name": "Karen", "age": 45, "occupation": "Gerente",
         "traits": "Conscientiousness High, Sociability Low",
         "memory": "Tengo 50 emails sin leer y estoy muy estresada.",
         "macro_state": "OBLIGACIONES",
-        "valid_actions": "jornada_laboral, gestiones_personales, revisar_rrss, conversacion_con_companeros" # Esperado: jornada_laboral
+        "valid_actions": "jornada_laboral, gestiones_personales, revisar_rrss, conversacion_con_companeros",
+        "respuesta_correcta": ["jornada_laboral"]
     },
-    
-    # --- 🟡 CASOS GRISES (Requieren sutileza psicológica) ---
     {
-        "test_name": "[SUTIL] EL INTROVERTIDO TRAS EL TRABAJO",
+        "test_name": "El introvertido tras el trabajo",
         "name": "Arthur", "age": 30, "occupation": "Programador",
         "traits": "Introversion High, Sociability Low",
         "memory": "Acabo de salir de la oficina. Mi cerebro está frito de mirar pantallas y no quiero hablar con nadie.",
         "macro_state": "OCIO",
-        "valid_actions": "ver_rrss, ocio_hosteleria, paseo_recreativo, conversacion_social" # Esperado: paseo_recreativo (no pantallas, no social)
+        "valid_actions": "ver_rrss, ocio_hosteleria, paseo_recreativo, conversacion_social",
+        "respuesta_correcta": ["paseo_recreativo"]
     },
     {
-        "test_name": "[SUTIL] EL ESTUDIANTE PROCRASTINADOR",
+        "test_name": "El estudiante procrastinador",
         "name": "Kevin", "age": 19, "occupation": "Estudiante",
         "traits": "Conscientiousness Low, Impulsivity High",
         "memory": "Tengo examen mañana, pero estoy aburridísimo y me distrae cualquier cosa.",
         "macro_state": "OBLIGACIONES",
-        "valid_actions": "jornada_academica, revisar_rrss, gestiones_personales" # Esperado: revisar_rrss (falla a su obligación)
+        "valid_actions": "jornada_academica, revisar_rrss, gestiones_personales",
+        "respuesta_correcta": ["revisar_rrss"]
     },
     {
-        "test_name": "[SUTIL] EL DEPORTISTA SANO COMIENDO",
+        "test_name": "El deportista sano comiendo",
         "name": "Elena", "age": 28, "occupation": "Entrenadora",
         "traits": "Conscientiousness High, Health-Focus High",
         "memory": "Acabo de terminar mi rutina de gimnasio. Tengo mucha hambre pero quiero cuidar la dieta estricta.",
         "macro_state": "ALIMENTACION",
-        "valid_actions": "ingesta_en_restauracion_rapida, ingesta_en_hogar, ingesta_rrss, ingesta_ligera" # Esperado: ingesta_en_hogar o ingesta_ligera
+        "valid_actions": "ingesta_en_restauracion_rapida, ingesta_en_hogar, ingesta_rrss, ingesta_ligera",
+        "respuesta_correcta": ["ingesta_en_hogar", "ingesta_ligera"]
     },
-
-    # --- 🔴 CASOS DE TRAMPA TEMPORAL (Requieren deducción de contexto) ---
     {
-        "test_name": "[TRAMPA] RECIÉN DESPERTADO",
+        "test_name": "Recien despertado",
         "name": "Carlos", "age": 35, "occupation": "Contable",
         "traits": "Conscientiousness High",
-        "memory": "Me acabo de despertar, he dormido 8 horas y me he tomado un café cargado.",
+        "memory": "Me acabo de despertar, he dormido 8 horas y me he tomado un cafe cargado.",
         "macro_state": "DESCANSO",
-        "valid_actions": "sueno_profundo, descanso_diurno, ver_la_television" # Esperado: ver_la_television (NO debe volver a dormir)
+        "valid_actions": "sueno_profundo, descanso_diurno, ver_la_television",
+        "respuesta_correcta": ["ver_la_television"]
     },
     {
-        "test_name": "[TRAMPA] HAMBRE EN EL TRABAJO",
+        "test_name": "Hambre en el trabajo",
         "name": "Laura", "age": 40, "occupation": "Abogada",
         "traits": "Neuroticism High",
-        "memory": "Me suenan las tripas, pero estoy en medio de la oficina y no puedo salir a ningún restaurante ahora mismo.",
+        "memory": "Me suenan las tripas, pero estoy en medio de la oficina y no puedo salir a ningun restaurante ahora mismo.",
         "macro_state": "ALIMENTACION",
-        "valid_actions": "ingesta_en_restauracion, ingesta_ligera, ingesta_en_hogar" # Esperado: ingesta_ligera (única viable en oficina)
+        "valid_actions": "ingesta_en_restauracion, ingesta_ligera, ingesta_en_hogar",
+        "respuesta_correcta": ["ingesta_ligera"]
     }
 ]
 
 def correr_super_benchmark():
     url_local = "http://localhost:11434/api/generate"
-    print("\n" + "="*70)
-    print("🚀 INICIANDO SUPER BENCHMARK DE MODELOS OLLAMA 🚀")
-    print("="*70)
+    print("\n" + "")
+    print("INICIANDO BENCHMARK DE MODELOS OLLAMA")
+    print("")
     
     tiempo_total_absoluto = time.time()
     
     for modelo in MODELOS_A_PROBAR:
-        print(f"\n\n{'='*70}")
-        print(f"🤖 EVALUANDO MODELO: {modelo.upper()}")
-        print(f"{'='*70}")
+        print(f"\n\n""")
+        print(f"EVALUANDO MODELO: {modelo.upper()}")
+        print("")
         
         tiempo_inicio_modelo = time.time()
         exitos = 0
@@ -140,27 +143,47 @@ def correr_super_benchmark():
                     try:
                         data = json.loads(texto_limpio)
                         accion = data.get("micro_accion", "CLAVE_INCORRECTA")
-                        print(f"  ✅ {caso['test_name']} (Tardó: {tiempo_tardado:.2f}s)")
-                        print(f"     -> {accion}")
-                        exitos += 1
+                        respuestas_correctas = caso.get("respuesta_correcta", [])
+                        es_correcto = accion in respuestas_correctas
+                        
+                        # Mostrar resultado
+                        print(f"\n{caso['test_name']}")
+                        print(f"  Tiempo: {tiempo_tardado:.2f}s")
+                        print(f"  Decidio: {accion}")
+                        print(f"  Correcto(s): {', '.join(respuestas_correctas)}")
+                        print(f"  Resultado: {'CORRECTO' if es_correcto else 'INCORRECTO'}")
+                        
+                        if es_correcto:
+                            exitos += 1
+                        else:
+                            fallos += 1
                     except json.JSONDecodeError:
-                        print(f"  ❌ {caso['test_name']} (Tardó: {tiempo_tardado:.2f}s) - JSON Roto")
-                        print(f"     Respuesta bruta: {texto_limpio}")
+                        print(f"\n{caso['test_name']}")
+                        print(f"  Tiempo: {tiempo_tardado:.2f}s")
+                        print(f"  ERROR: Respuesta no es JSON valido")
+                        print(f"  Correcto(s): {', '.join(caso.get('respuesta_correcta', []))}")
+                        print(f"  Resultado: INCORRECTO")
                         fallos += 1
                 else:
-                    print(f"  ⚠️ Error HTTP {response.status_code} en {caso['test_name']}")
+                    print(f"\n{caso['test_name']}")
+                    print(f"  Error HTTP {response.status_code}")
+                    print(f"  Resultado: INCORRECTO")
                     fallos += 1
             except Exception as e:
-                print(f"  🚨 Fallo crítico al conectar con Ollama probando {modelo}: {e}")
+                print(f"\nError critico al conectar con Ollama probando {modelo}: {e}")
                 fallos += 1
-                break # Si el modelo no está descargado, saltamos al siguiente
+                break
                 
         tiempo_fin_modelo = time.time()
-        print(f"\n📊 RESUMEN PARA {modelo.upper()}:")
-        print(f"   ⏱️ Tiempo de procesamiento: {tiempo_fin_modelo - tiempo_inicio_modelo:.2f} segundos")
-        print(f"   🎯 Precisión de formato JSON: {exitos}/{len(CASOS_TEST)}")
+        print(f"\n{'-'*80}")
+        print(f"RESUMEN PARA {modelo.upper()}:")
+        print(f"  Tiempo total: {tiempo_fin_modelo - tiempo_inicio_modelo:.2f} segundos")
+        print(f"  Aciertos: {exitos}/{len(CASOS_TEST)}")
+        print(f"  Precisión: {(exitos/len(CASOS_TEST)*100):.1f}%")
 
-    print(f"\n🏁 BENCHMARK GLOBAL FINALIZADO EN {time.time() - tiempo_total_absoluto:.2f} SEGUNDOS.")
+    print(f"\n{'='*80}")
+    print(f"BENCHMARK FINALIZADO EN {time.time() - tiempo_total_absoluto:.2f} SEGUNDOS.")
+    print("="*80)
 
 if __name__ == "__main__":
     correr_super_benchmark()
