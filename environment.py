@@ -101,8 +101,8 @@ def assign_homes(agents_list, map_size=100):
     id_casa = 1
     
     while agentes_sin_casa:
-        # Probabilidades de tamaño de hogar: 40% solos, 30% parejas, 20% tres, 10% cuatro
-        tamano_grupo = random.choices([1, 2, 3, 4], weights=[0.40, 0.30, 0.20, 0.10], k=1)[0]
+        # Probabilidades de tamaño de hogar: 28% solos, 29% parejas, 20% tres, 23% cuatro (https://www.ine.es/dyngs/Prensa/PROH20242039.htm)
+        tamano_grupo = random.choices([1, 2, 3, 4], weights=[0.28, 0.29, 0.20, 0.23], k=1)[0]
         habitantes = agentes_sin_casa[:tamano_grupo]
         agentes_sin_casa = agentes_sin_casa[tamano_grupo:]
         
