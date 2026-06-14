@@ -1,4 +1,5 @@
 import random
+import config
 
 def update_biological_needs(agente):
     """
@@ -10,48 +11,41 @@ def update_biological_needs(agente):
     
     # Actualizar energía según estado
     if estado == "DESCANSO":
-        # En descanso se recupera energía: máximo recuperable según tipo de descanso
         if micro == "sueno_profundo":
-            agente.energia = min(100, agente.energia + (100 * agente.energy_recovery_mult))
+            agente.energia = min(config.MAX_BIOLOGICAL_LEVEL, agente.energia + (config.ENERGY_RECOVERY_DEEP_SLEEP * agente.energy_recovery_mult))
         else:  # descanso_diurno
-            agente.energia = min(100, agente.energia + (50 * agente.energy_recovery_mult))
+            agente.energia = min(config.MAX_BIOLOGICAL_LEVEL, agente.energia + (config.ENERGY_RECOVERY_LIGHT_REST * agente.energy_recovery_mult))
     else:
-        # En otras actividades se consume energía según intensidad física
         acciones_alto_desgaste = ["actividad_fisica", "mantenimiento_del_hogar", "paseo_recreativo", 
                                   "jornada_laboral", "jornada_academica", "gestiones_personales"]
-        gasto_energia = 7 if micro in acciones_alto_desgaste else 5
+        gasto_energia = config.ENERGY_DECAY_HIGH if micro in acciones_alto_desgaste else config.ENERGY_DECAY_NORMAL
         agente.energia = max(0, agente.energia - (gasto_energia * agente.energy_decay_mult))
 
     # Actualizar saciedad según estado
     if estado == "ALIMENTACION":
-        # En alimentación se incrementa saciedad: cantidad varía por tipo de ingesta
         if micro in ["ingesta_en_hogar", "ingesta_en_restauracion", "interaccion_ingesta"]:
-            agente.saciedad = min(100, agente.saciedad + 100)
+            agente.saciedad = min(config.MAX_BIOLOGICAL_LEVEL, agente.saciedad + config.SATIETY_RECOVERY_FULL)
         elif micro in ["ingesta_ligera", "ingesta_rrss"]:
-            agente.saciedad = min(100, agente.saciedad + 40) 
+            agente.saciedad = min(config.MAX_BIOLOGICAL_LEVEL, agente.saciedad + config.SATIETY_RECOVERY_LIGHT) 
     else:
-        # En otras actividades se consume saciedad: más en actividad física
-        gasto_saciedad = 20 if micro in ["actividad_fisica", "mantenimiento_del_hogar"] else 15
+        gasto_saciedad = config.SATIETY_DECAY_HIGH if micro in ["actividad_fisica", "mantenimiento_del_hogar"] else config.SATIETY_DECAY_NORMAL
         agente.saciedad = max(0, agente.saciedad - gasto_saciedad)
 
-
 def calculate_utilities(agente):
-    """
-    Calcula deficiencia fisiológica mediante curva exponencial.
-    Mayor deficiencia = mayor urgencia de satisfacer necesidad.
-    """
-    k = agente.urgency_k 
+    # [INTERRUPTOR DE LABORATORIO] 
+    # Si FORCE_URGENCY_K está en config, ignora la psicología del agente.
+    k_global = getattr(config, 'FORCE_URGENCY_K', None)
+    k = k_global if k_global is not None else agente.urgency_k 
     
-    deficit_energia = 100 - agente.energia
-    deficit_saciedad = 100 - agente.saciedad
+    deficit_energia = config.MAX_BIOLOGICAL_LEVEL - agente.energia
+    deficit_saciedad = config.MAX_BIOLOGICAL_LEVEL - agente.saciedad
     
     utilidades = {
-        "DESCANSO": (deficit_energia / 100.0) ** k,
-        "ALIMENTACION": (deficit_saciedad / 100.0) ** k
+        "DESCANSO": (deficit_energia / float(config.MAX_BIOLOGICAL_LEVEL)) ** k,
+        "ALIMENTACION": (deficit_saciedad / float(config.MAX_BIOLOGICAL_LEVEL)) ** k
     }
     
     return utilidades
-
 
 def get_next_state_with_biology(agente, markov_probabilities, estados_posibles):
     """

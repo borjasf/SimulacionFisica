@@ -1,9 +1,10 @@
 import random
 import matplotlib.pyplot as plt
+import config
 
 
 # Mapa urbano con 12 ubicaciones diferenciadas por tipo, atractivo por edad y acciones permitidas
-MAPA_CIUDAD = {
+MAPA_ORIGINAL = {
     # Zonas de trabajo y estudio
     "Oficina_Centro": {
         "coords": (50, 50), "tipo": "OBLIGACIONES",
@@ -74,6 +75,41 @@ MAPA_CIUDAD = {
     }
 }
 
+MAPA_LABORATORIO = {
+    # BLOQUE TRABAJO / OBLIGACIONES
+    "Oficina_Cercana": { "coords": (15, 75), "tipo": "OBLIGACIONES", "micro_acciones": ["jornada_laboral", "gestiones_personales", "conversacion_con_companeros", "revisar_rrss", "jornada_academica"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+    "Oficina_Media": { "coords": (45, 75), "tipo": "OBLIGACIONES", "micro_acciones": ["jornada_laboral", "gestiones_personales", "conversacion_con_companeros", "revisar_rrss", "jornada_academica"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+    "Oficina_Lejana": { "coords": (90, 75), "tipo": "OBLIGACIONES", "micro_acciones": ["jornada_laboral", "gestiones_personales", "conversacion_con_companeros", "revisar_rrss", "jornada_academica"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+
+    # BLOQUE HOSTELERÍA / ALIMENTACIÓN
+    "Bar_Cercano": { "coords": (10, 70), "tipo": ["OCIO", "ALIMENTACION"], "micro_acciones": ["ocio_hosteleria", "conversacion_social", "ingesta_en_restauracion", "interaccion_ingesta", "ver_rrss"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+    "Bar_Medio": { "coords": (10, 40), "tipo": ["OCIO", "ALIMENTACION"], "micro_acciones": ["ocio_hosteleria", "conversacion_social", "ingesta_en_restauracion", "interaccion_ingesta", "ver_rrss"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+    "Bar_Lejano": { "coords": (10, 10), "tipo": ["OCIO", "ALIMENTACION"], "micro_acciones": ["ocio_hosteleria", "conversacion_social", "ingesta_en_restauracion", "interaccion_ingesta", "ver_rrss"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+
+    # BLOQUE EXTERIORES / RECREATIVO
+    "Parque_Cercano": { "coords": (20, 65), "tipo": ["OCIO", "ALIMENTACION"], "micro_acciones": ["paseo_recreativo", "actividad_fisica", "conversacion_social", "lectura", "ver_rrss", "ingesta_ligera"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+    "Parque_Medio": { "coords": (50, 45), "tipo": ["OCIO", "ALIMENTACION"], "micro_acciones": ["paseo_recreativo", "actividad_fisica", "conversacion_social", "lectura", "ver_rrss", "ingesta_ligera"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+    "Parque_Lejano": { "coords": (85, 20), "tipo": ["OCIO", "ALIMENTACION"], "micro_acciones": ["paseo_recreativo", "actividad_fisica", "conversacion_social", "lectura", "ver_rrss", "ingesta_ligera"], "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} },
+}
+
+# MAPA CAJA DE PETRI (FORZAR ENCUENTROS SOCIALES)
+MAPA_PETRI = {
+    "Plaza_Colision": { 
+        "coords": (50, 50), 
+        "tipo": ["OCIO", "ALIMENTACION", "OBLIGACIONES", "TAREAS_DOMESTICAS", "DESCANSO"], 
+        "micro_acciones": ["conversacion_social", "conversacion_con_companeros", "interaccion_ingesta"], 
+        "atractivo_por_edad": {"16-": 100.0, "16-24": 100.0, "25-44": 100.0, "45-64": 100.0, "65+": 100.0} 
+    }
+}
+
+# El interruptor dinámico ahora debe quedar así:
+if getattr(config, 'USE_PETRI_MAP', False):
+    MAPA_CIUDAD = MAPA_PETRI
+elif getattr(config, 'USE_LAB_MAP', False):
+    MAPA_CIUDAD = MAPA_LABORATORIO
+else:
+    MAPA_CIUDAD = MAPA_ORIGINAL
+
 def get_places_by_type_and_action(macro_estado, micro_accion):
     """Filtra el mapa aceptando lugares híbridos con una lógica universal."""
     lugares_validos = {}
@@ -100,13 +136,21 @@ def assign_homes(agents_list, map_size=100):
     casas_generadas = {}
     id_casa = 1
     
+    # Comprobamos si el interruptor de la Caja de Petri está activado
+    es_caja_petri = getattr(config, 'USE_PETRI_MAP', False)
+    
     while agentes_sin_casa:
         # Probabilidades de tamaño de hogar: 28% solos, 29% parejas, 20% tres, 23% cuatro (https://www.ine.es/dyngs/Prensa/PROH20242039.htm)
         tamano_grupo = random.choices([1, 2, 3, 4], weights=[0.28, 0.29, 0.20, 0.23], k=1)[0]
         habitantes = agentes_sin_casa[:tamano_grupo]
         agentes_sin_casa = agentes_sin_casa[tamano_grupo:]
         
-        coords_casa = (random.randint(0, map_size), random.randint(0, map_size))
+        # [HACK CAJA DE PETRI] Forzar coordenadas (50, 50) o generar aleatorias
+        if es_caja_petri:
+            coords_casa = (50, 50)
+        else:
+            coords_casa = (random.randint(0, map_size), random.randint(0, map_size))
+            
         nombres_habitantes = []
         
         for agente in habitantes:
@@ -121,6 +165,10 @@ def assign_homes(agents_list, map_size=100):
         id_casa += 1
         
     print(f"Se han generado {len(casas_generadas)} viviendas para {len(agents_list)} agentes.")
+    
+    if es_caja_petri:
+        print("[LABORATORIO] Modo 'Caja de Petri' activado: Todas las viviendas están en las coordenadas (50, 50).")
+        
     return casas_generadas
 
 def plot_city_map(casas_generadas, agente_destacado=None):

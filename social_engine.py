@@ -120,7 +120,7 @@ def process_encounter(agent, agents):
             # Extraemos el valor del LLM. Si falla o es Mock, usamos +2 por defecto.
             impacto_charla = dialogue_json.get('variacion_relacion', 2) 
             
-            puntuacion_homofilia_base = score * 10 # Convertimos el 0.XX a escala 0-100
+            puntuacion_homofilia_base = score * config.HOMOPHILY_SCALE_MULTIPLIER # Convertimos el 0.XX a escala 0-100
             
             for (a, b) in [(agent, companion), (companion, agent)]:
                 # 1. Si no se conocían, inicializamos su relación basada en la Homofilia
@@ -136,13 +136,13 @@ def process_encounter(agent, agents):
                 # 3. EVALUACIÓN DE UMBRALES (Granovetter)
                 afinidad_actual = a.affinity_network[str(b.id)]
                 
-                if afinidad_actual >= 60: # Umbral para hacerse amigos
+                if afinidad_actual >= config.FRIENDSHIP_THRESHOLD_GAIN: # Umbral para hacerse amigos
                     if str(b.id) not in a.amigos:
                         a.amigos.append(str(b.id))
                         if config.PRINT_LOGS and a == agent:
                             print(f"   [!] ¡{agent.name} y {companion.name} se han hecho amigos (Lazo Fuerte)!")
                             
-                elif afinidad_actual < 40: # Umbral para perder la amistad
+                elif afinidad_actual < config.FRIENDSHIP_THRESHOLD_LOSS: # Umbral para perder la amistad
                     if str(b.id) in a.amigos:
                         a.amigos.remove(str(b.id))
                         if config.PRINT_LOGS and a == agent:

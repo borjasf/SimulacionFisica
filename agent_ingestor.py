@@ -1,5 +1,6 @@
 import csv
 import ast
+import config
 from agent import Agent
 
 def load_agents_from_csv(filepath):
@@ -36,6 +37,10 @@ def load_agents_from_csv(filepath):
                     traits_list = ast.literal_eval(traits_raw)
                 except (ValueError, SyntaxError):
                     traits_list = []
+                    
+                # [INTERRUPTOR DE LABORATORIO] Sobrescribe los rasgos si está activado en config
+                if getattr(config, 'OVERRIDE_TRAIT', None) is not None:
+                    traits_list = [config.OVERRIDE_TRAIT]
                     
                 # Extraer datos demográficos para narrativa
                 gender = row.get('gender', 'unknown')

@@ -83,7 +83,7 @@ def generate_long_term_memory(agente, lista_acciones):
     
     # Reintentos automáticos en caso de error de API
     max_retries = 3
-    for intento in range(max_retries):
+    for intento in range(config.LLM_MAX_RETRIES):
         try:
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
@@ -95,7 +95,7 @@ def generate_long_term_memory(agente, lista_acciones):
         except Exception as e:
             print(f"   [Error API Memoria] Reintentando para {agente.name}... (Intento {intento + 1}/{max_retries})")
             print(f"   Motivo: {e}")
-            time.sleep(10)
+            time.sleep(config.LLM_RETRY_DELAY_MEMORIZAR)
             
     # Retornar memoria previa si todos los reintentos fallan
     return agente.long_term_memory
@@ -161,7 +161,7 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
     )
 
     max_retries = 3
-    for intento in range(max_retries):
+    for intento in range(config.LLM_MAX_RETRIES):
         try:
             response = client.models.generate_content(
                 model='gemini-2.5-flash',
@@ -183,7 +183,7 @@ def generate_social_dialogue(agente1, agente2, memoria_largo_plazo1, memoria_lar
         except Exception as e:
             print(f"   [Error Guionista] Reintentando diálogo entre {agente1.name} y {agente2.name}... (Intento {intento + 1}/{max_retries})")
             print(f"   Motivo exacto: {e}")
-            time.sleep(2)
+            time.sleep(config.LLM_RETRY_DELAY_DIALOGUE)
             
     return {
         "variacion_relacion": 0,

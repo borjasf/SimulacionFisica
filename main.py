@@ -298,13 +298,35 @@ def run_simulation():
         print(f"  Desplazamientos:        {pct_desplazamiento:6.1f}%")
         print(f"  Permanencia en lugar:   {pct_sedentario:6.1f}%")
 
-        # SECCIÓN 4: MÉTRICAS SOCIALES
-        total_amigos = sum(len(a.amigos) for a in agentes)
-        media_amigos = total_amigos / len(agentes) if agentes else 0
+        # SECCIÓN 4: MÉTRICAS SOCIALES Y TOPOLOGÍA
+        print("\nMÉTRICAS SOCIALES (Topología de Red)")
+        total_amigos_todos = sum(len(a.amigos) for a in agentes)
+        media_amigos = total_amigos_todos / len(agentes) if agentes else 0
         
-        print("\nMÉTRICAS SOCIALES")
         print(f"  Amigos promedio/agente: {media_amigos:6.2f}")
-        print(f"  Total conexiones:       {total_amigos}")
+        print(f"  Total aristas creadas:  {total_amigos_todos}")
+
+        # Calcular distribución de grados
+        grados = [len(a.amigos) for a in agentes]
+        distribucion = {}
+        for g in grados:
+            distribucion[g] = distribucion.get(g, 0) + 1
+
+        print("\nDISTRIBUCIÓN DE GRADOS (Histograma):")
+        # Ordenamos de 0 amigos hacia arriba
+        for cantidad_amigos in sorted(distribucion.keys()):
+            cantidad_agentes = distribucion[cantidad_amigos]
+            # Ponemos un tope visual a la barra para que no rompa la consola si hay muchos agentes
+            barra_len = min(cantidad_agentes, 50) 
+            barra = "█" * barra_len
+            print(f"  {cantidad_amigos:2d} amigos: {cantidad_agentes:3d} agentes {barra}")
+
+        # Identificar Nodos Hub
+        agentes_ordenados_social = sorted(agentes, key=lambda x: len(x.amigos), reverse=True)
+        print("\nTOP 5 NODOS HUB (Mayor Centralidad de Grado):")
+        for i, ag in enumerate(agentes_ordenados_social[:5], 1):
+            rasgos_str = ", ".join(ag.traits) if ag.traits else "Ninguno"
+            print(f"  {i}. {ag.name:12s} ({ag.age_group}): {len(ag.amigos)} amigos | Perfil: {rasgos_str}")
 
         # SECCIÓN 5: LUGARES MÁS VISITADOS
         global_places = {}
@@ -317,7 +339,29 @@ def run_simulation():
         for i, (lugar, visitas) in enumerate(sorted_places[:8], 1):
             print(f"  {i}. {lugar:25s} {visitas:6d} visitas")
 
+        # Exportar datos
         data_exporter.export_simulation_data(agentes, turno_global - 1)
+
+        # NUEVO BLOQUE: DIBUJAR MAPA 2D
+        if len(agentes) > 0:
+            print("\n[MAPA] Generando visualización 2D del espacio urbano...")
+            # Recolectamos todas las casas para dibujarlas (el entorno ya las tiene)
+            casas = {}
+            for a in agentes:
+                # Reconstruimos la estructura esperada por plot_city_map basándonos en las home_coords
+                clave = f"Casa_{a.home_coords}"
+                if clave not in casas:
+                    casas[clave] = {"coords": a.home_coords}
+            
+            # Cogemos al agente más activo (el índice 0) para trazar sus rutas en dorado
+            agente_estrella = agentes[0]
+            print(f" -> Trazando la rutina de vida de: {agente_estrella.name}")
+            
+            try:
+                # Invocamos la función
+                environment.plot_city_map(casas, agente_destacado=agente_estrella)
+            except Exception as e:
+                print(f"[Aviso] No se pudo generar el mapa gráfico. Error: {e}")
 
         sys.exit(0)
 

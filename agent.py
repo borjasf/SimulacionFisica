@@ -1,5 +1,6 @@
 from trait_rules import GOLDBERG_RULES
 import demographic_rules
+import config
 
 class Agent:
     """Representa un agente con estado psicológico, fisiológico y espacial."""
@@ -34,11 +35,11 @@ class Agent:
         self.filtered_micro_frequencies = {}
         
         # Parámetros fisiológicos
-        self.energia = 100
-        self.saciedad = 100
+        self.energia = config.INITIAL_BIOLOGICAL_LEVEL
+        self.saciedad = config.INITIAL_BIOLOGICAL_LEVEL
         self.energy_decay_mult = 1.0
         self.energy_recovery_mult = 1.0
-        self.urgency_k = 3.0
+        self.urgency_k = config.BASE_URGENCY_K
         
         # Modificadores de personalidad aplicados a diferentes motores
         self.exploration_rho_bonus = 0.0
@@ -53,9 +54,9 @@ class Agent:
         self.current_location_name = "Casa"
 
         # Sistema de memoria
-        self.short_term_memory = "Acabo de despertar." 
-        self.action_buffer = []     
-        self.long_term_memory = "Últimamente mi rutina ha sido bastante normal y estable."
+        self.short_term_memory = config.INITIAL_SHORT_TERM_MEMORY
+        self.action_buffer = []
+        self.long_term_memory = config.INITIAL_LONG_TERM_MEMORY
 
         # Red social
         self.amigos = []

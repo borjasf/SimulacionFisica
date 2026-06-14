@@ -75,23 +75,23 @@ def choose_destination(agent_coords, visited_places, places_db, agent_age_group,
     
     places_list = list(candidates.keys())
     weights_list = list(candidates.values())
-        is_exploring = True 
+    is_exploring = True 
         
-        for place_id, place_info in places_db.items():
-            if place_id not in known_places:
-                # Extraemos el atractivo específico para la edad de este agente
-                atractivo_real = place_info['atractivo_por_edad'].get(agent_age_group, 0.1)
+    for place_id, place_info in places_db.items():
+        if place_id not in known_places:
+            # Extraemos el atractivo específico para la edad de este agente
+            atractivo_real = place_info['atractivo_por_edad'].get(agent_age_group, 0.1)
                 
-                # Si el lugar está prohibido o tiene 0 atractivo para su edad, lo saltamos
-                if atractivo_real <= 0:
-                    continue
+            # Si el lugar está prohibido o tiene 0 atractivo para su edad, lo saltamos
+            if atractivo_real <= 0:
+                continue
                     
-                dist = euclidean_distance(agent_coords, place_info['coords'])
-                dist = max(dist, 0.1)
+            dist = euclidean_distance(agent_coords, place_info['coords'])
+            dist = max(dist, 0.1)
                 
-                # W = Atractivo_por_edad / (Distancia ^ Beta)
-                weight = atractivo_real / (dist ** beta)
-                candidates[place_id] = weight
+            # W = Atractivo_por_edad / (Distancia ^ Beta)
+            weight = atractivo_real / (dist ** beta)
+            candidates[place_id] = weight
         
         # Fallback de seguridad: Si intentó explorar pero no hay lugares nuevos aptos...
         if not candidates:
